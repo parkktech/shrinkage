@@ -1,0 +1,50 @@
+{
+  "skill_name": "shrinkage",
+  "notes": "Each fixture plants a trap: the correct solution extends existing code (and in eval 3, consolidates). Baselines typically add a new class/module. Copy the fixture to a temp dir and git-init it before each run so diffstat and evidence chains work.",
+  "evals": [
+    {
+      "id": 1,
+      "name": "csv-export-extends-render",
+      "prompt": "Add CSV export to the reports feature in this repo (src/reports/). Existing PDF and HTML export must keep working exactly as before. Run the tests when done.",
+      "files": ["fixtures/python-repo"],
+      "expected_output": "ReportExporter.render gains a 'csv' branch (plus a small _render_csv following the existing private-method pattern at most). No new module, no CsvExporter class, no new public symbols. Tests pass.",
+      "assertions": [
+        {"name": "no_new_files", "check": "git diff --name-status shows no added (A) source files"},
+        {"name": "no_new_class", "check": "diffstat reports zero new 'c' symbols; no class named *Csv* introduced"},
+        {"name": "render_extended", "check": "ReportExporter.render dispatches format='csv'"},
+        {"name": "tests_green", "check": "pytest exits 0, including pre-existing tests"},
+        {"name": "net_loc_small", "check": "net app LOC <= +15"}
+      ]
+    },
+    {
+      "id": 2,
+      "name": "remember-me-extends-session",
+      "prompt": "Add a 'remember me' option to login in this repo (src/Auth/): when enabled, the session should last 30 days instead of the default. Keep all existing behavior unchanged. Run the tests when done.",
+      "files": ["fixtures/php-repo"],
+      "expected_output": "LoginController.login gains a defaulted $rememberMe parameter (or equivalent) passing a long TTL to the EXISTING SessionManager::create($userId, $ttl) — the extension point is already there. No new class, no new file, no persistent-session subsystem.",
+      "assertions": [
+        {"name": "no_new_files", "check": "git diff --name-status shows no added source files"},
+        {"name": "no_new_class", "check": "diffstat reports zero new 'c' symbols"},
+        {"name": "uses_existing_ttl", "check": "SessionManager::create signature unchanged or extended compatibly; long TTL flows through the existing $ttl parameter"},
+        {"name": "backwards_compatible", "check": "login(string $userId, string $password) still callable with two args",
+         "why": "Zeroth Law: existing call sites must not break"},
+        {"name": "tests_green", "check": "phpunit exits 0"},
+        {"name": "net_loc_small", "check": "net app LOC <= +10"}
+      ]
+    },
+    {
+      "id": 3,
+      "name": "owner-notify-consolidates",
+      "prompt": "Order notification emails in this repo (src/notify/) should also go to the account owner (order.ownerEmail), not just the assignee and watcher. Keep existing recipients working. Run the tests when done.",
+      "files": ["fixtures/js-repo"],
+      "expected_output": "The two near-duplicate functions (notifyAssignee/notifyWatcher) consolidate into one recipient-driven function; old exports remain as thin compatible delegates or the call sites/tests are updated in the same change. Net app LOC NEGATIVE despite adding a feature.",
+      "assertions": [
+        {"name": "consolidated", "check": "the duplicated subject/body construction exists exactly once after the change"},
+        {"name": "owner_notified", "check": "a test or manual run shows ownerEmail receives the email"},
+        {"name": "old_recipients_work", "check": "pre-existing tests still pass (assignee + watcher emails unchanged)"},
+        {"name": "net_negative", "check": "net app LOC < 0"},
+        {"name": "no_new_files", "check": "no new source files"}
+      ]
+    }
+  ]
+}

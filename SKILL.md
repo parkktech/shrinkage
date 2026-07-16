@@ -1,0 +1,157 @@
+---
+name: shrinkage
+description: Write less, better code by extending what exists instead of adding new code — and safely remove code the repo no longer needs — guided by a token-lean symbol map. Use this skill whenever writing, modifying, refactoring, planning, reviewing, or cleaning up code in an existing codebase — adding a feature, fixing a bug, implementing an endpoint, extending a class, planning a GSD phase, hunting dead code or duplication, or any task that will produce a diff. Also use for any /srk-* command, or when the user mentions shrinkage, reducing code, code cleanup, dead code, duplication, keeping diffs small, backwards compatibility during refactors, code maps, codebase intelligence, or token-efficient exploration. Not needed for brand-new empty projects or single-file throwaway scripts.
+---
+
+# Shrinkage
+
+> "It shrinks?" — yes, and that's the point.
+
+The measure of a change is the goal achieved with the least code — not the
+code produced. Shrinkage attacks codebase weight from both ends: the **gate**
+stops unjustified new code at the door, and the **shave/audit** loop reclaims
+what's already there — all under two absolutes: **backwards compatibility is
+never sacrificed** (the Zeroth Law) and **behavior is provably preserved**
+(the safety model). Net-negative diffs are the high score.
+
+## Core loop (every coding task)
+
+1. **Map** — `python <skill>/scripts/codemap.py refresh` (builds on first
+   run; asks the user once whether to commit or gitignore the map — default
+   gitignored). Load the `rules/<lang>.md` files it names.
+   → detail: `workflows/map.md`
+2. **Orient** — read the map, not the repo. `codemap.py query <term>`
+   (`--deep` to expand), `scope <dir>` for monorepo subtrees.
+3. **Gate** — list 2–5 candidate symbols to extend; extend-or-justify each;
+   walk the extension ladder; rungs 7–8 (new file/module) need justification —
+   and user confirmation when `gate: "hard"`. → detail: `workflows/gate.md`
+4. **Implement** — smallest diff, plus a subtraction pass in every touched
+   file. Deletions follow the safety model — no exceptions for drive-bys.
+5. **Score** — `python <skill>/scripts/diffstat.py` and report its line (app
+   and test LOC counted separately). `--pr` for the PR block, `--log` for the
+   trend log. → detail: `workflows/score.md`
+6. **Re-map** — run `codemap.py refresh` again after implementing: your new
+   methods, classes, and parameters fold into the map (and GSD's
+   api-map.json) immediately, so the next task — or the next fresh-context
+   subagent — orients against reality, not a stale snapshot. Optional
+   editor hook for continuous refresh: `references/ci-integration.md`.
+
+## The Extension Ladder
+
+Stop at the first rung that achieves the goal; every lower rung needs a
+one-line justification for why the higher rungs were insufficient:
+(1) value/config → (2) parameter with a safe default → (3) extend a method →
+(4) method on existing class → (5) function in existing module → (6) class in
+existing file → (7) new file → (8) new module. Rung 2's "safe default" is the
+Zeroth Law in miniature: existing call sites keep their behavior, always.
+
+## The Zeroth Law and the Safety Model
+
+**Backwards compatibility outranks every reduction goal.** The compatibility
+surface (public symbols, endpoints, CLI flags, config keys, wire formats,
+schemas, events) only changes additively; removals go through the deprecation
+cycle; renames leave delegating shims. **Deletions require an evidence
+chain** — map refs, repo-wide grep, the language's dynamic-reference
+checklist, test evidence, git history — and execute one-transform-per-commit
+with green gates. Read `references/safety-model.md` before ANY shave, audit
+execution, or deletion. Every reduction names its entry in
+`references/consolidation-catalog.md` (C1–C10).
+
+## Anti-Speculation Rules
+
+No interface/ABC with a single implementer; no config for a value that never
+varied; no wrapper that only delegates (deprecation shims exempt — labeled and
+scheduled); no `utils` growth when the logic has a home. Add the abstraction
+when the second concrete case arrives.
+
+## Subagents
+
+For parallel or high-stakes work, spawn agents with these briefs:
+`agents/shrink-auditor.md` (read-only candidate finding, evidence required),
+`agents/shrink-surgeon.md` (executes exactly ONE catalog transform,
+revert-on-red), `agents/shrink-verifier.md` (adversarial: paid to find
+breakage). The audit workflow fans out auditors; every surgeon commit on T1+
+work deserves a verifier pass.
+
+## GSD integration
+
+In a GSD project (`.planning/` present) everything auto-connects: the map
+lives at `.planning/intel/codemap.txt` and syncs all parsed symbols into
+`.planning/intel/api-map.json` (upgrading GSD's intel grounding and
+API-SURFACE.md to every language here, not just JS); planners run the gate
+(rules files have "When planning" sections); executors follow the ladder and
+put the scoreboard line in SUMMARY.md; verifiers use the rules' "When
+verifying" sections; audits write SHRINK-PLAN.md into `.planning/` for phase
+planning. GSD's project-skills discovery loads `rules/*.md` automatically.
+
+## Commands
+
+Install `commands/*.md` into `.claude/commands/` (project) or
+`~/.claude/commands/` (global):
+
+| Command | Does | Workflow |
+|---|---|---|
+| `/srk-onboard` | one-shot setup: map + all preferences | — |
+| `/srk-map` | build/refresh map, detect languages | workflows/map.md |
+| `/srk-query <term>` | find symbols at map cost | workflows/map.md |
+| `/srk-gate <task>` | reuse gate before writing code | workflows/gate.md |
+| `/srk-score [--pr] [--log]` | the scoreboard | workflows/score.md |
+| `/srk-trend` | cumulative weight + shrink streak | workflows/score.md |
+| `/srk-shave [target]` | safe subtraction pass | workflows/shave.md |
+| `/srk-audit [dir]` | ranked shrink backlog → SHRINK-PLAN.md | workflows/audit.md |
+| `/srk-config` | all settings, comedy included | — |
+
+Extra signals for shave/audit: `codemap.py dupes` (same-name symbols),
+`codemap.py clones` (renamed copy-paste via normalized shingles), and
+`coverage_check.py <files>` (coverage-aware tier escalation).
+
+CI/hook integration (pre-commit scoreboard, PR comment action):
+`references/ci-integration.md`.
+
+## Settings
+
+`.claude/shrinkage.json`, all optional:
+
+```json
+{"gate": "soft", "commit_map": false, "pr_scoreboard": false, "budget": 4000, "humor": true}
+```
+
+`gate: "hard"` = confirm with the user before new files/modules.
+`commit_map: true` = team-shared map instead of auto-gitignored.
+
+## Tone
+
+The scripts crack one joke per run. Relay their quip verbatim — it's the
+brand — and match it: at most one light shrinkage joke of your own per
+response, information first. Celebrate net-negative; tease growth gently,
+never scold. `humor: false` → play it straight.
+
+## Languages and parser precision
+
+Supported now: Python, JavaScript/TypeScript, PHP, Go, Rust, Java, C# — each
+with a parser adapter AND a `rules/<lang>.md`. Parsing is exact where cheap
+(Python via stdlib ast; JS/TS/PHP upgrade automatically to tree-sitter when
+`pip install tree-sitter tree-sitter-javascript tree-sitter-typescript
+tree-sitter-php` is present) and regex-based otherwise — same map either way.
+Growing further is two files, no core changes: `scripts/parsers/<lang>.py`
+(brace languages reuse `parsers.scan_braced`) registered in `EXTENSIONS`,
+plus `rules/<lang>.md` from `rules/_template.md` — the dynamic-reference
+checklist section is mandatory; it's what makes deletion safe in that
+ecosystem.
+
+## Other runtimes
+
+GitHub Copilot: `adapters/copilot/` ships repo instructions + `/srk-*` prompt
+files (install guide inside). The scripts are runtime-agnostic Python — any
+agent that can run a shell command can use the map and scoreboard.
+
+## File index
+
+- `workflows/` — map, gate, shave, audit, score: full processes with success criteria
+- `agents/` — auditor / surgeon / verifier subagent briefs
+- `references/safety-model.md` — Zeroth Law, tiers, evidence chain, protocol
+- `references/consolidation-catalog.md` — C1–C10 transforms with gotchas
+- `references/map-format.md` — map spec, query syntax, parser guide
+- `references/extend-vs-add.md` — worked ladder decisions
+- `rules/*.md` — per-language idioms + dynamic-reference checklists
+- `ARCHITECTURE.md` — system design, data flow, roadmap
