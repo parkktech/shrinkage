@@ -1,5 +1,5 @@
 ---
-name: srk-gate
+name: gate
 description: "Run the reuse gate for a task: candidate symbols, extend-or-justify, minimal-diff proposal"
 argument-hint: "<task description>"
 allowed-tools: [Bash, Read, Grep]

@@ -1,5 +1,5 @@
 ---
-name: srk-map
+name: map
 description: "Build or refresh the token-lean codemap; prints detected languages and which rules to load"
 argument-hint: "[--budget N] [--sync-intel]"
 allowed-tools: [Bash, Read]

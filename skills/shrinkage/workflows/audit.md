@@ -41,7 +41,7 @@ phases) consuming the plan.
    discovered" section that future audits and shaves append to. This file is
    the audit's product and the shave's input.
 
-7. **Offer execution:** top T0/T1 items via `/srk-shave <target>` —
+7. **Offer execution:** top T0/T1 items via `/srk:shave <target>` —
    or, in a GSD project, as planned phases so executors run them with fresh
    contexts and the verify step checks the scoreboard.
 </process>

@@ -68,9 +68,9 @@ Keep SHRINK-PLAN.md standing and fresh instead of auditing ad hoc.
 
 **Option A — Claude scheduled task (Cowork / Claude desktop):** create a
 scheduled task with a prompt like: *"In repo <path/URL>: run the shrinkage
-audit workflow (skill: shrinkage, command /srk-audit). Refresh SHRINK-PLAN.md,
+audit workflow (skill: shrinkage, command /srk:audit). Refresh SHRINK-PLAN.md,
 compare against last week's plan, and summarize: new candidates, candidates
-executed since last week, cumulative trend (`/srk-trend`)."* Weekly cadence;
+executed since last week, cumulative trend (`/srk:trend`)."* Weekly cadence;
 the summary lands wherever your scheduled tasks report.
 
 **Option B — GitHub Action cron + Claude Code:**
@@ -90,7 +90,7 @@ jobs:
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           prompt: |
-            Run /srk-audit for this repo. Update SHRINK-PLAN.md and open a PR
+            Run /srk:audit for this repo. Update SHRINK-PLAN.md and open a PR
             with the refreshed plan if it changed. Do not execute any
             transforms — audit only.
 ```
@@ -101,7 +101,7 @@ jobs:
 **Option C — cheap mechanical pre-pass, no LLM:** a cron job that runs
 `codemap.py build`, `codemap.py dupes`, and `codemap.py clones` and commits
 the raw output to `.claude/audit-signals/` — the next human-triggered
-`/srk-audit` starts from fresh signals without spending agent time on sweeps.
+`/srk:audit` starts from fresh signals without spending agent time on sweeps.
 
 ## Keeping the map continuously fresh (editor hook)
 
@@ -137,6 +137,6 @@ are refreshed around every plan.
 
 ## Trend review ritual
 
-Monthly (or per retro): `/srk-trend`. Cumulative app LOC should trend down or
+Monthly (or per retro): `/srk:trend`. Cumulative app LOC should trend down or
 flat-with-features; a sustained climb means gates are being skipped — fix the
 habit, not the hook.

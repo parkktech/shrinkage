@@ -1,5 +1,5 @@
 ---
-name: srk-audit
+name: audit
 description: "Repo-wide shrink audit: six evidence sweeps, tiered candidates, ranked SHRINK-PLAN.md backlog"
 argument-hint: "[dir]"
 allowed-tools: [Bash, Read, Grep, Write, Agent]
@@ -23,5 +23,5 @@ brief in `$SKILL/agents/shrink-auditor.md`. Required reading:
 - [ ] All six sweeps ran (dead-symbol, duplication, structure, flag, platform, noise)
 - [ ] Every entry: catalog #, tier, net-LOC estimate, effort, confidence
 - [ ] Zero candidates ranked on map evidence alone
-- [ ] SHRINK-PLAN.md written; execution offered via /srk-shave or GSD phases
+- [ ] SHRINK-PLAN.md written; execution offered via /srk:shave or GSD phases
 </success_criteria>

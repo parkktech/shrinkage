@@ -1,5 +1,5 @@
 ---
-name: srk-onboard
+name: onboard
 description: "One-shot Shrinkage setup: build the map, capture every preference (gate, map policy, PR scoreboard, comedy), print the quickstart"
 argument-hint: ""
 allowed-tools: [Bash, Read, Write]
@@ -30,8 +30,8 @@ as conscious choices, user ready to work.
    `codemap.py refresh` so map location/gitignore reflect the choices.
 4. GSD project detected → point out the auto-integration (map + api-map.json
    in `.planning/intel/`, SHRINK-PLAN.md target, SUMMARY.md scoreboard lines).
-5. Print the quickstart: `/srk-gate "<task>"` before coding, `/srk-score`
-   after, `/srk-audit` when they want the backlog, `/srk-trend` to watch the
+5. Print the quickstart: `/srk:gate "<task>"` before coding, `/srk:score`
+   after, `/srk:audit` when they want the backlog, `/srk:trend` to watch the
    ratchet move.
 </process>
 

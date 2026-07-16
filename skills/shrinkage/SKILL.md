@@ -1,6 +1,6 @@
 ---
 name: shrinkage
-description: Write less, better code by extending what exists instead of adding new code — and safely remove code the repo no longer needs — guided by a token-lean symbol map. Use this skill whenever writing, modifying, refactoring, planning, reviewing, or cleaning up code in an existing codebase — adding a feature, fixing a bug, implementing an endpoint, extending a class, planning a GSD phase, hunting dead code or duplication, or any task that will produce a diff. Also use for any /srk-* command, or when the user mentions shrinkage, reducing code, code cleanup, dead code, duplication, keeping diffs small, backwards compatibility during refactors, code maps, codebase intelligence, or token-efficient exploration. Not needed for brand-new empty projects or single-file throwaway scripts.
+description: Write less, better code by extending what exists instead of adding new code — and safely remove code the repo no longer needs — guided by a token-lean symbol map. Use this skill whenever writing, modifying, refactoring, planning, reviewing, or cleaning up code in an existing codebase — adding a feature, fixing a bug, implementing an endpoint, extending a class, planning a GSD phase, hunting dead code or duplication, or any task that will produce a diff. Also use for any /srk:* or srk command, or when the user mentions shrinkage, reducing code, code cleanup, dead code, duplication, keeping diffs small, backwards compatibility during refactors, code maps, codebase intelligence, or token-efficient exploration. Not needed for brand-new empty projects or single-file throwaway scripts.
 ---
 
 # Shrinkage
@@ -86,20 +86,21 @@ planning. GSD's project-skills discovery loads `rules/*.md` automatically.
 
 ## Commands
 
-Install `commands/*.md` into `.claude/commands/` (project) or
-`~/.claude/commands/` (global):
+Installed automatically with the plugin (`/plugin marketplace add
+parkktech/shrinkage` → `/plugin install srk@parkktech`); standalone users can
+instead copy `commands/*.md` into `.claude/commands/`:
 
 | Command | Does | Workflow |
 |---|---|---|
-| `/srk-onboard` | one-shot setup: map + all preferences | — |
-| `/srk-map` | build/refresh map, detect languages | workflows/map.md |
-| `/srk-query <term>` | find symbols at map cost | workflows/map.md |
-| `/srk-gate <task>` | reuse gate before writing code | workflows/gate.md |
-| `/srk-score [--pr] [--log]` | the scoreboard | workflows/score.md |
-| `/srk-trend` | cumulative weight + shrink streak | workflows/score.md |
-| `/srk-shave [target]` | safe subtraction pass | workflows/shave.md |
-| `/srk-audit [dir]` | ranked shrink backlog → SHRINK-PLAN.md | workflows/audit.md |
-| `/srk-config` | all settings, comedy included | — |
+| `/srk:onboard` | one-shot setup: map + all preferences | — |
+| `/srk:map` | build/refresh map, detect languages | workflows/map.md |
+| `/srk:query <term>` | find symbols at map cost | workflows/map.md |
+| `/srk:gate <task>` | reuse gate before writing code | workflows/gate.md |
+| `/srk:score [--pr] [--log]` | the scoreboard | workflows/score.md |
+| `/srk:trend` | cumulative weight + shrink streak | workflows/score.md |
+| `/srk:shave [target]` | safe subtraction pass | workflows/shave.md |
+| `/srk:audit [dir]` | ranked shrink backlog → SHRINK-PLAN.md | workflows/audit.md |
+| `/srk:config` | all settings, comedy included | — |
 
 Extra signals for shave/audit: `codemap.py dupes` (same-name symbols),
 `codemap.py clones` (renamed copy-paste via normalized shingles), and

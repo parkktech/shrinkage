@@ -1,5 +1,5 @@
 ---
-name: srk-score
+name: score
 description: "The minimalism scoreboard: net app/test LOC, new/removed symbols; PR block and trend log"
 argument-hint: "[REF] [--pr] [--log]"
 allowed-tools: [Bash]

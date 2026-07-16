@@ -36,29 +36,41 @@ Two things, and they feed each other:
    change: net LOC, files touched, new/removed symbols. Negative is the high
    score.
 
+## Install
+
+In Claude Code:
+
+```
+/plugin marketplace add parkktech/shrinkage
+/plugin install srk@parkktech
+```
+
+Updates: bump arrives automatically when the plugin version changes
+(`/plugin marketplace update` to refresh manually).
+
 ## Quickstart
 
 ```bash
-# drop the skill into your skills dir, commands into your commands dir, then:
-/srk-map          # build the codemap, see detected languages
-/srk-gate "add csv export to reports"   # what should we EXTEND?
+/srk:onboard      # one-time setup in a repo: map + preferences
+/srk:map          # build the codemap, see detected languages
+/srk:gate "add csv export to reports"   # what should we EXTEND?
 # ...implement...
-/srk-score        # moment of truth
+/srk:score        # moment of truth
 ```
 
 ## Commands
 
 | Command | What it does |
 |---|---|
-| `/srk-onboard` | one-shot setup: builds the map, captures every preference |
-| `/srk-map` | build/refresh the codemap; names the language rules to load |
-| `/srk-query <term>` | find existing symbols at map cost, not grep cost |
-| `/srk-gate <task>` | reuse gate: candidates → extend-or-justify → minimal diff |
-| `/srk-score [--pr]` | the scoreboard; `--pr` emits a block for your PR description |
-| `/srk-trend` | cumulative weight over time + your current shrink streak |
-| `/srk-shave [target]` | subtraction pass — hunt code the repo no longer needs |
-| `/srk-audit [dir]` | repo-wide shrink opportunities, ranked by payoff |
-| `/srk-config` | all settings: gate, map policy, PR scoreboard, budget, comedy |
+| `/srk:onboard` | one-shot setup: builds the map, captures every preference |
+| `/srk:map` | build/refresh the codemap; names the language rules to load |
+| `/srk:query <term>` | find existing symbols at map cost, not grep cost |
+| `/srk:gate <task>` | reuse gate: candidates → extend-or-justify → minimal diff |
+| `/srk:score [--pr]` | the scoreboard; `--pr` emits a block for your PR description |
+| `/srk:trend` | cumulative weight over time + your current shrink streak |
+| `/srk:shave [target]` | subtraction pass — hunt code the repo no longer needs |
+| `/srk:audit [dir]` | repo-wide shrink opportunities, ranked by payoff |
+| `/srk:config` | all settings: gate, map policy, PR scoreboard, budget, comedy |
 
 CI bonus: `references/ci-integration.md` has a pre-commit hook and a GitHub
 Action that posts the scoreboard as a sticky PR comment.
