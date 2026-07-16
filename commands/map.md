@@ -23,3 +23,10 @@ sync to `.planning/intel/` automatically — confirm the sync line.
 - [ ] Rules for the task's languages loaded
 - [ ] GSD project → api-map.json sync confirmed
 </success_criteria>
+
+<next>
+Next:
+• /srk:gate "<task>"  — before writing code for a feature/fix
+• /srk:audit          — read-only scan → ranked SHRINK-PLAN.md of safe cleanups
+• /srk:onboard        — if settings aren't set yet
+</next>

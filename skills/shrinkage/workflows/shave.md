@@ -57,6 +57,8 @@ Deleting is part of the feature; this workflow is how deletion earns trust.
    revealed, suite status.
 </process>
 
+End with a terse result line + a **Next** menu of 1-3 `/srk:` commands (see the command file's <next> block). No wall of prose.
+
 <success_criteria>
 - [ ] Suite green before, after every transform, and at the end
 - [ ] One atomic commit per transform, evidence template in each message

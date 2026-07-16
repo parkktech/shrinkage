@@ -26,3 +26,9 @@ calls: read `$SKILL/references/extend-vs-add.md`.
 - [ ] No planned change recreates a catalog smell (C1/C2/C3/C9)
 - [ ] Compatibility surface changes are additive-only
 </success_criteria>
+
+<next>
+Next:
+• implement the chosen rung, then /srk:score
+• /srk:query <term>   — if you need more candidates first
+</next>

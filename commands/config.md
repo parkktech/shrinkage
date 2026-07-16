@@ -30,3 +30,8 @@ important ones and the comedy one.
    → false: re-run `/srk:map` so the ignore entry is restored. `humor` →
    false: deliver the confirmation with a perfectly straight face.
 </process>
+
+<next>
+Next:
+• /srk:map            — rebuild with the new settings if you changed budget/commit_map
+</next>

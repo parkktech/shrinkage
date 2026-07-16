@@ -37,6 +37,8 @@ the model on every task, and optionally for humans on every PR.
      for proving the ratchet only moves down.
 </process>
 
+End with a terse result line + a **Next** menu of 1-3 `/srk:` commands (see the command file's <next> block). No wall of prose.
+
 <success_criteria>
 - [ ] Scoreboard line reported verbatim
 - [ ] Every new symbol traceable to a gate justification

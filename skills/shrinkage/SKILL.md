@@ -120,12 +120,32 @@ CI/hook integration (pre-commit scoreboard, PR comment action):
 `gate: "hard"` = confirm with the user before new files/modules.
 `commit_map: true` = team-shared map instead of auto-gitignored.
 
+## Response style
+
+Keep it tight, GSD-style. Every command ends with a short result line and a
+**Next** menu of 1–3 suggested `/srk:` commands — never a wall of prose. The
+result is a fact or two; the reasoning stays in the workflow files, not the
+reply. Default shape:
+
+```
+<result line — the fact, e.g. "Map built: 17,682 symbols across 6 languages.">
+<the script's quip verbatim, if humor is on>
+
+Next:
+• /srk:gate "<task>"  — before writing code
+• /srk:audit          — find safe cleanup opportunities
+• /srk:trend          — track weight over time
+```
+
+Pick the Next options that actually fit the situation (see each command's
+"Next" list). Explain more only when the user asks why, or when a safety
+decision (a T2 escalation, a red gate) genuinely needs it. One light joke
+max, information first; `humor: false` → play it straight.
+
 ## Tone
 
 The scripts crack one joke per run. Relay their quip verbatim — it's the
-brand — and match it: at most one light shrinkage joke of your own per
-response, information first. Celebrate net-negative; tease growth gently,
-never scold. `humor: false` → play it straight.
+brand. Celebrate net-negative; tease growth gently, never scold.
 
 ## Languages and parser precision
 

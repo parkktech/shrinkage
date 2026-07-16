@@ -16,3 +16,8 @@ Find existing symbols related to a term at map cost, not repo-exploration cost.
 3. Present the hits grouped by file. If a relevant file shows as collapsed,
    re-run with `--deep`. Open only the files the hits point at.
 </process>
+
+<next>
+Next:
+• /srk:gate "<task>"  — turn candidates into an extend-or-justify plan
+</next>

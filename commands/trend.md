@@ -17,3 +17,8 @@ Empty log → explain that scoring with `--log` (or `/srk:score --log`) feeds
 the trend, and offer to enable it habitually. Report the summary line and, if
 the cumulative app LOC is negative, celebrate — that's the ratchet working.
 </execution_context>
+
+<next>
+Next:
+• /srk:audit          — find the next reductions to extend the streak
+</next>

@@ -25,3 +25,9 @@ Locate the shrinkage skill dir ($SKILL: `${CLAUDE_PLUGIN_ROOT}/skills/shrinkage`
 - [ ] T2 candidates escalated with evidence, never executed silently
 - [ ] Compatibility surface intact; net app LOC negative or justified
 </success_criteria>
+
+<next>
+Next:
+• /srk:score          — confirm the shave came out net-negative
+• /srk:audit          — queue the next batch of candidates
+</next>

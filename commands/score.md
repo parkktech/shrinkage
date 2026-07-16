@@ -23,3 +23,10 @@ block / GSD SUMMARY.md / trend log).
 - [ ] Every new symbol traceable to a gate justification
 - [ ] Test-LOC reductions flagged and justified, never silent
 </success_criteria>
+
+<next>
+Next:
+• /srk:score --pr     — emit the PR-description block
+• /srk:trend          — see cumulative weight + shrink streak
+• /srk:shave          — if the diff left removable code behind
+</next>

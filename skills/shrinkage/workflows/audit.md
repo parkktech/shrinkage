@@ -46,6 +46,8 @@ phases) consuming the plan.
    contexts and the verify step checks the scoreboard.
 </process>
 
+End with a terse result line + a **Next** menu of 1-3 `/srk:` commands (see the command file's <next> block). No wall of prose.
+
 <success_criteria>
 - [ ] All six sweeps ran (or skipped with stated reason)
 - [ ] Every plan entry: catalog #, tier, net-LOC estimate, effort, confidence

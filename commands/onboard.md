@@ -40,3 +40,9 @@ as conscious choices, user ready to work.
 - [ ] All five settings written as explicit choices
 - [ ] Quickstart delivered; GSD integration noted when applicable
 </success_criteria>
+
+<next>
+Next:
+• /srk:gate "<task>"  — before writing code
+• /srk:audit          — find safe cleanup opportunities across the repo
+</next>

@@ -25,3 +25,9 @@ brief in `$SKILL/agents/shrink-auditor.md`. Required reading:
 - [ ] Zero candidates ranked on map evidence alone
 - [ ] SHRINK-PLAN.md written; execution offered via /srk:shave or GSD phases
 </success_criteria>
+
+<next>
+Next:
+• /srk:shave <target> — execute the top SHRINK-PLAN.md item safely
+• /srk:trend          — track the ratchet over time
+</next>
