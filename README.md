@@ -38,15 +38,54 @@ Two things, and they feed each other:
 
 ## Install
 
-In Claude Code:
+### Claude Code (recommended)
 
 ```
 /plugin marketplace add parkktech/shrinkage
 /plugin install srk@parkktech
 ```
 
-Updates: bump arrives automatically when the plugin version changes
-(`/plugin marketplace update` to refresh manually).
+That's it. You get the `shrinkage` skill (auto-triggers on coding tasks) and
+the commands: `/srk:onboard`, `/srk:map`, `/srk:query`, `/srk:gate`,
+`/srk:score`, `/srk:trend`, `/srk:shave`, `/srk:audit`, `/srk:config`.
+
+Then, in any repo: `/srk:onboard` (builds the codemap and captures your
+preferences — including whether the tools are allowed to be funny).
+
+**Updating:** new versions arrive when `plugin.json`'s version bumps; refresh
+manually with `/plugin marketplace update parkktech`.
+
+**Optional, for exact parsing** (regex fallback works without it):
+
+```bash
+pip install tree-sitter tree-sitter-javascript tree-sitter-typescript tree-sitter-php
+```
+
+### Standalone (no plugin system, shortest command names)
+
+Clone into your user config and copy the commands — they surface un-namespaced
+(`/map`, `/gate`, ...) or rename them to taste:
+
+```bash
+git clone https://github.com/parkktech/shrinkage.git ~/.claude/plugins-src/shrinkage
+cp -r ~/.claude/plugins-src/shrinkage/skills/shrinkage ~/.claude/skills/
+cp ~/.claude/plugins-src/shrinkage/commands/*.md ~/.claude/commands/
+```
+
+Update with `git pull` + re-copy.
+
+### GitHub Copilot
+
+See [`skills/shrinkage/adapters/copilot/`](skills/shrinkage/adapters/copilot/) —
+repo-level instructions plus `.prompt.md` files that surface as `/srk-*` slash
+commands in VS Code, Visual Studio, and JetBrains.
+
+### GSD projects
+
+Nothing extra: with the plugin installed, any repo with `.planning/` is
+detected automatically — the codemap lands in `.planning/intel/`, syncs into
+GSD's `api-map.json`, and planners/executors/verifiers pick up the rules via
+GSD's project-skills discovery.
 
 ## Quickstart
 
