@@ -61,6 +61,28 @@ manually with `/plugin marketplace update parkktech`.
 pip install tree-sitter tree-sitter-javascript tree-sitter-typescript tree-sitter-php
 ```
 
+### Team repos (zero-command install for collaborators)
+
+Installation is per machine, not per repo — but you can make a repo hand the
+plugin to everyone who opens it. Commit this as `.claude/settings.json`:
+
+```json
+{
+  "extraKnownMarketplaces": {
+    "parkktech": {
+      "source": { "source": "github", "repo": "parkktech/shrinkage" }
+    }
+  },
+  "enabledPlugins": {
+    "srk@parkktech": true
+  }
+}
+```
+
+Collaborators who open the repo in Claude Code get the marketplace registered
+and the plugin enabled automatically. (Private plugin repo → installs work
+only for people with read access to it.)
+
 ### Standalone (no plugin system, shortest command names)
 
 Clone into your user config and copy the commands — they surface un-namespaced
