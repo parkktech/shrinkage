@@ -71,8 +71,11 @@ def test_startup_line_audit_lifecycle(repo):
         "| 1 | dead | m.py |\n| 2 | dup | m.py |\n")
     code, out = run("codemap.py", "refresh", "--auto", cwd=repo)
     assert "2 open item" in out
-    # 3) code moves on -> plan stale
+    # 3) code moves on AND a real (task-time) refresh rebuilds the map -> the
+    #    plan's stamped fp no longer matches the map fp -> stale. (The hook
+    #    itself never rebuilds on a big repo; task-time refresh does.)
     (repo / "m.py").write_text((repo / "m.py").read_text() + "\ndef c():\n    return 2\n")
+    run("codemap.py", "refresh", cwd=repo)  # task-time rebuild -> new map fp
     code, out = run("codemap.py", "refresh", "--auto", cwd=repo)
     assert "stale" in out and "/srk:audit" in out
     # 4) quiet_startup silences it

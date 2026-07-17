@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.12.1
+- Fix: session-start hook was doing a full file-tree fingerprint walk on
+  every launch, timing out (and printing nothing) on large repos. The hook is
+  now instant — reads the status line from the cached map header, builds only
+  when the map is absent; staleness refresh stays at task time. Plan-staleness
+  compares the plan's stamped fp to the map's fp (no walk).
+
 ## 0.12.0
 - Always-on session-start status line (default): `[shrinkage] active · N
   symbols · <next step>`. Adapts to audit state — prompts to run /srk:audit

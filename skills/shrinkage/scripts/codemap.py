@@ -269,15 +269,12 @@ def cmd_refresh(root, out, budget, do_sync):
 
 
 def cmd_auto(root, out, budget, do_sync):
-    """SessionStart hook: rebuild only if stale, then print ONE compact
-    always-on line so every session visibly confirms shrinkage is active.
-    Silence with `"quiet_startup": true` in .claude/shrinkage.json."""
-    header = out.read_text(encoding="utf-8").splitlines()[0] if out.exists() else ""
-    stale = True
-    m = re.search(r"\| fp: (\w+)", header)
-    if m and m.group(1) == fingerprint(root):
-        stale = False
-    if stale:
+    """SessionStart hook — MUST be fast on large repos (60k+ files). Prints the
+    status line from the cached map header instantly and builds only when the
+    map is ABSENT (first time). Real staleness refresh happens at task time
+    (core loop step 1), never on every session start. Silence with
+    `"quiet_startup": true`."""
+    if not out.exists():
         index = build_index(root)
         out.parent.mkdir(parents=True, exist_ok=True)
         out.write_text(format_map(index, root, budget), encoding="utf-8")
@@ -285,32 +282,38 @@ def cmd_auto(root, out, budget, do_sync):
             ensure_ignored(root, out)
         if do_sync or (root / ".planning").is_dir():
             sync_intel(index, root)
-        n = sum(len(v) for v in index.values())
+        header = out.read_text(encoding="utf-8").splitlines()[0]
+        verb = "codemap built"
     else:
-        mm = re.search(r"symbols: (\d+)", header)
-        n = int(mm.group(1)) if mm else 0
+        lines = out.read_text(encoding="utf-8").splitlines()
+        header, verb = (lines[0] if lines else ""), "active"
     if settings.load(root).get("quiet_startup"):
         return
-    verb = "codemap built" if stale else "active"
-    plan = root / (".planning" if (root / ".planning").is_dir() else ".") / "SHRINK-PLAN.md"
+    n_m = re.search(r"symbols: (\d+)", header)
+    n = int(n_m.group(1)) if n_m else 0
+    map_fp_m = re.search(r"\| fp: (\w+)", header)
+    map_fp = map_fp_m.group(1) if map_fp_m else ""
+    print(f"[shrinkage] {verb} · {n:,} symbols · {_audit_tail(root, map_fp)}")
+
+
+def _audit_tail(root, map_fp):
+    """Audit-state hint for the startup line — cheap: reads only SHRINK-PLAN.md,
+    compares its stamped map-fp to the current MAP's fp (no file-tree walk)."""
+    plan = root / ".planning" / "SHRINK-PLAN.md"
     if not plan.exists():
         plan = root / "SHRINK-PLAN.md"
     if not plan.exists():
-        tail = "no audit yet — run /srk:audit to find safe reductions"
-    else:
-        # audit exists: is it stale vs current code? (map fp changed since plan)
-        try:
-            planned_fp = re.search(r"map-fp:\s*(\w+)", plan.read_text(encoding="utf-8"))
-        except OSError:
-            planned_fp = None
-        cur = fingerprint(root)
-        if planned_fp and planned_fp.group(1) != cur:
-            tail = "SHRINK-PLAN.md is stale — /srk:audit to refresh it"
-        else:
-            open_items = _open_plan_items(plan)
-            tail = (f"SHRINK-PLAN.md: {open_items} open item(s) — /srk:shave 1 to start"
-                    if open_items else "SHRINK-PLAN.md clean — /srk:audit to rescan")
-    print(f"[shrinkage] {verb} · {n:,} symbols · {tail}")
+        return "no audit yet — run /srk:audit to find safe reductions"
+    try:
+        text = plan.read_text(encoding="utf-8")
+    except OSError:
+        return "run /srk:audit to refresh SHRINK-PLAN.md"
+    planned = re.search(r"map-fp:\s*(\w+)", text)
+    if planned and map_fp and planned.group(1) != map_fp:
+        return "SHRINK-PLAN.md is stale — /srk:audit to refresh it"
+    open_items = _open_plan_items(plan)
+    return (f"SHRINK-PLAN.md: {open_items} open item(s) — /srk:shave 1 to start"
+            if open_items else "SHRINK-PLAN.md clean — /srk:audit to rescan")
 
 
 def _open_plan_items(plan):
