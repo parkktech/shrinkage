@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.23.0
+- Surgeons commit by explicit file path. The shave protocol now requires
+  `git commit -- <target files>` (path-limited) and forbids `git add -A` /
+  `git commit -am`, with a post-commit `git show --stat` check that only the
+  transform's files landed. Closes the hole where a surgeon could sweep the
+  user's unrelated dirty working tree into a shave commit (it happened once:
+  ~220 files / +85k lines of in-flight feature work — the final scoreboard
+  caught it). Codified in safety-model §6, both surgeon briefs, and the shave
+  workflow.
+- Clearer, shorter `/srk:trend`: a tight 3-line lifetime block — the net app-LOC
+  ratchet, removed/merged/cleaned by type, commit count + date span — with the
+  noisy per-entry timestamp dump removed. It reads from git history (every shave
+  commit), so the number is the real cumulative regardless of manual logging.
+
 ## 0.22.0
 - Lifetime total — the real cumulative number. `/srk:trend` (and
   `diffstat.py --total`) now sums EVERY shave commit in the repo's history,

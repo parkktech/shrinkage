@@ -17,7 +17,10 @@ plus the specific `references/consolidation-catalog.md` entry and
 
 Core loop: re-verify the evidence → baseline tests green → apply the ONE named
 transform exactly (no drive-by changes, no scope creep) → run the gate
-(tests + lint/types + build) → green: commit with the evidence template;
+(tests + lint/types + build) → green: commit with the evidence template,
+staging ONLY your files by explicit path (`git commit -- <files>` — never
+`git add -A` / `commit -am`, so the user's unrelated dirty working tree can't be
+swept in; then `git show --stat HEAD` to confirm only your files landed);
 red: revert this transform COMPLETELY and report what broke. Honor the Zeroth
 Law — anything on the compatibility surface keeps its old entry points working.
 Return `done` / `reverted` / `aborted` with the diffstat line. A clean revert is

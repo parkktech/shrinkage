@@ -155,8 +155,11 @@ Deleting is part of the feature; this workflow is how deletion earns trust.
 
 5. **Execute, one transform per commit,** per the transformation protocol
    (§6): apply one catalog entry → gates green → commit with the evidence
-   template → next. Any red → revert that transform fully, record the hidden
-   dependency you just discovered in the report. **Economy:** spawn the
+   template, **staged by explicit file path** (`git commit -- <files>`, never
+   `git add -A` — the working tree may hold the user's unrelated in-flight work,
+   and a path-limited commit can't sweep it in) → next. Any red → revert that
+   transform fully, record the hidden dependency you just discovered in the
+   report. **Economy:** spawn the
    `srk-surgeon` agent to apply each transform — it runs on the cheap model
    (the what/how is already decided here), with the test gate guaranteeing
    safety. Reserve the capable model for the analysis (this workflow) and the

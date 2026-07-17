@@ -36,8 +36,12 @@ gotchas. `$SKILL/rules/<lang>.md` for the target's language.
    working (deprecation shims, marked and scheduled). No drive-by fixes, no
    renaming for taste, no "while I'm here."
 5. **Gate:** tests + lint/types + build. Green → commit using the evidence
-   template (safety-model §6). Red → revert COMPLETELY, return
-   `reverted: <what broke>` — the hidden dependency you found is valuable
+   template (safety-model §6), staging ONLY your transform's files by explicit
+   path: `git commit -- <your files> -m "<msg>"` — NEVER `git add -A` /
+   `git commit -am` (the working tree may hold the user's unrelated in-flight
+   work; a path-limited commit can't sweep it in). Then confirm with
+   `git show --stat HEAD` that only your files landed. Red → revert COMPLETELY,
+   return `reverted: <what broke>` — the hidden dependency you found is valuable
    intelligence.
 6. **Score:** run `diffstat.py`, include the line in your return.
 </process>

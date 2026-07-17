@@ -243,49 +243,33 @@ def history_total():
 def print_total(t=None):
     t = t if t is not None else history_total()
     if not t:
-        print("no shave commits found in history (looked for the 'shrink:' / "
-              "'catalog:' commit markers). Score a range instead: "
-              "diffstat.py <base>..HEAD")
+        print("no shave commits found in history (the shrink:/catalog: markers). "
+              "Score a committed range instead: diffstat.py <base>..HEAD")
         return
-    net_app, net_test = t["app_ins"] - t["app_del"], t["test_ins"] - t["test_del"]
+    net_app = t["app_ins"] - t["app_del"]
+    net_test = t["test_ins"] - t["test_del"]
     b = t["buckets"]
-    print(col(BOLD, f"Shrinkage lifetime · {t['n']} shave commits"))
-    print(f"  {col(GREEN, 'removed')}  {col(GREEN, format(t['app_del'], ','))} lines   "
-          + col(DIM, f"added {t['app_ins']:,}"))
-    print(f"  {col(GREEN, '▼')} net    {col(GREEN, 'app ' + format(net_app, '+,'))}  ·  "
-          f"test {format(net_test, '+,')}")
-    print("  " + col(CYAN, "by type") + "  " + " · ".join(
-        col(GREEN, f"{b[k]} {k}") for k in ("removed", "merged", "cleaned")))
     since = git("show", "-s", "--format=%ad", "--date=short", t["first"]).strip()
-    print(col(DIM, f"  since {since}  ({t['first'][:9]}..{t['last'][:9]})"))
+    arrow = col(GREEN, "▼") if net_app < 0 else col(YELLOW, "▲") if net_app > 0 else "·"
+    head = col(GREEN if net_app <= 0 else YELLOW, f"app {net_app:+,} LOC")
+    print(col(BOLD, "Shrinkage lifetime") + col(DIM, f" · {t['n']} shave commits · since {since}"))
+    print(f"  {arrow} {head}   " + col(DIM, f"{t['app_del']:,} removed / {t['app_ins']:,} added"))
+    print("  " + col(CYAN, "by type") + "  "
+          + " · ".join(col(GREEN, f"{b[k]} {k}") for k in ("removed", "merged", "cleaned"))
+          + col(DIM, f"   · tests {net_test:+,}"))
 
 
 def show_trend():
     total = history_total()
-    print_total(total)  # the real lifetime number (or a 'no shave commits' note)
-    logp = Path(".claude/shrinkage-log.jsonl")
-    entries = ([json.loads(l) for l in logp.read_text(encoding="utf-8").splitlines() if l.strip()]
-               if logp.exists() else [])
-    if entries:
-        streak = 0
-        for e in reversed(entries):
-            if e["net_app"] >= 0:
-                break
-            streak += 1
-        print(col(DIM, f"\nrecently scored ({len(entries)} in the trend log · streak {streak}):"))
-        for e in entries[-10:]:
-            print(col(DIM, f"    {e['ts']}  app {signed(e['net_app']):>7}  "
-                           f"test {signed(e['net_test']):>6}  files {e['files']}"))
+    print_total(total)
     dep = Path("DEPRECATIONS.md")
     if dep.exists():
         pending = sum(1 for l in dep.read_text(encoding="utf-8").splitlines()
                       if l.strip().startswith("- [ ]"))
         if pending:
             print(col(YELLOW, f"  deprecation shims pending removal: {pending} (DEPRECATIONS.md)"))
-    net = ((total["app_ins"] - total["app_del"]) if total
-           else sum(e["net_app"] for e in entries))
-    if net < 0:
-        q = settings.quip(".", "shrunk", net=net)
+    if total and (total["app_ins"] - total["app_del"]) < 0:
+        q = settings.quip(".", "shrunk", net=total["app_ins"] - total["app_del"])
         if q:
             print(col(DIM, "  " + q))
 

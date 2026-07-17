@@ -166,6 +166,16 @@ catalog: <catalog entry #>, tier T<0|1>
 net LOC: <n>
 ```
 
+**Stage by explicit path — never the whole tree.** Commit with
+`git commit -- <your target files> -m "<message>"` (path-limited); NEVER
+`git add -A`, `git add .`, `git commit -a`, or `git commit -am`. The working
+tree routinely holds the user's unrelated in-flight work — a path-limited commit
+cannot sweep it into your shave. After committing, `git show --stat HEAD` must
+list ONLY your transform's files; if anything else appears, `git reset --soft
+HEAD^` and re-commit by path. (A surgeon once swept ~220 dirty files / +85k
+lines of a user's in-flight feature work into one shave commit — this rule is
+why that can't recur.)
+
 ## 6b. The escape hatch (`--auto --dangerous`)
 
 The safety model's autonomy limits (§2) exist to protect you by default. There
