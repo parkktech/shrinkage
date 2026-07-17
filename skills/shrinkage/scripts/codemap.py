@@ -309,22 +309,34 @@ def _audit_tail(root, map_fp):
     except OSError:
         return "run /srk:audit to refresh SHRINK-PLAN.md"
     planned = re.search(r"map-fp:\s*(\w+)", text)
-    if planned and map_fp and planned.group(1) != map_fp:
-        return "SHRINK-PLAN.md is stale — /srk:audit to refresh it"
-    open_items = _open_plan_items(plan)
-    return (f"SHRINK-PLAN.md: {open_items} open item(s) — /srk:shave 1 to start"
-            if open_items else "SHRINK-PLAN.md clean — /srk:audit to rescan")
+    stale = " (stale — /srk:audit to refresh)" if (planned and map_fp and planned.group(1) != map_fp) else ""
+    open_text = re.split(r"^#+\s+Done\b", text, maxsplit=1, flags=re.I | re.M)[0]
+    open_items = _open_plan_items(text)
+    if not open_items:
+        return "SHRINK-PLAN.md clean — /srk:audit to rescan"
+    # Tier mix and headline savings — from OPEN rows only (exclude the Done section).
+    tiers = re.findall(r"\|\s*\d+\s*\|[^\n]*?\bT([0-3])\b", open_text)
+    tier_bits = ""
+    if tiers:
+        from collections import Counter as _C
+        c = _C(tiers)
+        tier_bits = " · " + " ".join(f"T{t}×{c[t]}" for t in sorted(c))
+    est = re.search(r"est-savings:\s*-?(\d+)", text)
+    savings = f" · ~{est.group(1)} LOC to reclaim" if est else ""
+    return (f"SHRINK-PLAN.md: {open_items} open{tier_bits}{savings}{stale} — "
+            f"/srk:shave 1 to start")
 
 
-def _open_plan_items(plan):
-    """Count unchecked candidate rows in a SHRINK-PLAN.md (best-effort)."""
-    try:
-        text = plan.read_text(encoding="utf-8")
-    except OSError:
-        return 0
-    # ranked table rows start with "| <number>" and aren't the header/separator
-    return sum(1 for l in text.splitlines()
-               if re.match(r"\|\s*\d+\s*\|", l) and "~~" not in l)
+def _open_plan_items(text):
+    """Count unchecked candidate rows in a SHRINK-PLAN.md (best-effort).
+    Ranked rows start with `| <number> |`; struck (`~~`) or Done rows don't count."""
+    out, done = 0, False
+    for l in text.splitlines():
+        if re.match(r"^#+\s+Done\b", l, re.I):
+            done = True
+        if not done and re.match(r"\|\s*\d+\s*\|", l) and "~~" not in l:
+            out += 1
+    return out
 
 
 SKIP_NAMES = {"__init__", "__str__", "__repr__", "constructor", "main", "index",

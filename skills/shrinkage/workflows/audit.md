@@ -49,7 +49,13 @@ phases) consuming the plan.
 
    ```
    <!-- map-fp: <12-char fingerprint from the codemap header> -->
+   <!-- est-savings: <sum of the est. net LOC column, e.g. -1240> -->
    ```
+
+   The `est-savings` total lets the session-start line show the headline
+   ("~1240 LOC to reclaim") without re-reading the whole plan. Keep the tier
+   letter (T0–T3) visible in each row so the startup line can summarize the
+   mix (T0×3 T1×5 …).
 
    Then the fixed schema so shaves can consume it mechanically — ranked table
    with EXACTLY these columns:

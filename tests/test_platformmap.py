@@ -70,7 +70,7 @@ def test_startup_line_audit_lifecycle(repo):
         f"<!-- map-fp: {fp} -->\n\n| # | candidate | file |\n|---|---|---|\n"
         "| 1 | dead | m.py |\n| 2 | dup | m.py |\n")
     code, out = run("codemap.py", "refresh", "--auto", cwd=repo)
-    assert "2 open item" in out
+    assert "2 open" in out
     # 3) code moves on AND a real (task-time) refresh rebuilds the map -> the
     #    plan's stamped fp no longer matches the map fp -> stale. (The hook
     #    itself never rebuilds on a big repo; task-time refresh does.)
@@ -82,3 +82,20 @@ def test_startup_line_audit_lifecycle(repo):
     (repo / ".claude" / "shrinkage.json").write_text('{"quiet_startup": true}')
     code, out = run("codemap.py", "refresh", "--auto", cwd=repo)
     assert out.strip() == ""
+
+
+def test_startup_line_shows_plan_stats(repo):
+    (repo / "m.py").write_text("def a():\n    return 1\n")
+    run("codemap.py", "refresh", "--auto", cwd=repo)
+    import re as _re
+    hdr = (repo / ".claude" / "codemap.txt").read_text().splitlines()[0]
+    fp = _re.search(r"\| fp: (\w+)", hdr).group(1)
+    (repo / "SHRINK-PLAN.md").write_text(
+        f"<!-- map-fp: {fp} -->\n<!-- est-savings: -842 -->\n\n"
+        "| # | c | tier | est |\n|---|---|---|---|\n"
+        "| 1 | a | T1 | -120 |\n| 2 | b | T0 | -40 |\n| 3 | c | T1 | -300 |\n"
+        "## Done\n| 4 | ~~x~~ | T1 | -50 |\n")
+    code, out = run("codemap.py", "refresh", "--auto", cwd=repo)
+    assert "3 open" in out                    # Done row excluded from count
+    assert "T0×1 T1×2" in out                 # Done T1 excluded from tier mix
+    assert "~842 LOC to reclaim" in out       # single sign, headline savings

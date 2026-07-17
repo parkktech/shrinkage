@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.13.0
+- Session-start line now shows plan STATS when a SHRINK-PLAN.md exists:
+  open-item count, tier mix (T0xN T1xN...), and headline '~N LOC to reclaim'
+  (from an est-savings stamp the audit writes). Done-section rows excluded.
+
 ## 0.12.1
 - Fix: session-start hook was doing a full file-tree fingerprint walk on
   every launch, timing out (and printing nothing) on large repos. The hook is
