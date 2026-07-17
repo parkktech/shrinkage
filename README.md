@@ -126,10 +126,10 @@ instantly if anything breaks. A single item ends by naming the next one so you
 can step through; **`--auto`** runs the backlog top-to-bottom unattended and
 stops at the first item needing your judgment (a T2/public-surface change), the
 first red gate, or an empty plan — never a rampage of unreviewed commits on a
-live codebase. It's also **context-durable**: progress is committed and tracked
-in SHRINK-PLAN.md, so if the context window fills it stops with a resume prompt
-— `/clear` then `/srk:shave --auto` picks up exactly where it left off, nothing
-lost. Then:
+live codebase. It's also **context-durable**: each item runs in a fresh subagent so the main
+context barely grows, and all progress is committed + tracked in
+SHRINK-PLAN.md. A long backlog runs to completion in one session — no manual
+`/clear` needed (and if context ever does fill, it auto-resumes). Then:
 ```
 /srk:score        # confirm it came out net-negative
 /srk:trend        # watch the codebase shrink over time

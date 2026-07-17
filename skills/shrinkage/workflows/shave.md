@@ -49,36 +49,47 @@ Deleting is part of the feature; this workflow is how deletion earns trust.
    ```
    for each open item, highest rank first:
      if item.tier is T2/T3:        STOP — needs your judgment (report, halt)
-     if hit auto_max_items OR context is filling (see below):
-                                   CHECKPOINT & STOP (resume-clean)
-     run the single-item shave (steps 2–7): re-verify evidence, gate,
-       apply ONE transform, tests green, commit, update the plan row to Done
-     if the gate went RED:         revert that item, record the hidden
-                                   dependency, STOP (a break means the plan's
-                                   assumptions are off — don't keep going blind)
+     if auto_max_items set and reached:  STOP (optional review checkpoint)
+     dispatch the item to a fresh srk-surgeon subagent (see below): it
+       re-verifies evidence, gates, applies ONE transform, runs tests, commits,
+       marks the plan row done, returns a one-line result
+     if it returned RED/reverted:  STOP (a break means the plan's assumptions
+                                   are off — don't keep going blind)
    ```
 
-   `--auto` halts on the **first T2/T3 item, the first red gate, the item
-   budget (`auto_max_items`, default 8), a context-pressure signal, or an empty
-   backlog** — never a whole-repo rampage of unreviewed commits. On a
-   production codebase, review the batch before pushing; each commit is
-   independently `git revert`-able. Report cumulative net LOC and a per-item
-   line (done / reverted / halted-at), then name what stopped it.
+   `--auto` runs **until done** — it halts only on the first T2/T3 item, the
+   first red gate, an empty backlog, or an optional `auto_max_items` review cap
+   (default 0 = no cap, run to completion). Never a whole-repo rampage of
+   *unreviewed* commits: each is atomic and `git revert`-able, and on a
+   production codebase you review the batch before pushing. Report cumulative
+   net LOC, a per-item line (done / reverted), and what stopped it.
 
-   ### Context monitoring (durable-state runs)
-   State lives on disk (git + SHRINK-PLAN.md), NOT in this conversation — so a
-   long run survives a context clear. Read `references/context-management.md`.
-   During the loop: after each committed item the plan is already up to date;
-   when the item budget is hit OR the harness signals the context window is
-   filling (low-context warning, or past `auto_context_stop`% — default 75),
-   finish the current atomic item (never mid-transform), confirm the plan
-   reflects reality, then STOP and tell the user verbatim:
+   ### Keep the main context flat — dispatch each item to a subagent
+   The way `--auto` runs the whole backlog WITHOUT needing a manual `/clear`:
+   run each item's work (re-verify evidence → gate → apply one transform →
+   tests → commit → mark the plan row done) inside a **fresh `srk-surgeon`
+   subagent** (economy: it's the cheap model, and the test gate guarantees
+   safety). The subagent returns one line — `done: <item> | <net LOC> | <sha>`
+   or `reverted: <what broke>`. The main orchestrator holds only the plan and
+   the running tally, so its context stays nearly flat no matter how many items
+   run. A 50-item backlog completes in one session; **no manual clear needed.**
+   High-stakes (T1 touching shared code) items also get an `srk-verifier`
+   subagent before the loop moves on.
 
-   > Progress committed, SHRINK-PLAN.md current. Run `/clear` (or `/compact`),
-   > then `/srk:shave --auto` to resume from the remaining items — nothing lost.
+   ### Context is a fallback, not the normal stop
+   Because per-item work is offloaded, the main context rarely fills. If it
+   still does (very long run, or subagents unavailable so work ran inline),
+   the durable-state safety net kicks in: state is on disk (git +
+   SHRINK-PLAN.md), so finish the current atomic item, confirm the plan is
+   current, and either let Claude Code auto-compact (the PreCompact hook leaves
+   a resume breadcrumb and the loop continues) or, if you prefer a clean batch,
+   tell the user:
 
-   Re-running `--auto` after a clear reads the plan's open rows and continues;
-   no re-audit needed unless the plan reads stale.
+   > Progress committed, SHRINK-PLAN.md current. `/clear` then `/srk:shave
+   > --auto` resumes from the remaining items — nothing lost.
+
+   Manual `/clear` is thus optional (a fresh-batch/review convenience), never
+   required. Read `references/context-management.md`.
 
 2. **Baseline.** Relevant test suite green. Red baseline → stop and report;
    you cannot detect breakage against a red baseline.

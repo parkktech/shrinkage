@@ -1,5 +1,18 @@
 # Context management for long runs
 
+## The short answer: manual `/clear` is NOT required
+
+`--auto` dispatches each backlog item to a **fresh `srk-surgeon` subagent**, so
+the main conversation holds only the plan and a one-line-per-item tally — its
+context stays nearly flat and a long backlog runs to completion in one session.
+If context ever does fill anyway (subagents unavailable, or an unusually long
+run), Claude Code **auto-compacts** and the PreCompact hook leaves a resume
+breadcrumb, so the loop continues on its own. Manual `/clear` is only ever an
+*optional* convenience — a clean slate for a fresh review batch — never a
+requirement. The rest of this file is the machinery behind that guarantee.
+
+---
+
 A `--auto` shave over a big backlog, or a deep audit, can fill the context
 window. Shrinkage is built to handle this cleanly because **its durable state
 is on disk, not in the conversation**:

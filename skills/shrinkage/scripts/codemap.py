@@ -436,12 +436,18 @@ def cmd_query(root, out, term, deep):
     if not hits:
         print(f"no symbols matching '{term}' — consider `query` with a broader term, or --deep")
         return
+    # Anti context-rot: a broad term on a big repo can match thousands of lines.
+    # Cap the dump; tell the user to narrow rather than flooding the window.
+    CAP = 60
+    total = len(hits)
     last = None
-    for group, line in hits:
+    for group, line in hits[:CAP]:
         if group != last:
             print(group)
             last = group
         print(line)
+    if total > CAP:
+        print(f"... {total - CAP} more matches — narrow the term (currently '{term}')")
     if deep:
         for rel in dict.fromkeys(g.split("  ")[0] for g, _ in hits):
             print(f"\n{rel} (deep):")

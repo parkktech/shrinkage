@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.16.0
+- Output discipline (anti context-rot): SKILL.md rule that the agent reports
+  one result line, never reprints diffs/maps/evidence, keeps records on disk
+  (gate ledger, SHRINK-PLAN.md) and references them; audit reports counts+top-3
+  not the full table; subagents return structured results only; codemap query
+  output capped (narrow-the-term hint) so a broad match can't flood context.
+- --auto no longer needs a manual /clear: each backlog item runs in a fresh
+  srk-surgeon subagent, so the main context stays flat and a long backlog
+  completes in one session. Manual /clear is now optional (fresh-batch
+  convenience); auto-compaction + the PreCompact breadcrumb cover the rest.
+  auto_max_items default 0 (run to completion); auto_context_stop is a
+  fallback, not the normal stop.
+
 ## 0.15.0
 - Context monitoring & clearing for long runs. `/srk:shave --auto` is now
   context-durable: state lives in git + SHRINK-PLAN.md (not the conversation),

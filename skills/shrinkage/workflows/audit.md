@@ -72,6 +72,12 @@ phases) consuming the plan.
 7. **Offer execution:** top T0/T1 items via `/srk:shave <target>` —
    or, in a GSD project, as planned phases so executors run them with fresh
    contexts and the verify step checks the scoreboard.
+
+8. **Report lean (anti context-rot).** The plan is the deliverable and it's on
+   disk — do NOT paste the full ranked table into the reply. Report only:
+   total candidates, tier mix (T0×N T1×N…), total est. LOC to reclaim, the top
+   3 by payoff, and "full plan: SHRINK-PLAN.md". Raw sweep output stays in the
+   subagents; only the ranked, verified plan is written to disk.
 </process>
 
 End with a terse result line + a **Next** menu of 1-3 `/srk:` commands (see the command file's <next> block). No wall of prose.

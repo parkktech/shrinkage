@@ -200,6 +200,30 @@ Pick the Next options that actually fit the situation (see each command's
 decision (a T2 escalation, a red gate) genuinely needs it. One light joke
 max, information first; `humor: false` → play it straight.
 
+## Output discipline (anti context-rot)
+
+Verbose output is what rots a long session — every reprinted diff and pasted
+evidence chain is dead weight in the window. Keep the conversation lean:
+
+- **Don't reprint what a tool already showed.** After running a script, report
+  its one result line — never paste the diff, the file, the full map, or the
+  command's raw dump back into the reply.
+- **State lives on disk, references live in chat.** Gate records go to the gate
+  ledger, evidence chains and findings go to SHRINK-PLAN.md, deprecations to
+  DEPRECATIONS.md — say "recorded in SHRINK-PLAN.md (6 items)", don't inline
+  the table. The reader opens the file if they want detail.
+- **Subagents return the structured result only** — `done: <item> | <netLOC> |
+  <sha>` or a findings object — not their working transcript. That's the whole
+  reason per-item work is offloaded; don't let it leak back as prose.
+- **`--auto` = one line per item**, then a final tally. Not a play-by-play.
+- **Audit reports counts + top few**, and points at the plan file for the rest.
+- **No tool-call narration** ("Now I'll run…", "Let me check…"). Just do it and
+  give the result. Prefer a compact table/line over paragraphs.
+
+Scripts follow the same rule: compact by default, detail behind `--deep`/
+`--verbose`. If you're about to emit a long block, ask whether it belongs in a
+file instead.
+
 ## Tone
 
 The scripts crack one joke per run. Relay their quip verbatim — it's the
