@@ -1,38 +1,39 @@
 ---
 name: srk:update
-description: "Reliably update the srk plugin: check installed vs latest version and clear the stale plugin cache"
+description: "Check installed vs latest version and print the reliable update steps (uninstall → install → relaunch)"
 argument-hint: "[--check]"
 allowed-tools: [Bash]
 ---
 
 <objective>
-Make updating the srk plugin reliable — clear the cached clone (which Claude
-Code pins to a commit and can leave stale after a version bump or force-push)
-so a fresh install picks up the latest.
+Tell the user whether a newer Shrinkage is available and hand them the update
+path that actually works on Claude Code — without leaving the plugin in a
+broken "already installed / cache-miss" state.
 </objective>
 
 <execution_context>
 Run this inline — no subagent. Locate the shrinkage skill dir
 ($SKILL: `${CLAUDE_PLUGIN_ROOT}/skills/shrinkage` when installed as a plugin,
-else `.claude/skills/shrinkage` or `~/.claude/skills/shrinkage`).
+else `.claude/skills/shrinkage` or `~/.claude/skills/shrinkage`), then run
+`python3 $SKILL/scripts/selfupdate.py` and relay its output verbatim.
 
-- `--check` (or bare, cautious): `python3 $SKILL/scripts/selfupdate.py` —
-  report installed vs latest version and the cache location; change nothing.
-- Otherwise: `python3 $SKILL/scripts/selfupdate.py --clear` — report versions
-  AND remove the plugin cache so the next install re-clones cleanly.
+The reliable update on Claude Code is **uninstall → install → relaunch**:
 
-Then relay the script's output verbatim, and tell the user the two commands to
-finish (the plugin can't invoke `/plugin` itself):
-
-  /plugin marketplace add parkktech/shrinkage
+  /plugin uninstall shrinkage@parkktech
   /plugin install shrinkage@parkktech
 
-…and to **quit and relaunch** Claude Code. If the script reports "up to date",
-say so and stop — no reinstall needed.
+`uninstall` clears the cached files AND the registration together, so the
+`install` genuinely re-fetches. Do NOT tell the user to just delete the plugin
+cache folder — that strands the registration and Claude Code then reports
+`already installed` + `cache-miss` (a loop `/plugin install` can't break). Only
+if the marketplace *clone* is corrupted do they nuke
+`~/.claude/plugins/marketplaces/parkktech` (with Claude Code closed) and re-add.
+
+If the script says "up to date", say so and stop — no reinstall needed.
 </execution_context>
 
 <next>
 Next:
-• /plugin install shrinkage@parkktech   — after the cache clear (then relaunch)
-• /srk:audit                       — once updated, put it to work
+• /plugin uninstall shrinkage@parkktech   — then /plugin install, then relaunch
+• /srk:audit                              — once updated, put it to work
 </next>

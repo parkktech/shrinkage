@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.21.1
+- Fix the update trap. `/srk:update` (selfupdate.py) no longer deletes the
+  plugin cache — deleting it stranded Claude Code's install *registration*,
+  producing the "Plugin already installed globally" + "Failed to load
+  marketplace: cache-miss" loop where `/plugin install` no-ops forever. It now
+  reports the version and prints the path that actually works:
+  `/plugin uninstall shrinkage@parkktech` → `/plugin install shrinkage@parkktech`
+  → relaunch (uninstall clears the cached files AND the registration together).
+  The update command, README, and the script's own guidance are updated to
+  match; the "just rm the cache folder" advice — which caused this — is gone.
+
 ## 0.21.0
 - Scoreboard rebuilt for clarity. `/srk:score` now prints a short, **colored**
   block — removed vs added lines, net app (and test, separately), files, and

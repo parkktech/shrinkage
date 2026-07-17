@@ -1,21 +1,23 @@
 #!/usr/bin/env python3
-"""selfupdate — reliable version check + cache clear for the srk plugin (v0.17).
+"""selfupdate — version check + the reliable update path for the shrinkage plugin.
 
-Claude Code caches the plugin as a git clone pinned to a commit; a version
-bump (or a force-push) can leave that cache stale or broken so `/plugin
-update` silently no-ops. This does the part a plugin CAN do: report installed
-vs latest, and blow away the cache so the next install re-clones cleanly. It
-prints the exact reinstall lines to finish (those are user-typed TUI commands
-the plugin can't invoke itself).
+Claude Code caches a plugin as a git clone and *registers* the install
+separately. The trap: deleting the cache folder (which an earlier version of
+this script did) leaves the plugin still registered but with no files, and
+Claude Code then reports `already installed` + `cache-miss` — an unbreakable
+loop, because `/plugin install` no-ops on a registered plugin.
 
-Usage:
-  selfupdate.py            check only — installed vs latest, cache location
-  selfupdate.py --clear    also remove the plugin cache (forces a fresh clone)
+So this script does NOT touch the filesystem. It reports installed vs latest and
+prints the update path that actually works on Claude Code: `/plugin uninstall`
+(which clears the cached files AND the registration together) then
+`/plugin install`, then relaunch.
+
+Usage: selfupdate.py            report installed vs latest + the update steps
+       selfupdate.py --check    same (kept for compatibility)
 """
 import json
 import os
 import re
-import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -48,11 +50,10 @@ def cache_dir():
 def installed_version(cache):
     if not cache:
         return None
-    # version dirs (srk/0.16.0/...) or a plugin.json somewhere under the cache
     vers = []
-    srk = cache / PLUGIN
-    if srk.is_dir():
-        vers = [d.name for d in srk.iterdir() if re.match(r"\d+\.\d+\.\d+", d.name)]
+    pdir = cache / PLUGIN
+    if pdir.is_dir():
+        vers = [d.name for d in pdir.iterdir() if re.match(r"\d+\.\d+\.\d+", d.name)]
     if vers:
         return max(vers, key=semver)
     for pj in cache.rglob(".claude-plugin/plugin.json"):
@@ -74,33 +75,31 @@ def latest_remote():
 
 
 def main():
-    clear = "--clear" in sys.argv
     cache = cache_dir()
     inst = installed_version(cache)
     latest = latest_remote()
 
-    print(f"srk plugin — installed: {inst or 'unknown'} · latest: {latest or 'unreachable'}")
-    if cache:
-        print(f"cache: {cache}")
-    else:
-        print("cache: none found (not installed via marketplace, or already clear)")
+    print(f"shrinkage plugin — installed: {inst or 'unknown'} · latest: {latest or 'unreachable'}")
+    print(f"cache: {cache}" if cache
+          else "cache: none found (not installed via marketplace, or already clear)")
 
     if inst and latest and semver(inst) >= semver(latest):
-        print("up to date." + ("" if clear else " (nothing to do)"))
-    elif latest:
+        print("up to date — nothing to do.")
+        return
+    if latest:
         print(f"update available: {inst or '?'} -> {latest}")
 
-    if clear and cache:
-        shutil.rmtree(cache, ignore_errors=True)
-        print(f"cleared cache: {cache}")
-        print("now run these in Claude Code, then relaunch:")
-        print(f"  /plugin marketplace add {MARKETPLACE}/shrinkage")
-        print(f"  /plugin install {PLUGIN}@{MARKETPLACE}")
-    elif clear:
-        print("no cache to clear — just: /plugin install "
-              f"{PLUGIN}@{MARKETPLACE} (then relaunch)")
-    elif latest and inst and semver(inst) < semver(latest):
-        print("run `selfupdate.py --clear` (or /srk:update) to refresh cleanly.")
+    # The path that actually works on Claude Code. uninstall clears the cached
+    # FILES and the REGISTRATION together — do NOT just delete the cache folder,
+    # that strands the registration and yields 'already installed' + 'cache-miss'.
+    print("\nto update, run these in Claude Code, then quit and relaunch:")
+    print(f"  /plugin uninstall {PLUGIN}@{MARKETPLACE}")
+    print(f"  /plugin install {PLUGIN}@{MARKETPLACE}")
+    print("(uninstall FIRST — a bare /plugin install no-ops on an already-registered plugin.)")
+    print("\nonly if the marketplace clone is corrupted, with Claude Code CLOSED:")
+    print(f"  rm -rf ~/.claude/plugins/marketplaces/{MARKETPLACE} ~/.claude/plugins/cache/{MARKETPLACE}")
+    print(f"  then reopen and run: /plugin uninstall {PLUGIN}@{MARKETPLACE} ; "
+          f"/plugin marketplace add {MARKETPLACE}/{PLUGIN} ; /plugin install {PLUGIN}@{MARKETPLACE}")
 
 
 if __name__ == "__main__":

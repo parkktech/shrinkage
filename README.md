@@ -81,16 +81,21 @@ Nothing to configure, nothing to run per-repo.
 /srk:update
 ```
 
-Checks your installed version against the latest, clears Claude Code's pinned
-plugin cache (the reason `/plugin marketplace update` can show "update
-available" but never apply), and prints the two reinstall lines to finish:
+Checks your installed version against the latest and prints the update steps.
+On Claude Code the reliable path is **uninstall → install → relaunch**:
 
 ```
+/plugin uninstall shrinkage@parkktech
 /plugin install shrinkage@parkktech
 ```
 
-…then quit and relaunch. If a version is ever really stuck, clear the cache
-directly in a shell — `rm -rf ~/.claude/plugins/cache/parkktech` — and reinstall.
+…then quit and relaunch. The `uninstall` clears the pinned cache **and** the
+registration together — that's the bit that matters. Don't just delete the
+cache folder: that leaves the plugin registered but file-less, and Claude Code
+then reports `already installed` + `cache-miss` (a loop `/plugin install` can't
+break). Only if the marketplace *clone* is corrupted, with Claude Code closed:
+`rm -rf ~/.claude/plugins/marketplaces/parkktech ~/.claude/plugins/cache/parkktech`,
+then reopen, `/plugin marketplace add parkktech/shrinkage`, and reinstall.
 
 ## Composer frameworks: Laravel, Magento 2, Drupal
 
