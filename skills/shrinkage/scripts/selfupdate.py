@@ -100,7 +100,7 @@ def main():
         print("no cache to clear — just: /plugin install "
               f"{PLUGIN}@{MARKETPLACE} (then relaunch)")
     elif latest and inst and semver(inst) < semver(latest):
-        print("run `selfupdate.py --clear` (or /srk-update) to refresh cleanly.")
+        print("run `selfupdate.py --clear` (or /srk:update) to refresh cleanly.")
 
 
 if __name__ == "__main__":

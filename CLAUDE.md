@@ -29,10 +29,10 @@ Then verify: `git ls-remote --tags origin` shows the new tag and
 ## Layout
 - `.claude-plugin/` — `plugin.json` (the plugin) + `marketplace.json` (the
   self-hosted marketplace; plugin source is `./`).
-- `commands/srk/*.md` — the `/srk-*` slash commands (thin; defer to workflows).
+- `commands/srk/*.md` — the `/srk:*` slash commands (thin; defer to workflows).
   `plugin.json` sets `"commands": "./commands/srk/"` so the subdir name `srk`
   (not the plugin name `shrinkage`) is the command prefix — this is the GSD
-  trick that renders `name: srk:shave` as `/srk-shave` in the IDE picker.
+  trick that renders `name: srk:shave` as `/srk:shave` in the IDE picker.
 - `skills/shrinkage/` — the skill: `SKILL.md`, `scripts/`, `rules/`,
   `references/`, `workflows/`, `agents/`, `adapters/`.
 - `agents/` (repo root) — the tiered Claude Code subagents (surgeon on Haiku).

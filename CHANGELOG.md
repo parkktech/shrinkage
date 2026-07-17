@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.20.2
+- Fix: command references now use the colon form `/srk:shave` that Claude Code
+  actually invokes. The `<next>` hints, the `/srk:help` screen, the README, the
+  status line, and the scripts' printed hints had been emitting the hyphen form
+  `/srk-shave`, which Claude Code rejects ("Unknown command: /srk-shave. Did you
+  mean /srk:shave?") — so the skill's own suggested next steps weren't runnable.
+  The commands were always `/srk:<cmd>` (the `commands/srk/` subdirectory
+  namespace); only the printed labels were wrong. Now they match, so every
+  suggested command is paste-runnable.
+
 ## 0.20.1
 - marketplace.json: add a top-level `renames` map (`{"srk": "shrinkage"}`) so
   Claude Code auto-migrates users who still have the old `srk@parkktech` enabled
@@ -13,18 +23,17 @@
   re-add, reinstall, then fully restart Claude Code. Documented in RELEASING.md.
 
 ## 0.20.0
-- New `/srk-help` — a short, clean command reference in the order you'd use them
+- New `/srk:help` — a short, clean command reference in the order you'd use them
   (setup → understand → reduce → measure → maintain), mirroring GSD's
-  `/gsd-help`. `/srk-help <command>` drills into one command; `/srk-help --full`
+  `/gsd-help`. `/srk:help <command>` drills into one command; `/srk:help --full`
   adds the "when to use" notes. Humor on by default.
 
 ## 0.19.0
-- Commands now display as `/srk-map`, `/srk-shave`, `/srk-audit`, … (GSD-style
-  short prefix) instead of the older `/srk:shave`. Mechanism: command files
-  moved to `commands/srk/` and `plugin.json` sets `"commands": "./commands/srk/"`,
-  so the subdirectory name `srk` — not the plugin name — becomes the command
-  namespace (exactly how gsd-core yields `/gsd-*`). No behavior change; only the
-  invocation label.
+- Commands live under the `srk:` prefix (`/srk:map`, `/srk:shave`, `/srk:audit`,
+  …). Mechanism: command files moved to `commands/srk/` and `plugin.json` sets
+  `"commands": "./commands/srk/"`, so the subdirectory name `srk` — not the
+  plugin name `shrinkage` — is the command namespace (the same setup gsd-core
+  uses). No behavior change.
 - Plugin is now `shrinkage@parkktech` (was `srk@parkktech`). BREAKING install
   change — one-time migration: `/plugin uninstall srk@parkktech`, then
   `/plugin install shrinkage@parkktech`, then relaunch. (A clean reinstall was
@@ -35,7 +44,7 @@
 - Clearer --auto halt: a drained T0/T1 backlog now reports what got done, why
   it stopped, and the continue options — never a bare "0 transforms" that
   reads like a bug.
-- `/srk-shave --auto --dangerous` (alias --full-send): explicit escape hatch
+- `/srk:shave --auto --dangerous` (alias --full-send): explicit escape hatch
   that executes T2/public-surface items too (direct removal, no deprecation
   cycle). KEEPS the free safety — atomic commit + tests-green-or-revert per
   item, hard-stop on a red/absent suite. Refused when allow_dangerous:false
@@ -43,7 +52,7 @@
   override.
 
 ## 0.17.0
-- `/srk-update` + selfupdate.py: reliable updates. Reports installed vs latest
+- `/srk:update` + selfupdate.py: reliable updates. Reports installed vs latest
   version and clears Claude Code's pinned plugin cache (the thing that leaves
   `/plugin update` silently no-opping after a version bump or force-push),
   then prints the exact reinstall lines. Answers the recurring "update shows
@@ -63,7 +72,7 @@
   fallback, not the normal stop.
 
 ## 0.15.0
-- Context monitoring & clearing for long runs. `/srk-shave --auto` is now
+- Context monitoring & clearing for long runs. `/srk:shave --auto` is now
   context-durable: state lives in git + SHRINK-PLAN.md (not the conversation),
   it checkpoints after every item, and stops at `auto_max_items` (default 8)
   or `auto_context_stop`% context (default 75) with a clear-and-resume prompt.
@@ -72,7 +81,7 @@
   compaction knows where to continue. references/context-management.md.
 
 ## 0.14.0
-- /srk-shave gains `--auto` (alias `all`): work the whole SHRINK-PLAN backlog
+- /srk:shave gains `--auto` (alias `all`): work the whole SHRINK-PLAN backlog
   top-to-bottom, one gated commit per item, halting on the first T2/public-
   surface item, first red gate, or empty plan. Single-item shaves now always
   prompt for the next item (name + tier + est LOC) so you can step through.
@@ -92,7 +101,7 @@
 
 ## 0.12.0
 - Always-on session-start status line (default): `[shrinkage] active · N
-  symbols · <next step>`. Adapts to audit state — prompts to run /srk-audit
+  symbols · <next step>`. Adapts to audit state — prompts to run /srk:audit
   when none exists, shows open SHRINK-PLAN.md items, or flags a stale plan
   when code moved on. Silence with quiet_startup. Audit stamps map-fp; shave
   updates the plan so it stays current.
@@ -122,7 +131,7 @@
   scoreboard doc/config exclusion fix, Copilot adapter refresh
 
 ## 0.6.x
-- Plugin + self-hosted marketplace (/srk- namespace), GSD-style terse output
+- Plugin + self-hosted marketplace (/srk: namespace), GSD-style terse output
 
 ## 0.5.0
 - Initial full skill: codemap (7 languages), safety model, consolidation

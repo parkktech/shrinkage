@@ -303,17 +303,17 @@ def _audit_tail(root, map_fp):
     if not plan.exists():
         plan = root / "SHRINK-PLAN.md"
     if not plan.exists():
-        return "no audit yet — run /srk-audit to find safe reductions"
+        return "no audit yet — run /srk:audit to find safe reductions"
     try:
         text = plan.read_text(encoding="utf-8")
     except OSError:
-        return "run /srk-audit to refresh SHRINK-PLAN.md"
+        return "run /srk:audit to refresh SHRINK-PLAN.md"
     planned = re.search(r"map-fp:\s*(\w+)", text)
-    stale = " (stale — /srk-audit to refresh)" if (planned and map_fp and planned.group(1) != map_fp) else ""
+    stale = " (stale — /srk:audit to refresh)" if (planned and map_fp and planned.group(1) != map_fp) else ""
     open_text = re.split(r"^#+\s+Done\b", text, maxsplit=1, flags=re.I | re.M)[0]
     open_items = _open_plan_items(text)
     if not open_items:
-        return "SHRINK-PLAN.md clean — /srk-audit to rescan"
+        return "SHRINK-PLAN.md clean — /srk:audit to rescan"
     # Tier mix and headline savings — from OPEN rows only (exclude the Done section).
     tiers = re.findall(r"\|\s*\d+\s*\|[^\n]*?\bT([0-3])\b", open_text)
     tier_bits = ""
@@ -324,7 +324,7 @@ def _audit_tail(root, map_fp):
     est = re.search(r"est-savings:\s*-?(\d+)", text)
     savings = f" · ~{est.group(1)} LOC to reclaim" if est else ""
     return (f"SHRINK-PLAN.md: {open_items} open{tier_bits}{savings}{stale} — "
-            f"/srk-shave 1 to start")
+            f"/srk:shave 1 to start")
 
 
 def _open_plan_items(text):

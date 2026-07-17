@@ -9,10 +9,10 @@ their acceptance tests. n=1 per arm — directional, not conclusive.
 ## Arms
 
 - **A — GSD + Shrinkage** — full tooling: `/gsd-new-project` phase loop +
-  `/srk-gate` before code, `/srk-score` after.
+  `/srk:gate` before code, `/srk:score` after.
 - **B — Vanilla** — plain Claude Code, no GSD, no Shrinkage.
-- **C — Shrinkage only** — plain Claude Code + Shrinkage (`/srk-onboard`,
-  `/srk-gate`, `/srk-score`), no GSD.
+- **C — Shrinkage only** — plain Claude Code + Shrinkage (`/srk:onboard`,
+  `/srk:gate`, `/srk:score`), no GSD.
 
 ## Results
 
@@ -58,7 +58,7 @@ generation (output tokens are within 5%) — which is why it's optimizable.*
    Output tokens (39.9k) were within 5% of vanilla (38.0k) — the model didn't
    do more work, it *read* more (3.5× cache reads: the codemap, rules, and
    safety model). The ~$9 premium over vanilla is loading Shrinkage's own
-   context, concentrated in the `/srk-gate` (8%) and `/srk-score` (3%)
+   context, concentrated in the `/srk:gate` (8%) and `/srk:score` (3%)
    subagents. That overhead is optimizable (run inline, cheaper model for
    simple subagents).
 

@@ -48,7 +48,7 @@ STOP and report: items done this run, cumulative net LOC, and the resume line.
 Tell the user, verbatim, how to continue:
 
 > Context is filling. Progress is committed and SHRINK-PLAN.md is up to date.
-> Run **`/clear`** (or `/compact`), then **`/srk-shave --auto`** to resume —
+> Run **`/clear`** (or `/compact`), then **`/srk:shave --auto`** to resume —
 > it picks up from the remaining open plan items. Nothing is lost.
 
 Prefer `/clear` for a clean slate on a fresh batch; `/compact` if you want to
@@ -59,12 +59,12 @@ unless the plan reads stale (code moved on).
 ## PreCompact breadcrumb
 
 The plugin ships a PreCompact hook that writes the resume state into the
-compaction summary (`shrinkage: N/M plan items done · resume /srk-shave
+compaction summary (`shrinkage: N/M plan items done · resume /srk:shave
 --auto`), so even an *automatic* compaction mid-run leaves the next context
 knowing exactly where to continue.
 
 ## Audit is naturally context-light
 
-`/srk-audit` fans work out to read-only subagents (each its own context) and
+`/srk:audit` fans work out to read-only subagents (each its own context) and
 keeps only their structured findings on the main thread — so auditing a huge
 repo doesn't itself blow context. The shave loop is where budgeting matters.

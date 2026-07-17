@@ -60,7 +60,7 @@ def test_startup_line_audit_lifecycle(repo):
     (repo / "m.py").write_text("def a():\n    return b()\n\ndef b():\n    return 1\n")
     # 1) no audit yet -> prompt to run it
     code, out = run("codemap.py", "refresh", "--auto", cwd=repo)
-    assert "no audit yet" in out and "/srk-audit" in out
+    assert "no audit yet" in out and "/srk:audit" in out
     # 2) fresh plan with matching fingerprint -> open item count
     fp = None
     import re as _re
@@ -77,7 +77,7 @@ def test_startup_line_audit_lifecycle(repo):
     (repo / "m.py").write_text((repo / "m.py").read_text() + "\ndef c():\n    return 2\n")
     run("codemap.py", "refresh", cwd=repo)  # task-time rebuild -> new map fp
     code, out = run("codemap.py", "refresh", "--auto", cwd=repo)
-    assert "stale" in out and "/srk-audit" in out
+    assert "stale" in out and "/srk:audit" in out
     # 4) quiet_startup silences it
     (repo / ".claude" / "shrinkage.json").write_text('{"quiet_startup": true}')
     code, out = run("codemap.py", "refresh", "--auto", cwd=repo)

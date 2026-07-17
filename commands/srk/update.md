@@ -34,5 +34,5 @@ say so and stop — no reinstall needed.
 <next>
 Next:
 • /plugin install shrinkage@parkktech   — after the cache clear (then relaunch)
-• /srk-audit                       — once updated, put it to work
+• /srk:audit                       — once updated, put it to work
 </next>

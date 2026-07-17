@@ -36,6 +36,6 @@ not load safety-model.md here. Ambiguous calls:
 
 <next>
 Next:
-• implement the chosen rung, then /srk-score
-• /srk-query <term>   — if you need more candidates first
+• implement the chosen rung, then /srk:score
+• /srk:query <term>   — if you need more candidates first
 </next>

@@ -6,7 +6,7 @@ allowed-tools: [Read]
 ---
 
 <objective>
-Give the user a short, clean map of every /srk-* command — top to bottom, in
+Give the user a short, clean map of every /srk:* command — top to bottom, in
 the order they'd actually reach for them (set up, understand, reduce, measure,
 maintain). Default view is terse; detail is opt-in.
 </objective>
@@ -16,7 +16,7 @@ No heavy logic. Read the argument and respond:
 
 - **bare** (no args): print <reference> verbatim, inside a fenced code block so
   the columns stay aligned. Nothing else — no preamble, no per-command essay.
-- **<command>** (e.g. `shave`, `/srk-shave`): print that one command's line
+- **<command>** (e.g. `shave`, `/srk:shave`): print that one command's line
   plus its "when to use" note from <details>. Unknown name → fall back to the
   full list.
 - **--full**: print <reference>, then the "when to use" notes from <details>.
@@ -30,27 +30,27 @@ screen, not open-mic night).
 Shrinkage — write less, delete safely, keep it working.
 
 Setup
-  /srk-onboard    one-time setup: build the map, set your preferences
+  /srk:onboard    one-time setup: build the map, set your preferences
 
 Understand
-  /srk-map        build or refresh the token-lean codemap
-  /srk-query      find symbols in the map instead of grepping the tree
+  /srk:map        build or refresh the token-lean codemap
+  /srk:query      find symbols in the map instead of grepping the tree
 
 Before adding code
-  /srk-gate       reuse gate: extend what exists before writing new code
+  /srk:gate       reuse gate: extend what exists before writing new code
 
 Take weight off
-  /srk-audit      scan the repo -> ranked SHRINK-PLAN.md of safe cuts
-  /srk-shave      execute a cut: evidence chain + atomic commit per change
+  /srk:audit      scan the repo -> ranked SHRINK-PLAN.md of safe cuts
+  /srk:shave      execute a cut: evidence chain + atomic commit per change
 
 Watch the scale
-  /srk-score      this change's net-LOC scoreboard (+ optional PR badge)
-  /srk-trend      the repo's weight over time; your shrink streak
+  /srk:score      this change's net-LOC scoreboard (+ optional PR badge)
+  /srk:trend      the repo's weight over time; your shrink streak
 
 Housekeeping
-  /srk-config     view or change any setting
-  /srk-update     update the plugin to the latest version
-  /srk-help       this screen — add a command for detail, --full for more
+  /srk:config     view or change any setting
+  /srk:update     update the plugin to the latest version
+  /srk:help       this screen — add a command for detail, --full for more
 
 Typical flow:  onboard once -> gate before you add -> shave to remove -> score to prove it.
 Here, shrinkage is the whole point.
@@ -73,6 +73,6 @@ Per-command "when to use" (for --full or a single-command lookup):
 
 <next>
 Next:
-• /srk-onboard        — if this repo isn't set up yet
-• /srk-gate "<task>"  — before you write the next feature
+• /srk:onboard        — if this repo isn't set up yet
+• /srk:gate "<task>"  — before you write the next feature
 </next>

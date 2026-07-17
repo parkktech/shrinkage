@@ -30,8 +30,8 @@ as conscious choices, user ready to work.
    `codemap.py refresh` so map location/gitignore reflect the choices.
 4. GSD project detected → point out the auto-integration (map + api-map.json
    in `.planning/intel/`, SHRINK-PLAN.md target, SUMMARY.md scoreboard lines).
-5. Print the quickstart: `/srk-gate "<task>"` before coding, `/srk-score`
-   after, `/srk-audit` when they want the backlog, `/srk-trend` to watch the
+5. Print the quickstart: `/srk:gate "<task>"` before coding, `/srk:score`
+   after, `/srk:audit` when they want the backlog, `/srk:trend` to watch the
    ratchet move.
 </process>
 
@@ -43,6 +43,6 @@ as conscious choices, user ready to work.
 
 <next>
 Next:
-• /srk-gate "<task>"  — before writing code
-• /srk-audit          — find safe cleanup opportunities across the repo
+• /srk:gate "<task>"  — before writing code
+• /srk:audit          — find safe cleanup opportunities across the repo
 </next>

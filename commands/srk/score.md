@@ -27,7 +27,7 @@ block / GSD SUMMARY.md / trend log).
 
 <next>
 Next:
-• /srk-score --pr     — emit the PR-description block
-• /srk-trend          — see cumulative weight + shrink streak
-• /srk-shave          — if the diff left removable code behind
+• /srk:score --pr     — emit the PR-description block
+• /srk:trend          — see cumulative weight + shrink streak
+• /srk:shave          — if the diff left removable code behind
 </next>

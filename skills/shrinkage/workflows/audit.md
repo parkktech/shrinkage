@@ -69,7 +69,7 @@ phases) consuming the plan.
    `## Deferred (T2)` section where each entry carries its deprecation-cycle
    proposal. This file is the audit's product and the shave's input.
 
-7. **Offer execution:** top T0/T1 items via `/srk-shave <target>` —
+7. **Offer execution:** top T0/T1 items via `/srk:shave <target>` —
    or, in a GSD project, as planned phases so executors run them with fresh
    contexts and the verify step checks the scoreboard.
 
@@ -80,7 +80,7 @@ phases) consuming the plan.
    subagents; only the ranked, verified plan is written to disk.
 </process>
 
-End with a terse result line + a **Next** menu of 1-3 `/srk-` commands (see the command file's <next> block). No wall of prose.
+End with a terse result line + a **Next** menu of 1-3 `/srk:` commands (see the command file's <next> block). No wall of prose.
 
 <success_criteria>
 - [ ] All six sweeps ran (or skipped with stated reason)

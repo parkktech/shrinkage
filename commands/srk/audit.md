@@ -23,11 +23,11 @@ brief in `$SKILL/agents/shrink-auditor.md`. Required reading:
 - [ ] All six sweeps ran (dead-symbol, duplication, structure, flag, platform, noise)
 - [ ] Every entry: catalog #, tier, net-LOC estimate, effort, confidence
 - [ ] Zero candidates ranked on map evidence alone
-- [ ] SHRINK-PLAN.md written; execution offered via /srk-shave or GSD phases
+- [ ] SHRINK-PLAN.md written; execution offered via /srk:shave or GSD phases
 </success_criteria>
 
 <next>
 Next:
-• /srk-shave 1 — execute the plan's #1 item safely
-• /srk-trend          — track the ratchet over time
+• /srk:shave 1 — execute the plan's #1 item safely
+• /srk:trend          — track the ratchet over time
 </next>

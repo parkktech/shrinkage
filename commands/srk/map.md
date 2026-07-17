@@ -26,7 +26,7 @@ sync to `.planning/intel/` automatically — confirm the sync line.
 
 <next>
 Next:
-• /srk-gate "<task>"  — before writing code for a feature/fix
-• /srk-audit          — read-only scan → ranked SHRINK-PLAN.md of safe cleanups
-• /srk-onboard        — if settings aren't set yet
+• /srk:gate "<task>"  — before writing code for a feature/fix
+• /srk:audit          — read-only scan → ranked SHRINK-PLAN.md of safe cleanups
+• /srk:onboard        — if settings aren't set yet
 </next>
