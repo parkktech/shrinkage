@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.22.0
+- Lifetime total — the real cumulative number. `/srk:trend` (and
+  `diffstat.py --total`) now sums EVERY shave commit in the repo's history,
+  found by the `shrink:` / `catalog:` markers from the §6 commit template, into
+  one figure: total removed vs added, net app/test, a removed/merged/cleaned
+  breakdown from each commit's catalog tag, and the date span. Previously the
+  trend showed only changes someone had manually `/srk:score --log`'d, so a big
+  multi-commit cleanup read as "just the last couple changes." The number now
+  reflects all of it, no logging required. `/srk:score` stays per-change (use
+  `<base>..HEAD` for a committed range); `/srk:trend` is the lifetime view.
+- README: document `--full-send` (alias for `/srk:shave --auto --dangerous`).
+
 ## 0.21.1
 - Fix the update trap. `/srk:update` (selfupdate.py) no longer deletes the
   plugin cache — deleting it stranded Claude Code's install *registration*,

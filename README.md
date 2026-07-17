@@ -144,6 +144,7 @@ does **not** cut. Safe to run anytime.
 /srk:shave 1                  # item #1 from SHRINK-PLAN.md, then prompts for the next
 /srk:shave --auto             # work the WHOLE backlog until it needs you
 /srk:shave --auto --dangerous # full send: execute T2/public-surface items too
+/srk:shave --full-send        # alias for --auto --dangerous
 /srk:shave src/billing        # sweep one folder
 /srk:shave src/Invoice.php    # sweep one file
 /srk:shave                    # no target: the files in your current diff
@@ -161,9 +162,10 @@ instantly if anything breaks. Three ways to work the backlog:
   work complete," not a failure. It's **context-durable**: each item runs in a
   fresh subagent, so a long run finishes in one session and survives a `/clear`
   — no manual clearing needed.
-- **`--auto --dangerous`** ("full send") — executes the human-judgment items
-  too: direct removal of public surface, still one tested, atomic, revertible
-  commit each, still hard-stopping on a red suite. The explicit escape hatch —
+- **`--auto --dangerous`** (alias **`--full-send`**) — executes the
+  human-judgment items too: direct removal of public surface, still one tested,
+  atomic, revertible commit each, still hard-stopping on a red suite. The escape
+  hatch —
   loud, opt-in, and off when a team sets `allow_dangerous: false`.
 
 Then:

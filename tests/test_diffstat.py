@@ -119,3 +119,17 @@ def test_trend_reports_pending_deprecations(repo):
         "# Shims\n- [ ] old_name -> new_name (remove 2026-09)\n- [ ] legacy() (remove 2026-10)\n- [x] done()\n")
     code, out = run("diffstat.py", "--trend", cwd=repo)
     assert "pending removal: 2" in out, out
+
+
+def test_total_sums_all_shave_commits(repo):
+    (repo / "app.py").write_text("".join(f"x{i} = {i}\n" for i in range(20)))
+    commit(repo)                                                        # baseline (not a shave)
+    (repo / "app.py").write_text("".join(f"x{i} = {i}\n" for i in range(15)))
+    commit(repo, "shrink: remove dead\n\ncatalog: C6, tier T1\nnet LOC: -5")   # −5, removed
+    (repo / "app.py").write_text("".join(f"x{i} = {i}\n" for i in range(11)))
+    commit(repo, "shrink: dedup block\n\ncatalog: C9, tier T1\nnet LOC: -4")    # −4, merged
+    code, out = run("diffstat.py", "--total", cwd=repo)
+    assert code == 0, out
+    assert "2 shave commits" in out, out
+    assert "app -9" in out, out                        # summed across BOTH commits, not just the last
+    assert "1 removed" in out and "1 merged" in out, out

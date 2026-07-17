@@ -200,34 +200,92 @@ def scoreboard(ref, app_ins, app_del, test_ins, test_del, files,
         print(col(DIM, "  " + q))
 
 
-def show_trend():
-    logp = Path(".claude/shrinkage-log.jsonl")
-    if not logp.exists():
-        print("no trend log yet — run diffstat.py --log after changes to start one")
+_SHAVE_GREP = ["--grep=^shrink:", "--grep=catalog:"]  # shave-commit markers (safety-model §6 template)
+
+
+def _commit_loc(sha):
+    """(app_ins, app_del, test_ins, test_del) for one commit vs its parent."""
+    ai = ad = ti = td = 0
+    for line in git("show", "--numstat", "--no-renames", "--format=", sha).strip().splitlines():
+        if "\t" not in line:
+            continue
+        add, rm, path = line.split("\t", 2)
+        if add == "-" or NON_CODE.search(path):
+            continue
+        a, r = int(add), int(rm)
+        if TEST_PATH.search(path):
+            ti += a; td += r
+        else:
+            ai += a; ad += r
+    return ai, ad, ti, td
+
+
+def history_total():
+    """Sum EVERY shave commit in history (found by the shrink:/catalog: markers),
+    with a removed/merged/cleaned tally from each commit's catalog tag. This is
+    the real lifetime number — it does not depend on anyone having run --log.
+    Returns the totals dict, or None when no shave commits exist."""
+    shas = git("log", *_SHAVE_GREP, "--format=%H").split()
+    if not shas:
+        return None
+    ai = ad = ti = td = 0
+    buckets = {"removed": 0, "merged": 0, "cleaned": 0}
+    for sha in shas:
+        a, d, t, u = _commit_loc(sha)
+        ai += a; ad += d; ti += t; td += u
+        m = re.search(r"catalog:\s*C(\d+)", git("show", "-s", "--format=%B", sha))
+        if m and ("C" + m.group(1)) in _BUCKET:
+            buckets[_BUCKET["C" + m.group(1)]] += 1
+    return {"n": len(shas), "app_ins": ai, "app_del": ad, "test_ins": ti,
+            "test_del": td, "buckets": buckets, "first": shas[-1], "last": shas[0]}
+
+
+def print_total(t=None):
+    t = t if t is not None else history_total()
+    if not t:
+        print("no shave commits found in history (looked for the 'shrink:' / "
+              "'catalog:' commit markers). Score a range instead: "
+              "diffstat.py <base>..HEAD")
         return
-    entries = [json.loads(l) for l in logp.read_text(encoding="utf-8").splitlines() if l.strip()]
-    app = sum(e["net_app"] for e in entries)
-    test = sum(e["net_test"] for e in entries)
-    streak = 0
-    for e in reversed(entries):
-        if e["net_app"] >= 0:
-            break
-        streak += 1
-    print(col(BOLD, "Shrinkage trend"))
-    print(f"  {col(GREEN, 'cumulative app ' + signed(app))} lines  ·  "
-          f"test {signed(test)}  ·  {len(entries)} scored changes  ·  "
-          + col(GREEN, f"shrink streak {streak}"))
-    for e in entries[-10:]:
-        print(col(DIM, f"    {e['ts']}  app {signed(e['net_app']):>6}  "
-                       f"test {signed(e['net_test']):>6}  files {e['files']}"))
+    net_app, net_test = t["app_ins"] - t["app_del"], t["test_ins"] - t["test_del"]
+    b = t["buckets"]
+    print(col(BOLD, f"Shrinkage lifetime · {t['n']} shave commits"))
+    print(f"  {col(GREEN, 'removed')}  {col(GREEN, format(t['app_del'], ','))} lines   "
+          + col(DIM, f"added {t['app_ins']:,}"))
+    print(f"  {col(GREEN, '▼')} net    {col(GREEN, 'app ' + format(net_app, '+,'))}  ·  "
+          f"test {format(net_test, '+,')}")
+    print("  " + col(CYAN, "by type") + "  " + " · ".join(
+        col(GREEN, f"{b[k]} {k}") for k in ("removed", "merged", "cleaned")))
+    since = git("show", "-s", "--format=%ad", "--date=short", t["first"]).strip()
+    print(col(DIM, f"  since {since}  ({t['first'][:9]}..{t['last'][:9]})"))
+
+
+def show_trend():
+    total = history_total()
+    print_total(total)  # the real lifetime number (or a 'no shave commits' note)
+    logp = Path(".claude/shrinkage-log.jsonl")
+    entries = ([json.loads(l) for l in logp.read_text(encoding="utf-8").splitlines() if l.strip()]
+               if logp.exists() else [])
+    if entries:
+        streak = 0
+        for e in reversed(entries):
+            if e["net_app"] >= 0:
+                break
+            streak += 1
+        print(col(DIM, f"\nrecently scored ({len(entries)} in the trend log · streak {streak}):"))
+        for e in entries[-10:]:
+            print(col(DIM, f"    {e['ts']}  app {signed(e['net_app']):>7}  "
+                           f"test {signed(e['net_test']):>6}  files {e['files']}"))
     dep = Path("DEPRECATIONS.md")
     if dep.exists():
         pending = sum(1 for l in dep.read_text(encoding="utf-8").splitlines()
                       if l.strip().startswith("- [ ]"))
         if pending:
             print(col(YELLOW, f"  deprecation shims pending removal: {pending} (DEPRECATIONS.md)"))
-    if app < 0:
-        q = settings.quip(".", "shrunk", net=app)
+    net = ((total["app_ins"] - total["app_del"]) if total
+           else sum(e["net_app"] for e in entries))
+    if net < 0:
+        q = settings.quip(".", "shrunk", net=net)
         if q:
             print(col(DIM, "  " + q))
 
@@ -236,6 +294,9 @@ def main():
     argv = sys.argv[1:]
     if "--trend" in argv:
         show_trend()
+        return
+    if "--total" in argv:
+        print_total()
         return
     pos = [a for a in argv if not a.startswith("--")]
     ref = pos[0] if pos else "HEAD"
