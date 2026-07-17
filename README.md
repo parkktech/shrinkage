@@ -36,33 +36,36 @@ agent one of those devs.
 
 ---
 
-## Install (Claude Code)
+## Get started (30 seconds, then never again)
+
+In Claude Code:
 
 ```
 /plugin marketplace add parkktech/shrinkage
 /plugin install srk@parkktech
 ```
 
-You get the `shrinkage` skill (auto-triggers on coding tasks) and the commands
-below. Then, in any repo: **`/srk:onboard`** builds the map and sets your
-preferences.
+**That's the whole setup.** From your next session, Shrinkage runs itself in
+every repo:
 
-Optional, for exact parsing (regex fallback works without it):
-`pip install tree-sitter tree-sitter-javascript tree-sitter-typescript tree-sitter-php`
+- The codemap builds automatically when a session opens (first time in a repo
+  you'll see one line: `[shrinkage] active — codemap built…`).
+- Coding tasks are guided automatically — extend-don't-add, scored diffs.
+- Type `/srk:` anytime to drive manually (the commands are listed below).
 
-For **GitHub Copilot**, and other runtimes, see [Other runtimes](#other-runtimes).
+Nothing to configure, nothing to run per-repo.
 
----
+<details>
+<summary><b>Optional extras</b> (skip these unless you want them)</summary>
 
-## Zero setup
+- `/srk:onboard` — set preferences: strict gate, team-shared map, humor off.
+- Live status under the input box (`srk ▼-123 LOC · streak 3`): run
+  `/statusline` and point it at `skills/shrinkage/scripts/statusline.py`.
+- Exact parsing (regex fallback already works):
+  `pip install tree-sitter tree-sitter-javascript tree-sitter-typescript tree-sitter-php`
+- GitHub Copilot instead of Claude Code: see [Other runtimes](#other-runtimes).
 
-Install the plugin and you're done: a session-start hook builds/refreshes the
-codemap automatically in any repo with code (silently skips everything else),
-and the skill triggers itself on coding tasks — the first build announces
-itself with a one-line tip in the session. `/srk:onboard` exists only to set
-preferences. Optional: point your status line at `scripts/statusline.py` for
-an always-visible `srk ▼-123 LOC · streak N` (or the getting-started nudge)
-under the input box.
+</details>
 
 ## Composer frameworks: Laravel, Magento 2, Drupal
 
