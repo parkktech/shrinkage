@@ -245,6 +245,7 @@ reduction engine shines hardest on existing codebases, per the flow above.
 | `/srk-audit [dir]` | ranked reduction backlog → `SHRINK-PLAN.md` |
 | `/srk-config` | settings: gate, map policy, PR scoreboard, budget, comedy |
 | `/srk-update` | check version + clear the stale plugin cache for a clean update |
+| `/srk-help [command]` | every command in the order you'd use them |
 
 ---
 

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.20.0
+- New `/srk-help` — a short, clean command reference in the order you'd use them
+  (setup → understand → reduce → measure → maintain), mirroring GSD's
+  `/gsd-help`. `/srk-help <command>` drills into one command; `/srk-help --full`
+  adds the "when to use" notes. Humor on by default.
+
 ## 0.19.0
 - Commands now display as `/srk-map`, `/srk-shave`, `/srk-audit`, … (GSD-style
   short prefix) instead of the older `/srk:shave`. Mechanism: command files

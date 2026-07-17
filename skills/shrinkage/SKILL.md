@@ -131,7 +131,7 @@ planning. GSD's project-skills discovery loads `rules/*.md` automatically.
 
 Installed automatically with the plugin (`/plugin marketplace add
 parkktech/shrinkage` → `/plugin install shrinkage@parkktech`); standalone users can
-instead copy `commands/*.md` into `.claude/commands/`:
+instead copy the `commands/srk/` folder into `.claude/commands/`:
 
 | Command | Does | Workflow |
 |---|---|---|
@@ -145,6 +145,7 @@ instead copy `commands/*.md` into `.claude/commands/`:
 | `/srk-audit [dir]` | ranked shrink backlog → SHRINK-PLAN.md | workflows/audit.md |
 | `/srk-config` | all settings, comedy included | — |
 | `/srk-update` | check version + clear stale plugin cache for a clean update | — |
+| `/srk-help [command]` | usage guide, in workflow order | — |
 
 Extra signals for shave/audit: `codemap.py dupes` (same-name symbols),
 `codemap.py clones` (renamed copy-paste via normalized shingles), and
