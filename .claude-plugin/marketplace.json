@@ -13,5 +13,8 @@
       "category": "development",
       "tags": ["code-quality", "refactoring", "dead-code", "gsd"]
     }
-  ]
+  ],
+  "renames": {
+    "srk": "shrinkage"
+  }
 }

@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.20.1
+- marketplace.json: add a top-level `renames` map (`{"srk": "shrinkage"}`) so
+  Claude Code auto-migrates users who still have the old `srk@parkktech` enabled
+  over to `shrinkage@parkktech`, instead of throwing "Plugin srk not found in
+  marketplace parkktech" on load. Requires Claude Code v2.1.193+; older versions
+  ignore it (harmless). This is the official fix for the post-rename load error.
+- Note: the recurring "update won't apply" is Claude Code's pinned-plugin-cache
+  bug (issues #14061/#16866/#29074) — `/plugin update` and `/reload-plugins`
+  don't clear `~/.claude/plugins/cache/<marketplace>`. Reliable refresh =
+  delete `~/.claude/plugins/marketplaces/parkktech` + `.../cache/parkktech`,
+  re-add, reinstall, then fully restart Claude Code. Documented in RELEASING.md.
+
 ## 0.20.0
 - New `/srk-help` — a short, clean command reference in the order you'd use them
   (setup → understand → reduce → measure → maintain), mirroring GSD's

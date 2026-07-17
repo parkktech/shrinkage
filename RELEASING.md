@@ -51,9 +51,22 @@ users to run `/srk-update` (which clears the cache) and then reinstall.
 ## How users get the new version
 
 `/plugin marketplace update parkktech` refreshes the catalog but leaves the
-installed copy pinned. To actually move a client to the new version:
-`/plugin uninstall shrinkage@parkktech` → `/plugin install shrinkage@parkktech` → relaunch.
-This is expected Claude Code behavior, not a bug in this repo.
+installed copy pinned — and `/plugin update` / `/reload-plugins` do NOT clear
+Claude Code's on-disk plugin cache (upstream bug: issues #14061, #16866,
+#29074). A TUI-only uninstall/reinstall therefore often re-loads the SAME stale
+version. The reliable reset (Linux client with shell) deletes the cache:
+
+    # 1. Quit Claude Code completely (commands load only at process startup)
+    rm -rf ~/.claude/plugins/marketplaces/parkktech ~/.claude/plugins/cache/parkktech
+    # 2. Relaunch, then in Claude Code:
+    #      /plugin marketplace add parkktech/shrinkage
+    #      /plugin install shrinkage@parkktech
+    # 3. Quit and relaunch once more, then /srk to confirm.
+
+For the `srk`→`shrinkage` rename, `marketplace.json` carries a top-level
+`renames` map so Claude Code v2.1.193+ auto-migrates a stale `srk@parkktech`
+enabled entry to `shrinkage@parkktech`. Older clients clear the dead entry via
+`/plugin` → Errors → Enter to resolve.
 
 ## Version history
 
