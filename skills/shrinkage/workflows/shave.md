@@ -31,13 +31,13 @@ Deleting is part of the feature; this workflow is how deletion earns trust.
    - **nothing** — the files in `git diff --name-only HEAD` (riding along
      with a feature change).
    A number/`--auto` with no SHRINK-PLAN.md present → say so and suggest
-   `/srk:audit` first. Keep a single-item shave scoped — a repo-wide *hunt* is
+   `/srk-audit` first. Keep a single-item shave scoped — a repo-wide *hunt* is
    the audit workflow's job.
 
    ### Interactive vs --auto
    - **Single item / bare** (no `--auto`): do the ONE item, then **prompt for
      the next** — end with "next up: #N `<candidate>` (Tstier, ~N LOC) —
-     `/srk:shave N`, or `/srk:shave --auto` to run the rest." One reviewable
+     `/srk-shave N`, or `/srk-shave --auto` to run the rest." One reviewable
      step at a time; you stay in the loop.
    - **`--auto`**: don't prompt between items — keep going until a stop
      condition. This is the "set it running on the backlog" mode.
@@ -80,8 +80,8 @@ Deleting is part of the feature; this workflow is how deletion earns trust.
        #k <candidate> (T2, ~<LOC>) — <recommended: confirm / deprecation cycle>
        ...
    To continue:
-     • /srk:shave <k>            — confirm this one (deprecation cycle for T2)
-     • /srk:shave --auto --dangerous  — execute ALL remaining autonomously
+     • /srk-shave <k>            — confirm this one (deprecation cycle for T2)
+     • /srk-shave --auto --dangerous  — execute ALL remaining autonomously
                                         (removes public surface directly; each
                                         commit still tested + revertible)
      • /gsd-plan-phase           — for a plan-routed big merge
@@ -91,7 +91,7 @@ Deleting is part of the feature; this workflow is how deletion earns trust.
    transforms, nothing to do" that reads like a bug.
 
    ### --dangerous ("full send") — explicit escape hatch
-   `/srk:shave --auto --dangerous` (alias `--full-send`) proceeds through T2 and
+   `/srk-shave --auto --dangerous` (alias `--full-send`) proceeds through T2 and
    public-surface items without stopping for confirmation. What it KEEPS (the
    free safety, never dropped): one atomic commit per item, tests green before
    and after or auto-revert, evidence re-verified, and a **hard stop on a red or
@@ -125,7 +125,7 @@ Deleting is part of the feature; this workflow is how deletion earns trust.
    a resume breadcrumb and the loop continues) or, if you prefer a clean batch,
    tell the user:
 
-   > Progress committed, SHRINK-PLAN.md current. `/clear` then `/srk:shave
+   > Progress committed, SHRINK-PLAN.md current. `/clear` then `/srk-shave
    > --auto` resumes from the remaining items — nothing lost.
 
    Manual `/clear` is thus optional (a fresh-batch/review convenience), never
@@ -186,7 +186,7 @@ Deleting is part of the feature; this workflow is how deletion earns trust.
    revealed, suite status, and remaining open plan items.
 </process>
 
-End with a terse result line + a **Next** menu of 1-3 `/srk:` commands (see the command file's <next> block). No wall of prose.
+End with a terse result line + a **Next** menu of 1-3 `/srk-` commands (see the command file's <next> block). No wall of prose.
 
 <success_criteria>
 - [ ] Suite green before, after every transform, and at the end

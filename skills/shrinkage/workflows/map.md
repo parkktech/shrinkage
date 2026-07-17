@@ -44,7 +44,7 @@ read instead of 15k–40k tokens of greps and file dumps per task.
    `refresh` and re-query before concluding anything.
 </process>
 
-End with a terse result line + a **Next** menu of 1-3 `/srk:` commands (see the command file's <next> block). No wall of prose.
+End with a terse result line + a **Next** menu of 1-3 `/srk-` commands (see the command file's <next> block). No wall of prose.
 
 <success_criteria>
 - [ ] Map exists at the correct location and `refresh` reports current

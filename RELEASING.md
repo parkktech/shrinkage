@@ -46,13 +46,13 @@ Releases box — or promote the latest tag to a Release for visibility.
 Force-pushing rewrites commit SHAs and breaks every client's cached plugin
 clone (Claude Code pins the install to a SHA), turning a normal update into a
 stuck-cache reinstall. Always fast-forward. If history ever must change, tell
-users to run `/srk:update` (which clears the cache) and then reinstall.
+users to run `/srk-update` (which clears the cache) and then reinstall.
 
 ## How users get the new version
 
 `/plugin marketplace update parkktech` refreshes the catalog but leaves the
 installed copy pinned. To actually move a client to the new version:
-`/plugin uninstall srk@parkktech` → `/plugin install srk@parkktech` → relaunch.
+`/plugin uninstall shrinkage@parkktech` → `/plugin install shrinkage@parkktech` → relaunch.
 This is expected Claude Code behavior, not a bug in this repo.
 
 ## Version history

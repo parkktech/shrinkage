@@ -1,5 +1,5 @@
 ---
-name: update
+name: srk:update
 description: "Reliably update the srk plugin: check installed vs latest version and clear the stale plugin cache"
 argument-hint: "[--check]"
 allowed-tools: [Bash]
@@ -25,7 +25,7 @@ Then relay the script's output verbatim, and tell the user the two commands to
 finish (the plugin can't invoke `/plugin` itself):
 
   /plugin marketplace add parkktech/shrinkage
-  /plugin install srk@parkktech
+  /plugin install shrinkage@parkktech
 
 …and to **quit and relaunch** Claude Code. If the script reports "up to date",
 say so and stop — no reinstall needed.
@@ -33,6 +33,6 @@ say so and stop — no reinstall needed.
 
 <next>
 Next:
-• /plugin install srk@parkktech   — after the cache clear (then relaunch)
-• /srk:audit                       — once updated, put it to work
+• /plugin install shrinkage@parkktech   — after the cache clear (then relaunch)
+• /srk-audit                       — once updated, put it to work
 </next>

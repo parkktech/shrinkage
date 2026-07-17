@@ -86,7 +86,7 @@ nothing to remove later.
    discipline becomes mechanical, not honor-system.
 </process>
 
-End with a terse result line + a **Next** menu of 1-3 `/srk:` commands (see the command file's <next> block). No wall of prose.
+End with a terse result line + a **Next** menu of 1-3 `/srk-` commands (see the command file's <next> block). No wall of prose.
 
 <success_criteria>
 - [ ] 2–5 candidates listed with extend / not-applicable-because verdicts

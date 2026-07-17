@@ -20,6 +20,6 @@ if log.exists():
     arrow = "▼" if app < 0 else "▲"
     print(f"srk {arrow}{app:+d} LOC · streak {streak}")
 elif Path(".claude/codemap.txt").exists() or Path(".planning/intel/codemap.txt").exists():
-    print("srk: mapped — /srk:gate before code, /srk:score --log after")
+    print("srk: mapped — /srk-gate before code, /srk-score --log after")
 else:
-    print("srk: run /srk:onboard to start shrinkage-optimized coding")
+    print("srk: run /srk-onboard to start shrinkage-optimized coding")

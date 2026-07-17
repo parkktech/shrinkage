@@ -1,5 +1,5 @@
 ---
-name: map
+name: srk:map
 description: "Build or refresh the token-lean codemap; prints detected languages and which rules to load"
 argument-hint: "[--budget N] [--sync-intel]"
 allowed-tools: [Bash, Read]
@@ -26,7 +26,7 @@ sync to `.planning/intel/` automatically — confirm the sync line.
 
 <next>
 Next:
-• /srk:gate "<task>"  — before writing code for a feature/fix
-• /srk:audit          — read-only scan → ranked SHRINK-PLAN.md of safe cleanups
-• /srk:onboard        — if settings aren't set yet
+• /srk-gate "<task>"  — before writing code for a feature/fix
+• /srk-audit          — read-only scan → ranked SHRINK-PLAN.md of safe cleanups
+• /srk-onboard        — if settings aren't set yet
 </next>

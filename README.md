@@ -45,24 +45,26 @@ In Claude Code:
 
 ```
 /plugin marketplace add parkktech/shrinkage
-/plugin install srk@parkktech
+/plugin install shrinkage@parkktech
 ```
 
 **That's the whole setup.** From your next session, Shrinkage runs itself in
 every repo:
 
-- The codemap builds automatically when a session opens (first time in a repo
-  you'll see one line: `[shrinkage] active — codemap built…`).
+- The codemap builds automatically when a session opens, and every session
+  shows one status line — `[shrinkage] active · N symbols · run /srk-audit`,
+  which becomes your open SHRINK-PLAN item count and est. LOC-to-reclaim once
+  you've audited.
 - Coding tasks are guided automatically — extend-don't-add, scored diffs.
-- Type `/srk:` anytime to drive manually (the commands are listed below).
+- Type `/srk-` anytime to drive manually (the commands are listed below).
 
 Nothing to configure, nothing to run per-repo.
 
 <details>
 <summary><b>Optional extras</b> (skip these unless you want them)</summary>
 
-- `/srk:onboard` — set preferences: strict gate, team-shared map, humor off.
-- `/srk:update` — reliable update: checks version, clears the stale plugin
+- `/srk-onboard` — set preferences: strict gate, team-shared map, humor off.
+- `/srk-update` — reliable update: checks version, clears the stale plugin
   cache, hands you the two reinstall lines (fixes "update available but won't
   apply").
 - Live status under the input box (`srk ▼-123 LOC · streak 3`): run
@@ -73,6 +75,23 @@ Nothing to configure, nothing to run per-repo.
 
 </details>
 
+## Updating
+
+```
+/srk-update
+```
+
+Checks your installed version against the latest, clears Claude Code's pinned
+plugin cache (the reason `/plugin marketplace update` can show "update
+available" but never apply), and prints the two reinstall lines to finish:
+
+```
+/plugin install shrinkage@parkktech
+```
+
+…then quit and relaunch. If a version is ever really stuck, clear the cache
+directly in a shell — `rm -rf ~/.claude/plugins/cache/parkktech` — and reinstall.
+
 ## Composer frameworks: Laravel, Magento 2, Drupal
 
 Framework apps are where reuse pays biggest — the platform already has most of
@@ -80,7 +99,7 @@ what you're about to write. Shrinkage reads **Composer's own class index**
 (`vendor/composer/autoload_classmap.php` — no vendor parsing, instant even on
 a 60k-class Magento install), detects your framework from `composer.json`, and:
 
-- **`/srk:query` + `codemap.py vendor <term>`** — before writing anything, the
+- **`/srk-query` + `codemap.py vendor <term>`** — before writing anything, the
   gate sweeps vendor: "does Illuminate/Magento/Drupal core already provide
   this?" Calling code you don't own is the ultimate shrink.
 - **Framework-aware extension ladder** — dedicated rules map changes onto each
@@ -99,14 +118,14 @@ This is Shrinkage's home turf. Three steps:
 
 **1. Map it.** In your repo:
 ```
-/srk:map
+/srk-map
 ```
 Builds the symbol map and reports what languages it found. On a large repo this
 is where the agent stops re-reading everything and starts working from the index.
 
 **2. Audit it.** 
 ```
-/srk:audit
+/srk-audit
 ```
 Runs six read-only evidence sweeps — dead symbols, duplication (same-name **and**
 renamed copy-paste), single-implementer abstractions, expired feature flags,
@@ -117,32 +136,35 @@ does **not** cut. Safe to run anytime.
 
 **3. Shave it.** Point it at what to clean — a plan item, a folder, or a file:
 ```
-/srk:shave 1                  # item #1 from SHRINK-PLAN.md, then prompts for the next
-/srk:shave --auto             # work the WHOLE backlog until it needs you
-/srk:shave --auto --dangerous # full send: execute T2/public-surface items too
-/srk:shave src/billing        # sweep one folder
-/srk:shave src/Invoice.php    # sweep one file
-/srk:shave                    # no target: the files in your current diff
-/srk:shave 1 --dry-run        # show the full plan for item 1, change nothing
+/srk-shave 1                  # item #1 from SHRINK-PLAN.md, then prompts for the next
+/srk-shave --auto             # work the WHOLE backlog until it needs you
+/srk-shave --auto --dangerous # full send: execute T2/public-surface items too
+/srk-shave src/billing        # sweep one folder
+/srk-shave src/Invoice.php    # sweep one file
+/srk-shave                    # no target: the files in your current diff
+/srk-shave 1 --dry-run        # show the full plan for item 1, change nothing
 ```
 Each removal is its own commit with tests green before and after — reverting
-instantly if anything breaks. A single item ends by naming the next one so you
-can step through; **`--auto`** runs the backlog top-to-bottom unattended and
-stops at the first item needing your judgment (a T2/public-surface change), the
-first red gate, or an empty plan — never a rampage of unreviewed commits on a
-live codebase. When it stops, it tells you what got done, why it stopped, and
-your options — a drained T0/T1 backlog reads as "safe work complete," not a
-failure. For the remaining human-judgment items, `--auto --dangerous`
-("full send") executes them too — direct removal of public surface, still one
-tested, atomic, revertible commit each, still hard-stopping on a red suite.
-It's the explicit escape hatch: loud, opt-in, and off-limits when a team sets
-`allow_dangerous: false`. It's also **context-durable**: each item runs in a fresh subagent so the main
-context barely grows, and all progress is committed + tracked in
-SHRINK-PLAN.md. A long backlog runs to completion in one session — no manual
-`/clear` needed (and if context ever does fill, it auto-resumes). Then:
+instantly if anything breaks. Three ways to work the backlog:
+
+- **Step through it** — a single `/srk-shave N` ends by naming the next item,
+  so you review one commit at a time.
+- **`--auto`** — runs the backlog top-to-bottom unattended, one tested atomic
+  commit per item, and stops at the first thing needing your judgment (a
+  T2/public-surface change), a red gate, or an empty plan. When it stops it
+  reports what got done and your options — a drained T0/T1 backlog is "safe
+  work complete," not a failure. It's **context-durable**: each item runs in a
+  fresh subagent, so a long run finishes in one session and survives a `/clear`
+  — no manual clearing needed.
+- **`--auto --dangerous`** ("full send") — executes the human-judgment items
+  too: direct removal of public surface, still one tested, atomic, revertible
+  commit each, still hard-stopping on a red suite. The explicit escape hatch —
+  loud, opt-in, and off when a team sets `allow_dangerous: false`.
+
+Then:
 ```
-/srk:score        # confirm it came out net-negative
-/srk:trend        # watch the codebase shrink over time
+/srk-score        # confirm it came out net-negative
+/srk-trend        # watch the codebase shrink over time
 ```
 
 ### The safety model (why it won't break your stuff)
@@ -162,12 +184,12 @@ refuse it. Full detail: `skills/shrinkage/references/safety-model.md`.
 ## Write less as you go (new work)
 
 ```
-/srk:gate "add CSV export to the reports page"
+/srk-gate "add CSV export to the reports page"
 ```
 Before writing code, the gate pulls candidate symbols from the map, decides
 *extend-or-justify* for each, and proposes the smallest diff on the extension
 ladder — so new files are the justified exception, not the reflex. Then implement,
-and `/srk:score` to grade the diff.
+and `/srk-score` to grade the diff.
 
 ---
 
@@ -213,15 +235,16 @@ reduction engine shines hardest on existing codebases, per the flow above.
 
 | Command | Does |
 |---|---|
-| `/srk:onboard` | one-shot setup: build the map, capture preferences |
-| `/srk:map` | build/refresh the codemap, detect languages |
-| `/srk:query <term>` | find existing symbols at map cost, not grep cost |
-| `/srk:gate <task>` | reuse gate before writing code |
-| `/srk:score [--pr] [--log]` | the scoreboard (app vs test LOC, symbols) |
-| `/srk:trend` | cumulative code weight + shrink streak |
-| `/srk:shave [target]` | safe subtraction pass on existing code |
-| `/srk:audit [dir]` | ranked reduction backlog → `SHRINK-PLAN.md` |
-| `/srk:config` | settings: gate, map policy, PR scoreboard, budget, comedy |
+| `/srk-onboard` | one-shot setup: build the map, capture preferences |
+| `/srk-map` | build/refresh the codemap, detect languages |
+| `/srk-query <term>` | find existing symbols at map cost, not grep cost |
+| `/srk-gate <task>` | reuse gate before writing code |
+| `/srk-score [--pr] [--log]` | the scoreboard (app vs test LOC, symbols) |
+| `/srk-trend` | cumulative code weight + shrink streak |
+| `/srk-shave [N \| --auto [--dangerous] \| path]` | safe subtraction pass; `--auto` works the whole backlog, `--dangerous` full-sends |
+| `/srk-audit [dir]` | ranked reduction backlog → `SHRINK-PLAN.md` |
+| `/srk-config` | settings: gate, map policy, PR scoreboard, budget, comedy |
+| `/srk-update` | check version + clear the stale plugin cache for a clean update |
 
 ---
 
@@ -230,12 +253,26 @@ reduction engine shines hardest on existing codebases, per the flow above.
 `.claude/shrinkage.json`, all optional:
 
 ```json
-{"gate": "soft", "commit_map": false, "pr_scoreboard": false, "budget": 4000, "humor": true}
+{
+  "gate": "soft",
+  "commit_map": false,
+  "pr_scoreboard": false,
+  "budget": 4000,
+  "humor": true,
+  "quiet_startup": false,
+  "auto_max_items": 0,
+  "auto_context_stop": 75,
+  "allow_dangerous": true
+}
 ```
 
-`gate: "hard"` = confirm before new files/modules. `commit_map: true` = share the
-map with the team instead of gitignoring it. `humor: false` = the tools stop
-cracking jokes.
+- `gate: "hard"` — confirm before new files/modules.
+- `commit_map: true` — share the map with the team instead of gitignoring it.
+- `humor: false` — the tools stop cracking jokes.
+- `quiet_startup: true` — suppress the session-start status line.
+- `auto_max_items` — optional review cap for `/srk-shave --auto` (0 = run to completion).
+- `auto_context_stop` — context-% fallback that pauses `--auto` (subagent dispatch usually keeps it from mattering).
+- `allow_dangerous: false` — team kill-switch that refuses `/srk-shave --auto --dangerous`.
 
 ---
 

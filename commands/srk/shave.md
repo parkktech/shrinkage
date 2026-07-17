@@ -1,5 +1,5 @@
 ---
-name: shave
+name: srk:shave
 description: "Safe subtraction pass: remove/consolidate code with evidence chains, atomic commits, and zero behavior change"
 argument-hint: "[plan item # | --auto [--dangerous] | dir | file] [--dry-run]"
 allowed-tools: [Bash, Read, Grep, Edit, Write, Agent]
@@ -41,8 +41,8 @@ got done + why it stopped + the two continue options (never a bare '0 done').
 
 <next>
 Next:
-• /srk:shave <next #>  — the item just named (one more reviewable step)
-• /srk:shave --auto    — run the rest of the backlog until it needs you
-• /srk:shave --auto --dangerous — full send: execute T2/public items too (risky)
-• /srk:score           — confirm the shave came out net-negative
+• /srk-shave <next #>  — the item just named (one more reviewable step)
+• /srk-shave --auto    — run the rest of the backlog until it needs you
+• /srk-shave --auto --dangerous — full send: execute T2/public items too (risky)
+• /srk-score           — confirm the shave came out net-negative
 </next>

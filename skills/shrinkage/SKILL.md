@@ -1,6 +1,6 @@
 ---
 name: shrinkage
-description: Write less, better code by extending what exists instead of adding new code — and safely remove code the repo no longer needs — guided by a token-lean symbol map. Use this skill whenever writing, modifying, refactoring, planning, reviewing, or cleaning up code in an existing codebase — adding a feature, fixing a bug, implementing an endpoint, extending a class, planning a GSD phase, hunting dead code or duplication, or any task that will produce a diff. Also use for any /srk:* or srk command, or when the user mentions shrinkage, reducing code, code cleanup, dead code, duplication, keeping diffs small, backwards compatibility during refactors, code maps, codebase intelligence, or token-efficient exploration. Not needed for brand-new empty projects or single-file throwaway scripts.
+description: Write less, better code by extending what exists instead of adding new code — and safely remove code the repo no longer needs — guided by a token-lean symbol map. Use this skill whenever writing, modifying, refactoring, planning, reviewing, or cleaning up code in an existing codebase — adding a feature, fixing a bug, implementing an endpoint, extending a class, planning a GSD phase, hunting dead code or duplication, or any task that will produce a diff. Also use for any /srk-* or srk command, or when the user mentions shrinkage, reducing code, code cleanup, dead code, duplication, keeping diffs small, backwards compatibility during refactors, code maps, codebase intelligence, or token-efficient exploration. Not needed for brand-new empty projects or single-file throwaway scripts.
 ---
 
 # Shrinkage
@@ -111,10 +111,10 @@ with supported code (silent no-op elsewhere). Installing the plugin IS the
 setup; the skill auto-triggers on coding tasks from that point. Every session
 prints one compact status line so shrinkage's state is always visible:
 `[shrinkage] active · N symbols · <next step>` — where the next step adapts:
-"no audit yet — run /srk:audit" when no SHRINK-PLAN.md exists, the open-item
-count when it does, or "SHRINK-PLAN.md is stale — /srk:audit to refresh" once
+"no audit yet — run /srk-audit" when no SHRINK-PLAN.md exists, the open-item
+count when it does, or "SHRINK-PLAN.md is stale — /srk-audit to refresh" once
 code has moved past the last audit. Silence it with `"quiet_startup": true`.
-`/srk:onboard` is optional — preferences only.
+`/srk-onboard` is optional — preferences only.
 
 ## GSD integration
 
@@ -130,35 +130,35 @@ planning. GSD's project-skills discovery loads `rules/*.md` automatically.
 ## Commands
 
 Installed automatically with the plugin (`/plugin marketplace add
-parkktech/shrinkage` → `/plugin install srk@parkktech`); standalone users can
+parkktech/shrinkage` → `/plugin install shrinkage@parkktech`); standalone users can
 instead copy `commands/*.md` into `.claude/commands/`:
 
 | Command | Does | Workflow |
 |---|---|---|
-| `/srk:onboard` | one-shot setup: map + all preferences | — |
-| `/srk:map` | build/refresh map, detect languages | workflows/map.md |
-| `/srk:query <term>` | find symbols at map cost | workflows/map.md |
-| `/srk:gate <task>` | reuse gate before writing code | workflows/gate.md |
-| `/srk:score [--pr] [--log]` | the scoreboard | workflows/score.md |
-| `/srk:trend` | cumulative weight + shrink streak | workflows/score.md |
-| `/srk:shave [target]` | safe subtraction pass | workflows/shave.md |
-| `/srk:audit [dir]` | ranked shrink backlog → SHRINK-PLAN.md | workflows/audit.md |
-| `/srk:config` | all settings, comedy included | — |
-| `/srk:update` | check version + clear stale plugin cache for a clean update | — |
+| `/srk-onboard` | one-shot setup: map + all preferences | — |
+| `/srk-map` | build/refresh map, detect languages | workflows/map.md |
+| `/srk-query <term>` | find symbols at map cost | workflows/map.md |
+| `/srk-gate <task>` | reuse gate before writing code | workflows/gate.md |
+| `/srk-score [--pr] [--log]` | the scoreboard | workflows/score.md |
+| `/srk-trend` | cumulative weight + shrink streak | workflows/score.md |
+| `/srk-shave [target]` | safe subtraction pass | workflows/shave.md |
+| `/srk-audit [dir]` | ranked shrink backlog → SHRINK-PLAN.md | workflows/audit.md |
+| `/srk-config` | all settings, comedy included | — |
+| `/srk-update` | check version + clear stale plugin cache for a clean update | — |
 
 Extra signals for shave/audit: `codemap.py dupes` (same-name symbols),
 `codemap.py clones` (renamed copy-paste via normalized shingles), and
 `coverage_check.py <files>` (coverage-aware tier escalation). Bookkeeping:
 `gatelog.py` (persistent gate ledger — diffstat flags new symbols with no
 record), `badge.py` (shrink badge SVG from the trend log), DEPRECATIONS.md
-(shim removal schedule — trend nags on unchecked entries). `/srk:shave`
+(shim removal schedule — trend nags on unchecked entries). `/srk-shave`
 accepts `--dry-run`: full plan with evidence, zero edits.
 
 Context economy: load `rules/<lang>.md` once per session; the gate never loads
 `safety-model.md` (that's deletion reading); score is script-only — run
 diffstat, echo verbatim.
 
-Long runs: `/srk:shave --auto` is context-durable — state lives in git +
+Long runs: `/srk-shave --auto` is context-durable — state lives in git +
 SHRINK-PLAN.md, not the conversation, so it checkpoints per item and survives
 a `/clear`. It stops at `auto_max_items` (default 8) or when context fills
 (`auto_context_stop`%, default 75); resume by re-running it. Detail:
@@ -182,7 +182,7 @@ CI/hook integration (pre-commit scoreboard, PR comment action):
 ## Response style
 
 Keep it tight, GSD-style. Every command ends with a short result line and a
-**Next** menu of 1–3 suggested `/srk:` commands — never a wall of prose. The
+**Next** menu of 1–3 suggested `/srk-` commands — never a wall of prose. The
 result is a fact or two; the reasoning stays in the workflow files, not the
 reply. Default shape:
 
@@ -191,9 +191,9 @@ reply. Default shape:
 <the script's quip verbatim, if humor is on>
 
 Next:
-• /srk:gate "<task>"  — before writing code
-• /srk:audit          — find safe cleanup opportunities
-• /srk:trend          — track weight over time
+• /srk-gate "<task>"  — before writing code
+• /srk-audit          — find safe cleanup opportunities
+• /srk-trend          — track weight over time
 ```
 
 Pick the Next options that actually fit the situation (see each command's

@@ -39,16 +39,16 @@ def main():
     root = Path(sys.argv[sys.argv.index("--root") + 1] if "--root" in sys.argv else ".").resolve()
     plan = find_plan(root)
     if not plan:
-        print("shrinkage: no SHRINK-PLAN.md — run /srk:audit to create one")
+        print("shrinkage: no SHRINK-PLAN.md — run /srk-audit to create one")
         return
     open_n, done_n = counts(plan.read_text(encoding="utf-8"))
     total = open_n + done_n
     if open_n:
         print(f"shrinkage: {done_n}/{total} plan items done · {open_n} open · "
-              f"resume /srk:shave --auto")
+              f"resume /srk-shave --auto")
     else:
         print(f"shrinkage: SHRINK-PLAN.md complete ({total}/{total}) · "
-              f"/srk:audit to find more")
+              f"/srk-audit to find more")
 
 
 if __name__ == "__main__":

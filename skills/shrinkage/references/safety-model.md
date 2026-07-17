@@ -169,7 +169,7 @@ net LOC: <n>
 ## 6b. The escape hatch (`--auto --dangerous`)
 
 The safety model's autonomy limits (§2) exist to protect you by default. There
-is one explicit, opt-in override — `/srk:shave --auto --dangerous` — for when
+is one explicit, opt-in override — `/srk-shave --auto --dangerous` — for when
 you knowingly accept the risk (you own/control every consumer of the code).
 What it changes and, crucially, what it does NOT:
 

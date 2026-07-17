@@ -25,7 +25,7 @@ def test_detects_installed_version_and_cache(tmp_path):
 def test_clear_removes_cache_and_prints_steps(tmp_path):
     (tmp_path / ".claude/plugins/cache/parkktech/srk/0.14.0").mkdir(parents=True)
     out = run_home(tmp_path, "--clear")
-    assert "cleared cache" in out and "/plugin install srk@parkktech" in out
+    assert "cleared cache" in out and "/plugin install shrinkage@parkktech" in out
     assert not (tmp_path / ".claude/plugins/cache/parkktech").exists()
 
 
