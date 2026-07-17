@@ -196,7 +196,10 @@ brand. Celebrate net-negative; tease growth gently, never scold.
 
 ## Languages and parser precision
 
-Supported now: Python, JavaScript/TypeScript, PHP, Go, Rust, Java, C#, plus
+Supported now: Python, JavaScript/TypeScript, PHP, Go, Rust, Java, C#, Kotlin
+(+ Android: manifest/layout/nav XML, gradle scripts, and ProGuard keep rules
+indexed reference-only; `rules/frameworks/android.md` for the Jetpack seams),
+plus
 templates — Blade/.phtml (via the PHP adapter), Twig (blocks + macros mapped,
 `rules/twig.md`), Vue/Svelte/Astro (via the JS adapter). Reference-only
 indexing covers Handlebars/EJS/Jinja/Smarty/Latte/ERB/Liquid templates and

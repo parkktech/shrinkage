@@ -247,6 +247,13 @@ def cmd_build(root, out, budget, do_sync):
     if (root / "composer.json").exists():
         import platformmap as srk_platform
         srk_platform.print_frameworks(root)
+    if any((root / m).exists() for m in ("build.gradle", "build.gradle.kts", "settings.gradle",
+                                         "settings.gradle.kts", "app/src/main/AndroidManifest.xml")):
+        skill_root = Path(__file__).resolve().parent.parent
+        print("frameworks detected — read the framework rules before implementing:")
+        print(f"  android    -> {skill_root / 'rules' / 'frameworks' / 'android.md'}")
+        print("  platform sweep: check your modules, then Jetpack/androidx, before writing "
+              "a manager/scheduler/cache by hand.")
 
 
 def cmd_refresh(root, out, budget, do_sync):

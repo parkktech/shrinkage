@@ -18,7 +18,8 @@ agent one of those devs.
 ## What it does
 
 - **Maps your repo cheaply.** A script parses your code (Python, JS/TS, PHP, Go,
-  Rust, Java, C# — plus Blade/.phtml/Twig/Vue templates, with reference-only
+  Rust, Java, C#, Kotlin — plus Blade/.phtml/Twig/Vue templates, Android
+  manifest/layout XML + ProGuard rules, with reference-only
   indexing for Handlebars/Jinja/Smarty/ERB and framework XML/YAML config) into
   a compact symbol map — the agent reads ~4k tokens of map
   instead of grepping half the repo to rediscover what already exists.

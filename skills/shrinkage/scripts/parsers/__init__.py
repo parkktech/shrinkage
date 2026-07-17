@@ -41,6 +41,7 @@ EXTENSIONS = {
     ".rs":   ("rust", "rust"),
     ".java": ("java_like", "java"),
     ".cs":   ("java_like", "csharp"),
+    ".kt":     ("kotlin", "kotlin"),
     ".vue":    ("javascript", "javascript"),  # SFC: script parsed, template refs counted
     ".svelte": ("javascript", "javascript"),
     ".astro":  ("javascript", "javascript"),
@@ -50,14 +51,16 @@ EXTENSIONS = {
 # they feed the identifier counter so template/config usage keeps symbols
 # alive in the map (the classic deletion trap).
 REF_ONLY_EXTS = {".hbs", ".mustache", ".ejs", ".j2", ".jinja", ".jinja2",
-                 ".tpl", ".latte", ".erb", ".liquid"}
+                 ".tpl", ".latte", ".erb", ".liquid",
+                 ".kts", ".gradle", ".pro"}  # gradle scripts + proguard keep rules
 # Framework config that references classes/methods by string (Magento XML,
 # Drupal/Symfony YAML, Laravel config dirs are .php and already indexed).
 REF_ONLY_FILES = re.compile(
     r"(^|/)(di|events|webapi|system|crontab|widget|acl|menu|sections)\.xml$"
     r"|(^|/)view/.*/(layout|ui_component)/.*\.xml$"
     r"|\.services\.ya?ml$|(^|/)routing\.ya?ml$|\.links\.[\w.]+\.ya?ml$"
-    r"|(^|/)config/schema/.*\.ya?ml$")
+    r"|(^|/)config/schema/.*\.ya?ml$"
+    r"|(^|/)AndroidManifest\.xml$|(^|/)res/(layout|navigation|xml|menu)[^/]*/.*\.xml$")
 
 
 def is_ref_only(path):
