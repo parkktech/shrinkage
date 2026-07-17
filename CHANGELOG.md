@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.14.0
+- /srk:shave gains `--auto` (alias `all`): work the whole SHRINK-PLAN backlog
+  top-to-bottom, one gated commit per item, halting on the first T2/public-
+  surface item, first red gate, or empty plan. Single-item shaves now always
+  prompt for the next item (name + tier + est LOC) so you can step through.
+  Answers 'why doesn't shave do the whole project?' — it can now, safely.
+
 ## 0.13.0
 - Session-start line now shows plan STATS when a SHRINK-PLAN.md exists:
   open-item count, tier mix (T0xN T1xN...), and headline '~N LOC to reclaim'

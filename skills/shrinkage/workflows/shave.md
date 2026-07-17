@@ -24,11 +24,43 @@ Deleting is part of the feature; this workflow is how deletion earns trust.
    - **a SHRINK-PLAN.md item number** (`1`, `3`, or `#3`) — execute exactly
      that plan entry: its file(s) are the scope, its catalog entry and
      evidence come pre-loaded from the plan (re-verify per §3 anyway);
+   - **`--auto`** (alias: `all`) — **keep going until done**: work the whole
+     backlog top-to-bottom, unattended, one gated commit per item (batch loop
+     below). The answer to "why doesn't it do the whole project?";
    - **a directory or file path** — hunt within it;
    - **nothing** — the files in `git diff --name-only HEAD` (riding along
      with a feature change).
-   A number with no SHRINK-PLAN.md present → say so and suggest `/srk:audit`
-   first. Keep a shave scoped — a repo-wide hunt is the audit workflow's job.
+   A number/`--auto` with no SHRINK-PLAN.md present → say so and suggest
+   `/srk:audit` first. Keep a single-item shave scoped — a repo-wide *hunt* is
+   the audit workflow's job.
+
+   ### Interactive vs --auto
+   - **Single item / bare** (no `--auto`): do the ONE item, then **prompt for
+     the next** — end with "next up: #N `<candidate>` (Tstier, ~N LOC) —
+     `/srk:shave N`, or `/srk:shave --auto` to run the rest." One reviewable
+     step at a time; you stay in the loop.
+   - **`--auto`**: don't prompt between items — keep going until a stop
+     condition. This is the "set it running on the backlog" mode.
+
+   ### Batch loop (`--auto`)
+   Process every OPEN plan item in ranked order, each as its own gated commit —
+   throughput without giving up the per-commit safety guarantee:
+
+   ```
+   for each open item, highest rank first:
+     if item.tier is T2/T3:  STOP — needs your judgment (report and halt)
+     run the single-item shave (steps 2–7): re-verify evidence, gate,
+       apply ONE transform, tests green, commit, update the plan row to Done
+     if the gate went RED:   revert that item, record the hidden dependency,
+                             STOP (a break means the plan's assumptions are off —
+                             don't keep going blind)
+   ```
+
+   `--auto` halts on the **first T2/T3 item, the first red gate, or an empty
+   backlog** — never a whole-repo rampage of unreviewed commits. On a
+   production codebase, review the batch before pushing; each commit is
+   independently `git revert`-able. Report cumulative net LOC and a per-item
+   line (done / reverted / halted-at), then name what stopped it.
 
 2. **Baseline.** Relevant test suite green. Red baseline → stop and report;
    you cannot detect breakage against a red baseline.

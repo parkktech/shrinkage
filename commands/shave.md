@@ -1,7 +1,7 @@
 ---
 name: shave
 description: "Safe subtraction pass: remove/consolidate code with evidence chains, atomic commits, and zero behavior change"
-argument-hint: "[plan item number | dir | file] [--dry-run]"
+argument-hint: "[plan item # | --auto | dir | file] [--dry-run]"
 allowed-tools: [Bash, Read, Grep, Edit, Write, Agent]
 ---
 
@@ -19,15 +19,25 @@ Locate the shrinkage skill dir ($SKILL: `${CLAUDE_PLUGIN_ROOT}/skills/shrinkage`
 `$SKILL/references/consolidation-catalog.md`.
 </execution_context>
 
+<execution_context_extra>
+Targets: a plan item number (default one-at-a-time), `--auto`/`all` (work the
+whole backlog until a stop condition), a dir/file path, or nothing (current
+diff). After a single item, ALWAYS prompt for the next one (name it + its
+tier + est LOC); `--auto` runs without prompting and halts only on the first
+T2/T3 item, first red gate, or empty backlog.
+</execution_context_extra>
+
 <success_criteria>
 - [ ] Suite green before, after every transform, and at the end
 - [ ] One atomic commit per transform with the evidence template
 - [ ] T2 candidates escalated with evidence, never executed silently
 - [ ] Compatibility surface intact; net app LOC negative or justified
+- [ ] Single item → prompted for the next; `--auto` → ran to a stop condition
 </success_criteria>
 
 <next>
 Next:
-• /srk:score          — confirm the shave came out net-negative
-• /srk:audit          — queue the next batch of candidates
+• /srk:shave <next #>  — the item just named (one more reviewable step)
+• /srk:shave --auto    — run the rest of the backlog until it needs you
+• /srk:score           — confirm the shave came out net-negative
 </next>

@@ -114,14 +114,19 @@ does **not** cut. Safe to run anytime.
 
 **3. Shave it.** Point it at what to clean — a plan item, a folder, or a file:
 ```
-/srk:shave 1                  # item #1 from SHRINK-PLAN.md (the usual next step)
+/srk:shave 1                  # item #1 from SHRINK-PLAN.md, then prompts for the next
+/srk:shave --auto             # work the WHOLE backlog until it needs you
 /srk:shave src/billing        # sweep one folder
 /srk:shave src/Invoice.php    # sweep one file
 /srk:shave                    # no target: the files in your current diff
 /srk:shave 1 --dry-run        # show the full plan for item 1, change nothing
 ```
 Each removal is its own commit with tests green before and after — reverting
-instantly if anything breaks. Then:
+instantly if anything breaks. A single item ends by naming the next one so you
+can step through; **`--auto`** runs the backlog top-to-bottom unattended and
+stops at the first item needing your judgment (a T2/public-surface change), the
+first red gate, or an empty plan — never a rampage of unreviewed commits on a
+live codebase. Then:
 ```
 /srk:score        # confirm it came out net-negative
 /srk:trend        # watch the codebase shrink over time
