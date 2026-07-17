@@ -1,19 +1,21 @@
 #!/usr/bin/env python3
-"""diffstat — the minimalism scoreboard for the current change.
+"""diffstat — the minimalism scoreboard for a change.
 
-Usage: diffstat.py [REF] [--pr] [--log]     compare worktree against REF (default HEAD)
-       diffstat.py --trend                  summarize the trend log (cumulative + streak)
+Usage:
+  diffstat.py [REF]         score the working tree against REF (default HEAD)
+  diffstat.py BASE..HEAD    score a COMMITTED range (e.g. a shave batch), so a
+                            dirty working tree of unrelated work can't drown it
+  diffstat.py --trend       cumulative trend + shrink streak
+Flags: --pr (PR markdown block) · --log (append a trend entry) ·
+       --color / --no-color (force / disable ANSI; auto-on for a TTY)
 
-Prints: net app LOC and net test LOC (separately — deleting tests never
-flatters the score), files touched, new/removed symbols (via the same parser
-registry as codemap.py, so every supported language is scored).
-
---pr   also emit a markdown block for the PR description
-       (or set pr_scoreboard=true in .claude/shrinkage.json)
---log  append a JSON line to .claude/shrinkage-log.jsonl — the repo's weight
-       trend over time
+Prints a short, colored scoreboard: lines removed vs added and the net (app and
+test counted separately — deleting tests never flatters the score), files,
+symbols removed/added (counts, not a wall of names), and — when a SHRINK-PLAN.md
+exists — how many finished items were removals / merges / cleanups.
 """
 import json
+import os
 import re
 import subprocess
 import sys
@@ -25,10 +27,30 @@ import settings  # noqa: E402
 from parsers import language_of, parse_file, parse_text  # noqa: E402
 
 TEST_PATH = re.compile(r"(^|/)(tests?|specs?|__tests__)(/|$)|(^|[./_])(test|spec)s?[._]", re.I)
-# Docs/config/lockfiles are not code — excluded from LOC so "app LOC" means code.
+# Docs/config/lockfiles are not code — excluded so "app LOC" means code.
 NON_CODE = re.compile(
     r"\.(md|markdown|rst|txt|json|ya?ml|toml|ini|cfg|conf|lock|env|csv|svg)$"
     r"|(^|/)\.gitignore$|(^|/)(\.planning|\.claude)/", re.I)
+
+# SHRINK-PLAN catalog code -> plain-language bucket (see consolidation-catalog.md).
+_BUCKET = {
+    "C2": "removed", "C4": "removed", "C6": "removed",              # wrappers, flags, dead symbols
+    "C1": "merged", "C5": "merged", "C7": "merged", "C9": "merged",  # dedup / consolidate
+    "C3": "cleaned", "C8": "cleaned", "C10": "cleaned",            # inline / table-ify / de-noise
+}
+
+_ARGV = sys.argv[1:]
+COLOR = (("--color" in _ARGV or sys.stdout.isatty())
+         and "--no-color" not in _ARGV and not os.environ.get("NO_COLOR"))
+GREEN, RED, YELLOW, CYAN, BOLD, DIM = "32", "31", "33", "36", "1", "2"
+
+
+def col(code, s):
+    return f"\033[{code}m{s}\033[0m" if COLOR else str(s)
+
+
+def signed(n):
+    return f"+{n}" if n >= 0 else str(n)
 
 
 def git(*args):
@@ -36,29 +58,40 @@ def git(*args):
     return r.stdout if r.returncode == 0 else ""
 
 
+def _endpoints(ref):
+    """'A..B' / 'A...B' -> (A, B); a single ref -> (ref, None) meaning working tree."""
+    m = re.match(r"^(.+?)\.\.\.?(.+)$", ref)
+    return (m.group(1), m.group(2)) if m else (ref, None)
+
+
 def collect(ref):
-    net_app = net_test = 0
+    base, head = _endpoints(ref)
+    app_ins = app_del = test_ins = test_del = 0
     files, new_syms, removed_syms, sig_changes = [], [], [], []
-    # --no-renames: rename paths like "src/{a.py => b.py}" would break path
-    # handling; with it, a rename is a clean delete+add pair.
+    # --no-renames: a rename becomes a clean delete+add pair (path handling stays simple).
     for line in git("diff", "--numstat", "--no-renames", ref).strip().splitlines():
         add, rm, path = line.split("\t", 2)
         files.append(path)
-        if add == "-":  # binary
+        if add == "-":             # binary
             continue
-        if NON_CODE.search(path):  # docs/config don't count as code LOC
+        if NON_CODE.search(path):   # docs/config don't count as code LOC
             continue
-        delta = int(add) - int(rm)
+        a, r = int(add), int(rm)
         if TEST_PATH.search(path):
-            net_test += delta
+            test_ins += a; test_del += r
         else:
-            net_app += delta
+            app_ins += a; app_del += r
     for path in files:
         if not language_of(path):
             continue
-        old = {s.key(): s.signature for s in parse_text(path, git("show", f"{ref}:{path}"))}
-        new = {s.key(): s.signature
-               for s in (parse_file(Path(path)) if Path(path).exists() else [])}
+        old = {s.key(): s.signature for s in parse_text(path, git("show", f"{base}:{path}"))}
+        if head is None:
+            new_src = parse_file(Path(path)) if Path(path).exists() else []
+        else:
+            txt = git("show", f"{head}:{path}")
+            new_src = parse_text(path, txt) if txt else []
+        new = {s.key(): s.signature for s in new_src}
+
         def label(k):
             _, p, n = k
             return f"{p + '.' if p else ''}{n}"
@@ -68,15 +101,47 @@ def collect(ref):
         # potential compatibility break — surface it every time.
         sig_changes += [f"{label(k)} [{old[k]} -> {new[k]}]"
                         for k in old.keys() & new.keys() if old[k] != new[k]]
-    return net_app, net_test, files, sorted(new_syms), sorted(removed_syms), sorted(sig_changes)
+    return (app_ins, app_del, test_ins, test_del, files,
+            sorted(new_syms), sorted(removed_syms), sorted(sig_changes))
+
+
+def plan_tally(root):
+    """Count finished SHRINK-PLAN items by bucket (removed / merged / cleaned).
+
+    Best-effort: a done item is a struck row (`~~…~~`) or a row under a
+    `## Done` heading that carries a `C<n>` catalog code. Returns the dict, or
+    None when nothing is done yet (so the line is simply omitted)."""
+    plan = root / ".planning" / "SHRINK-PLAN.md"
+    if not plan.exists():
+        plan = root / "SHRINK-PLAN.md"
+    if not plan.exists():
+        return None
+    try:
+        text = plan.read_text(encoding="utf-8")
+    except OSError:
+        return None
+    buckets = {"removed": 0, "merged": 0, "cleaned": 0}
+    in_done = False
+    for line in text.splitlines():
+        h = re.match(r"^#+\s*(.+)", line)
+        if h:
+            in_done = h.group(1).strip().lower().startswith("done")
+            continue
+        if not line.lstrip().startswith("|"):
+            continue
+        if not (in_done or "~~" in line):
+            continue
+        m = re.search(r"\bC(\d+)\b", line)
+        if m and ("C" + m.group(1)) in _BUCKET:
+            buckets[_BUCKET["C" + m.group(1)]] += 1
+    return buckets if sum(buckets.values()) else None
 
 
 def gate_ledger_check(new_syms):
     """Cross-check new symbols against recorded gate justifications (v0.8).
 
-    Opt-in: only runs when .claude/shrinkage-gates.jsonl exists (written by
-    gatelog.py at gate time). Returns the new symbols with no gate record.
-    """
+    Opt-in: only runs when .claude/shrinkage-gates.jsonl exists. Returns the
+    new symbols with no gate record."""
     ledger = Path(".claude/shrinkage-gates.jsonl")
     if not ledger.exists():
         return None
@@ -90,12 +155,49 @@ def gate_ledger_check(new_syms):
     return [s for s in new_syms if s not in short and s.split(".")[-1] not in short]
 
 
-def signed(n):
-    return f"+{n}" if n >= 0 else str(n)
+def scoreboard(ref, app_ins, app_del, test_ins, test_del, files,
+               new_syms, removed_syms, sig_changes, root):
+    net_app, net_test = app_ins - app_del, test_ins - test_del
+    is_range = ".." in ref
+    label = ref if is_range else f"working tree vs {ref}"
+    arrow = col(GREEN, "▼") if net_app < 0 else col(YELLOW, "▲") if net_app > 0 else "·"
 
+    print(col(BOLD, f"Shrinkage · {label}"))
+    print(f"  {col(GREEN, 'removed')}  {col(GREEN, str(app_del))} lines"
+          f"   {col(DIM, f'added {app_ins}')}")
+    netcode = GREEN if net_app < 0 else YELLOW if net_app > 0 else DIM
+    test_note = (col(GREEN, "test +0") + col(DIM, " (untouched)") if net_test == 0
+                 else col(YELLOW, f"test {signed(net_test)}") + col(DIM, " (down — justify)")
+                 if net_test < 0 else f"test {signed(net_test)}")
+    print(f"  {arrow} net    {col(netcode, 'app ' + signed(net_app))}  ·  {test_note}")
+    print(col(DIM, f"  files {len(files)}  ·  symbols "
+                   f"{len(removed_syms)} removed, {len(new_syms)} added"))
+    if not is_range and len(files) > 15:
+        print(col(DIM, f"  ({len(files)} files dirty — to score only a committed "
+                       f"shave, use  <base>..HEAD)"))
 
-def names(syms):
-    return f" ({', '.join(syms[:8])})" if syms else ""
+    tally = plan_tally(root)
+    if tally:
+        print("  " + col(CYAN, "plan") + "   " + " · ".join(
+            col(GREEN, f"{tally[b]} {b}") for b in ("removed", "merged", "cleaned")))
+
+    # Judgment flags — only when they fire.
+    if sig_changes:
+        print(col(YELLOW, f"  ⚠ compat-watch: {len(sig_changes)} signature change(s) — "
+                          f"verify additive-only (Zeroth Law): ") + "; ".join(sig_changes[:5]))
+    unjustified = gate_ledger_check(new_syms)
+    if unjustified:
+        print(col(YELLOW, "  ⚠ unjustified new symbols (no gate record): ")
+              + ", ".join(unjustified[:8]) + " — run the gate or record via gatelog.py")
+    if net_test < 0:
+        print(col(YELLOW, "  ⚠ test LOC went DOWN") + " — confirm justified "
+              "(safety-model §7: test deletions are never a shrink win).")
+
+    kind = ("shrunk" if net_app < 0 else "grew" if net_app > 25
+            else "flat" if (net_app == 0 and files) else None)
+    q = settings.quip(".", kind, net=net_app) if kind else ""
+    if q:
+        print(col(DIM, "  " + q))
 
 
 def show_trend():
@@ -111,21 +213,23 @@ def show_trend():
         if e["net_app"] >= 0:
             break
         streak += 1
-    print(f"trend: {len(entries)} scored changes | cumulative app LOC {signed(app)} | "
-          f"cumulative test LOC {signed(test)} | shrink streak: {streak}")
+    print(col(BOLD, "Shrinkage trend"))
+    print(f"  {col(GREEN, 'cumulative app ' + signed(app))} lines  ·  "
+          f"test {signed(test)}  ·  {len(entries)} scored changes  ·  "
+          + col(GREEN, f"shrink streak {streak}"))
     for e in entries[-10:]:
-        print(f"  {e['ts']}  app {signed(e['net_app']):>6}  test {signed(e['net_test']):>6}  "
-              f"files {e['files']}")
+        print(col(DIM, f"    {e['ts']}  app {signed(e['net_app']):>6}  "
+                       f"test {signed(e['net_test']):>6}  files {e['files']}"))
     dep = Path("DEPRECATIONS.md")
     if dep.exists():
         pending = sum(1 for l in dep.read_text(encoding="utf-8").splitlines()
                       if l.strip().startswith("- [ ]"))
         if pending:
-            print(f"deprecation shims pending removal: {pending} (DEPRECATIONS.md)")
+            print(col(YELLOW, f"  deprecation shims pending removal: {pending} (DEPRECATIONS.md)"))
     if app < 0:
         q = settings.quip(".", "shrunk", net=app)
         if q:
-            print(q)
+            print(col(DIM, "  " + q))
 
 
 def main():
@@ -135,40 +239,21 @@ def main():
         return
     pos = [a for a in argv if not a.startswith("--")]
     ref = pos[0] if pos else "HEAD"
-    net_app, net_test, files, new_syms, removed_syms, sig_changes = collect(ref)
-    net = net_app + net_test
+    root = Path(".")
+    (app_ins, app_del, test_ins, test_del, files,
+     new_syms, removed_syms, sig_changes) = collect(ref)
+    net_app, net_test = app_ins - app_del, test_ins - test_del
 
-    print(f"net LOC: {signed(net)} (app {signed(net_app)}, test {signed(net_test)}) | "
-          f"files touched: {len(files)} | "
-          f"new symbols: {len(new_syms)}{names(new_syms)} | "
-          f"removed symbols: {len(removed_syms)}{names(removed_syms)}")
-    if sig_changes:
-        print(f"compat-watch: {len(sig_changes)} signature change(s) on existing symbols — "
-              f"verify additive-only (Zeroth Law): " + "; ".join(sig_changes[:5]))
-    unjustified = gate_ledger_check(new_syms)
-    if unjustified:
-        print(f"unjustified new symbols (no gate record): {', '.join(unjustified[:8])} — "
-              f"run the gate or record via gatelog.py")
-
-    kind = ("shrunk" if net_app < 0 else
-            "grew" if net_app > 25 else
-            "flat" if (net_app == 0 and files) else None)
-    q = settings.quip(".", kind, net=net_app) if kind else ""
-    if q:
-        print(q)
-    elif net_app < 0:
-        print("net-negative app diff — the feature landed and the codebase got smaller. Call it out.")
-    if net_test < 0:
-        print("note: test LOC went DOWN — confirm this was justified (safety-model §7: "
-              "test deletions are never a shrink win).")
+    scoreboard(ref, app_ins, app_del, test_ins, test_del, files,
+               new_syms, removed_syms, sig_changes, root)
 
     if "--pr" in argv or settings.load(".")["pr_scoreboard"]:
         print("\n--- PR description block ---")
         print("### Code minimalism scoreboard\n")
-        print("| net app LOC | net test LOC | files touched | new symbols | removed symbols |")
-        print("|---|---|---|---|---|")
-        print(f"| {signed(net_app)} | {signed(net_test)} | {len(files)} "
-              f"| {len(new_syms)}{names(new_syms)} | {len(removed_syms)}{names(removed_syms)} |")
+        print("| removed | added | net app | net test | files | symbols removed |")
+        print("|---|---|---|---|---|---|")
+        print(f"| {app_del} | {app_ins} | {signed(net_app)} | {signed(net_test)} "
+              f"| {len(files)} | {len(removed_syms)} |")
 
     if "--log" in argv:
         logp = Path(".claude/shrinkage-log.jsonl")

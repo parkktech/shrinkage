@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.21.0
+- Scoreboard rebuilt for clarity. `/srk:score` now prints a short, **colored**
+  block — removed vs added lines, net app (and test, separately), files, and
+  symbols as COUNTS (no more inline wall of 35 symbol names) — plus, from
+  SHRINK-PLAN, a `removed · merged · cleaned` tally (catalog C-codes bucketed:
+  dead code/flags → removed, dedup/consolidate → merged, simplify/de-noise →
+  cleaned). The command shows it once, verbatim — no prose re-render, no
+  duplicated raw line.
+- Score a committed range: `diffstat.py <base>..HEAD` (e.g. a shave batch) so a
+  working tree dirty with unrelated feature work can't inflate the number (the
+  "+1711 of stuff I didn't touch" problem). Scoring a working tree of >15 files
+  prints a one-line hint to use the range instead.
+- diffstat.py now reports insertions and deletions separately (was net-only);
+  `--color`/`--no-color` (auto-on for a TTY); the `/srk:trend` view is colored
+  too. New tests cover the removed/added split, range scoring, and the tally.
+
 ## 0.20.2
 - Fix: command references now use the colon form `/srk:shave` that Claude Code
   actually invokes. The `<next>` hints, the `/srk:help` screen, the README, the

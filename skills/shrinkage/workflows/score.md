@@ -1,53 +1,40 @@
 # Workflow: Score
 
 <objective>
-Measure every change on the metric that matters: goal achieved with how much
-code. The scoreboard makes minimalism visible, comparable, and habitual — for
-the model on every task, and optionally for humans on every PR.
+Make minimalism visible in one glance: how much code the change removed vs
+added, net (app and test separately), and — from SHRINK-PLAN — how many items
+were removals, merges, or cleanups. Short, colored, honest.
 </objective>
 
 <process>
-1. **Run:** `python3 $SKILL/scripts/diffstat.py [REF] [--pr]` (default REF:
-   HEAD → scores the working diff; pass `main` to score a whole branch).
-   **This step is script-only:** run it and echo its output verbatim — no
-   re-analysis pass, no subagent, no re-reading the codebase. The script now
-   prints everything that needs judgment flags: `compat-watch` lines
-   (signature changes on existing symbols — Zeroth Law check) and
-   `unjustified new symbols` (gate-ledger cross-check). Only those two lines
-   warrant follow-up reasoning; a clean scoreboard needs none.
+1. **Score the right ref.**
+   - Working tree (default): `python3 $SKILL/scripts/diffstat.py --color`.
+   - A COMMITTED shave/feature while the tree still holds unrelated dirty files:
+     score the range — `diffstat.py <base>..HEAD --color` — so unrelated work
+     can't inflate the number. This is the fix for a board that reads +1700 when
+     your shave only removed 400.
 
-2. **Read the line:** net app LOC, net test LOC (counted separately — test
-   deletions never flatter the score), files touched, new symbols (named),
-   removed symbols (named).
+2. **Show it verbatim.** The script IS the scoreboard — one colored block:
+   `removed / added / net`, `files · symbols`, and `plan  N removed · N merged ·
+   N cleaned`. Echo it as-is. Do NOT reformat into prose, do NOT reprint, do NOT
+   list symbol names — the block is already clean and folds in its own ⚠ flags
+   (compat-watch signature changes, unjustified new symbols).
 
-3. **Interrogate the numbers:**
-   - New symbols the gate didn't justify → flag; either justify now or fold
-     them into existing homes before finishing.
-   - Net app LOC positive and large → re-check the plan against the catalog:
-     is a C1/C9 hiding in the diff?
-   - Removed symbols present → confirm each had its evidence chain (riding a
-     feature diff doesn't exempt a deletion from the safety model).
+3. **Comment only on a ⚠.** A clean board needs zero commentary. If a
+   compat-watch or unjustified line fired, add ONE sentence pointing at it.
 
-4. **Report** the scoreboard line verbatim (with the script's quip when humor
-   is on — one joke, information first). Net-negative → celebrate. Large
-   growth → tease gently, never scold; growth that survived the gate is
-   legitimate.
-
-5. **Publish where it counts:**
-   - `--pr` (or `pr_scoreboard: true`) → paste the markdown block into the PR
-     description so human reviewers see the metric.
-   - GSD project → the line goes in the plan's SUMMARY.md; verifiers check it
-     against the plan's expectation.
-   - The trend log (`.claude/shrinkage-log.jsonl`, `--log`) accumulates one
-     entry per scored change — the repo's weight over time, for retros and
-     for proving the ratchet only moves down.
+4. **Publish only if asked.** `--pr` appends a PR markdown block; `--log`
+   records the change for `/srk:trend`. Don't `--log` a working tree full of
+   unrelated work — log the committed range, or after committing.
 </process>
 
-End with a terse result line + a **Next** menu of 1-3 `/srk:` commands (see the command file's <next> block). No wall of prose.
+End with the colored scoreboard + a **Next** menu of 1-3 `/srk:` commands. No
+wall of prose — the old scoreboard's failure was burying −401 of real work under
+paragraphs and a list of 35 symbol names.
 
 <success_criteria>
-- [ ] Scoreboard line reported verbatim
-- [ ] Every new symbol traceable to a gate justification
-- [ ] App vs test LOC read separately, no test-deletion flattery
-- [ ] Configured outputs (PR block / SUMMARY.md / trend log) delivered
+- [ ] Scored the right ref (committed range when the tree is dirty with unrelated work)
+- [ ] Colored scoreboard shown once, verbatim — no prose re-render, no symbol-name wall
+- [ ] App vs test LOC read separately; test-LOC drops flagged
+- [ ] Only ⚠-flagged lines get follow-up
 </success_criteria>

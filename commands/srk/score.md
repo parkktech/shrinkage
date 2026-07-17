@@ -1,33 +1,53 @@
 ---
 name: srk:score
-description: "The minimalism scoreboard: net app/test LOC, new/removed symbols; PR block and trend log"
-argument-hint: "[REF] [--pr] [--log]"
+description: "The minimalism scoreboard: lines removed/added/net, symbols, and how many plan items were removed/merged/cleaned"
+argument-hint: "[REF | BASE..HEAD] [--pr] [--log]"
 allowed-tools: [Bash]
 ---
 
 <objective>
-Grade the current diff on the metric that matters: goal achieved with how much
-code. App and test LOC count separately; negative app LOC is the high score.
+Grade the change on the metric that matters: goal achieved with how much code.
+The script prints a short, colored scoreboard — removed vs added lines, net app
+(and test, separately), symbols, and the removed/merged/cleaned plan tally.
 </objective>
 
 <execution_context>
-Run this inline — do NOT spawn a subagent for scoring; it is one script call.
-Locate the shrinkage skill dir ($SKILL: `${CLAUDE_PLUGIN_ROOT}/skills/shrinkage` when installed as a plugin, else `.claude/skills/shrinkage` or `~/.claude/skills/shrinkage`), then follow
-`$SKILL/workflows/score.md`: run `python3 $SKILL/scripts/diffstat.py
-$ARGUMENTS`, report the line verbatim (quip included), interrogate unjustified
-new symbols and any test-LOC drop, and publish to the configured outputs (PR
-block / GSD SUMMARY.md / trend log).
+One script call, inline — no subagent, no re-analysis. Locate $SKILL
+(`${CLAUDE_PLUGIN_ROOT}/skills/shrinkage` when installed as a plugin, else
+`.claude/skills/shrinkage` or `~/.claude/skills/shrinkage`), then:
+
+1. **Pick the ref so the number is honest.**
+   - You just COMMITTED a shave/feature and the working tree still holds
+     unrelated dirty files? Score the committed range:
+     `python3 $SKILL/scripts/diffstat.py <base>..HEAD --color`
+     (the shave batch's parent: `<firstShaveCommit>^..HEAD`). This is the fix
+     for "the score shows +1700 of stuff I didn't touch."
+   - Otherwise score the working tree:
+     `python3 $SKILL/scripts/diffstat.py --color`.
+
+2. **Show the output verbatim — it IS the scoreboard.** Do NOT reprint it,
+   reformat it into prose, or list the symbol names. The colored block already
+   reads cleanly and folds in its own ⚠ flags (compat-watch signature changes,
+   unjustified new symbols).
+
+3. **Add at most ONE line, only if a ⚠ fired** — point at the compat-watch
+   change to eyeball or the unjustified new symbol. A clean board needs no
+   commentary.
+
+4. **Publish only if asked:** `--pr` appends the PR markdown block; `--log`
+   records the change in the trend (`/srk:trend`) — but don't `--log` a working
+   tree full of unrelated work; log the committed range or after committing.
 </execution_context>
 
 <success_criteria>
-- [ ] Scoreboard line reported verbatim
-- [ ] Every new symbol traceable to a gate justification
-- [ ] Test-LOC reductions flagged and justified, never silent
+- [ ] Scored the right ref (committed range when the tree is dirty with unrelated work)
+- [ ] Colored scoreboard shown once, verbatim — no prose re-render, no symbol-name wall
+- [ ] Only ⚠-flagged lines get a follow-up sentence
 </success_criteria>
 
 <next>
 Next:
+• /srk:trend          — cumulative weight + shrink streak
 • /srk:score --pr     — emit the PR-description block
-• /srk:trend          — see cumulative weight + shrink streak
-• /srk:shave          — if the diff left removable code behind
+• /srk:audit          — find the next reductions
 </next>
