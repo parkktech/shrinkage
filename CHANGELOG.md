@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.12.0
+- Always-on session-start status line (default): `[shrinkage] active · N
+  symbols · <next step>`. Adapts to audit state — prompts to run /srk:audit
+  when none exists, shows open SHRINK-PLAN.md items, or flags a stale plan
+  when code moved on. Silence with quiet_startup. Audit stamps map-fp; shave
+  updates the plan so it stays current.
+
 ## 0.11.0
 - Kotlin parser + Android support (manifest/layout/gradle/ProGuard indexed
   reference-only; Jetpack seams in rules/frameworks/android.md)

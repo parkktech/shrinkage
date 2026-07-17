@@ -14,6 +14,7 @@ DEFAULTS = {
     "pr_scoreboard": False,  # True: diffstat also emits a markdown block for PR descriptions.
     "budget": 4000,          # codemap token budget.
     "humor": True,           # False: the tools deliver their news with a straight face.
+    "quiet_startup": False,   # True: no session-start [shrinkage] active line.
 }
 
 QUIPS = {

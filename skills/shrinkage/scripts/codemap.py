@@ -268,6 +268,62 @@ def cmd_refresh(root, out, budget, do_sync):
     cmd_build(root, out, budget, do_sync)
 
 
+def cmd_auto(root, out, budget, do_sync):
+    """SessionStart hook: rebuild only if stale, then print ONE compact
+    always-on line so every session visibly confirms shrinkage is active.
+    Silence with `"quiet_startup": true` in .claude/shrinkage.json."""
+    header = out.read_text(encoding="utf-8").splitlines()[0] if out.exists() else ""
+    stale = True
+    m = re.search(r"\| fp: (\w+)", header)
+    if m and m.group(1) == fingerprint(root):
+        stale = False
+    if stale:
+        index = build_index(root)
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(format_map(index, root, budget), encoding="utf-8")
+        if not settings.load(root)["commit_map"]:
+            ensure_ignored(root, out)
+        if do_sync or (root / ".planning").is_dir():
+            sync_intel(index, root)
+        n = sum(len(v) for v in index.values())
+    else:
+        mm = re.search(r"symbols: (\d+)", header)
+        n = int(mm.group(1)) if mm else 0
+    if settings.load(root).get("quiet_startup"):
+        return
+    verb = "codemap built" if stale else "active"
+    plan = root / (".planning" if (root / ".planning").is_dir() else ".") / "SHRINK-PLAN.md"
+    if not plan.exists():
+        plan = root / "SHRINK-PLAN.md"
+    if not plan.exists():
+        tail = "no audit yet — run /srk:audit to find safe reductions"
+    else:
+        # audit exists: is it stale vs current code? (map fp changed since plan)
+        try:
+            planned_fp = re.search(r"map-fp:\s*(\w+)", plan.read_text(encoding="utf-8"))
+        except OSError:
+            planned_fp = None
+        cur = fingerprint(root)
+        if planned_fp and planned_fp.group(1) != cur:
+            tail = "SHRINK-PLAN.md is stale — /srk:audit to refresh it"
+        else:
+            open_items = _open_plan_items(plan)
+            tail = (f"SHRINK-PLAN.md: {open_items} open item(s) — /srk:shave 1 to start"
+                    if open_items else "SHRINK-PLAN.md clean — /srk:audit to rescan")
+    print(f"[shrinkage] {verb} · {n:,} symbols · {tail}")
+
+
+def _open_plan_items(plan):
+    """Count unchecked candidate rows in a SHRINK-PLAN.md (best-effort)."""
+    try:
+        text = plan.read_text(encoding="utf-8")
+    except OSError:
+        return 0
+    # ranked table rows start with "| <number>" and aren't the header/separator
+    return sum(1 for l in text.splitlines()
+               if re.match(r"\|\s*\d+\s*\|", l) and "~~" not in l)
+
+
 SKIP_NAMES = {"__init__", "__str__", "__repr__", "constructor", "main", "index",
               "render", "setup", "handle", "toString", "run", "get", "set"}
 
@@ -398,33 +454,16 @@ def main():
 
     root = Path(a.root).resolve()
     out = Path(a.out).resolve() if a.out else map_path(root)
-    if a.auto:
-        if not (root / ".git").exists() or next(source_files(root), None) is None:
-            return  # not a code project — hooks must never spam unrelated dirs
-        # First map in this repo -> one visible nudge (SessionStart hook output
-        # reaches the session); already mapped -> stay silent.
-        first_time = not (a.out and Path(a.out).exists()) and not map_path(root).exists()
-        if not first_time:
-            a.quiet = True
-            sys.stdout = open(os.devnull, "w", encoding="utf-8")
+    if a.auto and (not (root / ".git").exists() or next(source_files(root), None) is None):
+        return  # not a code project — hooks must never spam unrelated dirs
     if a.budget is None:
         a.budget = settings.load(root)["budget"]
 
     if a.command == "build":
         cmd_build(root, out, a.budget, a.sync_intel)
     elif a.command == "refresh":
-        if a.auto and not a.quiet:
-            # first-time nudge: compact, single purpose — tell the session
-            # shrinkage is live and how to use it.
-            index = build_index(root)
-            out.parent.mkdir(parents=True, exist_ok=True)
-            out.write_text(format_map(index, root, a.budget), encoding="utf-8")
-            if not settings.load(root)["commit_map"]:
-                ensure_ignored(root, out)
-            n = sum(len(v) for v in index.values())
-            print(f"[shrinkage] active — codemap built: {n} symbols. "
-                  f"Use /srk:gate \"<task>\" before writing code and /srk:score after; "
-                  f"/srk:onboard to set preferences.")
+        if a.auto:
+            cmd_auto(root, out, a.budget, a.sync_intel)  # default-on active line
         else:
             cmd_refresh(root, out, a.budget, a.sync_intel)
     elif a.command == "query":

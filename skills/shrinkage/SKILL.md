@@ -105,12 +105,16 @@ makes deletion safe there.
 
 ## Zero-init
 
-The plugin ships a SessionStart hook that runs `codemap.py refresh --auto
---quiet` — the map builds/refreshes itself the moment a session opens in any
-git repo with supported code (silent no-op elsewhere). Installing the plugin
-IS the setup; the skill auto-triggers on coding tasks from that point.
-`/srk:onboard` is optional — run it only to set preferences (gate hardness,
-map commit policy, comedy).
+The plugin ships a SessionStart hook that runs `codemap.py refresh --auto` —
+the map builds/refreshes itself the moment a session opens in any git repo
+with supported code (silent no-op elsewhere). Installing the plugin IS the
+setup; the skill auto-triggers on coding tasks from that point. Every session
+prints one compact status line so shrinkage's state is always visible:
+`[shrinkage] active · N symbols · <next step>` — where the next step adapts:
+"no audit yet — run /srk:audit" when no SHRINK-PLAN.md exists, the open-item
+count when it does, or "SHRINK-PLAN.md is stale — /srk:audit to refresh" once
+code has moved past the last audit. Silence it with `"quiet_startup": true`.
+`/srk:onboard` is optional — preferences only.
 
 ## GSD integration
 

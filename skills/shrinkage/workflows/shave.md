@@ -73,9 +73,16 @@ Deleting is part of the feature; this workflow is how deletion earns trust.
    added count as investment, not weight). Report the scoreboard line and, in
    a GSD project, put it in the plan SUMMARY.md.
 
-8. **Report:** transforms executed (catalog # + tier + net LOC each), T2
+8. **Update SHRINK-PLAN.md** so it stays current: mark each executed item done
+   (strike the row with `~~...~~` or move it to a `## Done` section — the
+   startup line counts unstruck `| N |` rows as open), append reverted
+   attempts to `## Hidden dependencies discovered`, and re-stamp `map-fp` to
+   the post-shave fingerprint so the plan doesn't read as stale from your own
+   changes.
+
+9. **Report:** transforms executed (catalog # + tier + net LOC each), T2
    candidates escalated with evidence, reverted attempts and what they
-   revealed, suite status.
+   revealed, suite status, and remaining open plan items.
 </process>
 
 End with a terse result line + a **Next** menu of 1-3 `/srk:` commands (see the command file's <next> block). No wall of prose.

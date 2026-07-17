@@ -42,8 +42,17 @@ phases) consuming the plan.
    carrying its deprecation-cycle proposal.
 
 6. **Write SHRINK-PLAN.md** (repo root, or `.planning/` in a GSD project).
-   Fixed schema so shaves can consume it mechanically — ranked table with
-   EXACTLY these columns:
+   Stamp the current map fingerprint at the top so staleness is detectable —
+   the startup line reads this to say "plan is stale, re-audit" when code has
+   moved on. Get it from the codemap header (`| fp: XX␣`) or
+   `codemap.py refresh`:
+
+   ```
+   <!-- map-fp: <12-char fingerprint from the codemap header> -->
+   ```
+
+   Then the fixed schema so shaves can consume it mechanically — ranked table
+   with EXACTLY these columns:
 
    ```
    | # | candidate | file:line | catalog | tier | est. net LOC | effort | confidence | coverage | evidence |
