@@ -20,9 +20,15 @@ Deleting is part of the feature; this workflow is how deletion earns trust.
    modified, no commit made. This is the review artifact before letting the
    surgeon loose.
 
-1. **Scope.** Target = the argument given, or the files in
-   `git diff --name-only HEAD` when riding along with a feature change.
-   Keep a shave scoped — a repo-wide hunt is the audit workflow's job.
+1. **Scope.** The target argument is one of:
+   - **a SHRINK-PLAN.md item number** (`1`, `3`, or `#3`) — execute exactly
+     that plan entry: its file(s) are the scope, its catalog entry and
+     evidence come pre-loaded from the plan (re-verify per §3 anyway);
+   - **a directory or file path** — hunt within it;
+   - **nothing** — the files in `git diff --name-only HEAD` (riding along
+     with a feature change).
+   A number with no SHRINK-PLAN.md present → say so and suggest `/srk:audit`
+   first. Keep a shave scoped — a repo-wide hunt is the audit workflow's job.
 
 2. **Baseline.** Relevant test suite green. Red baseline → stop and report;
    you cannot detect breakage against a red baseline.

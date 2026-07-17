@@ -28,6 +28,6 @@ brief in `$SKILL/agents/shrink-auditor.md`. Required reading:
 
 <next>
 Next:
-• /srk:shave <target> — execute the top SHRINK-PLAN.md item safely
+• /srk:shave 1 — execute the plan's #1 item safely
 • /srk:trend          — track the ratchet over time
 </next>

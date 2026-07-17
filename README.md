@@ -112,12 +112,16 @@ writes a ranked **`SHRINK-PLAN.md`**: every candidate with a catalog tag, a risk
 tier, an evidence chain, and an estimated line saving. It finds and ranks; it
 does **not** cut. Safe to run anytime.
 
-**3. Shave it.**
+**3. Shave it.** Point it at what to clean — a plan item, a folder, or a file:
 ```
-/srk:shave <target>
+/srk:shave 1                  # item #1 from SHRINK-PLAN.md (the usual next step)
+/srk:shave src/billing        # sweep one folder
+/srk:shave src/Invoice.php    # sweep one file
+/srk:shave                    # no target: the files in your current diff
+/srk:shave 1 --dry-run        # show the full plan for item 1, change nothing
 ```
-Executes the top items from the plan, one at a time, each as its own commit with
-tests green before and after — reverting instantly if anything breaks. Then:
+Each removal is its own commit with tests green before and after — reverting
+instantly if anything breaks. Then:
 ```
 /srk:score        # confirm it came out net-negative
 /srk:trend        # watch the codebase shrink over time
