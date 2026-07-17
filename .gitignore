@@ -1,0 +1,5 @@
+
+# Python bytecode (regenerable — never track)
+__pycache__/
+*.pyc
+*.pyo
