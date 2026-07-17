@@ -224,6 +224,9 @@ def cmd_build(root, out, budget, do_sync):
     if do_sync or (root / ".planning").is_dir():
         print(f"gsd intel synced: {sync_intel(index, root)}")
     print_langs(index)
+    if (root / "composer.json").exists():
+        import platformmap as srk_platform
+        srk_platform.print_frameworks(root)
 
 
 def cmd_refresh(root, out, budget, do_sync):
@@ -350,7 +353,7 @@ def cmd_query(root, out, term, deep):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("command", choices=["build", "refresh", "query", "langs", "scope", "dupes", "clones"])
+    ap.add_argument("command", choices=["build", "refresh", "query", "langs", "scope", "dupes", "clones", "vendor"])
     ap.add_argument("arg", nargs="?", help="query term / scope dir")
     ap.add_argument("--root", default=".", help="repo root (default: cwd)")
     ap.add_argument("--out", help="map file (default: auto — GSD intel dir if .planning/ exists)")
@@ -359,19 +362,44 @@ def main():
     ap.add_argument("--sync-intel", action="store_true", help="force GSD api-map.json sync")
     ap.add_argument("--deep", action="store_true", help="query: re-parse matching files for full detail")
     ap.add_argument("--quiet", action="store_true", help="suppress output (for editor hooks)")
+    ap.add_argument("--auto", action="store_true",
+                    help="hook mode: exit silently when this isn't a code project "
+                         "(no supported source files or no .git)")
     a = ap.parse_args()
     if a.quiet:
         sys.stdout = open(os.devnull, "w", encoding="utf-8")
 
     root = Path(a.root).resolve()
     out = Path(a.out).resolve() if a.out else map_path(root)
+    if a.auto:
+        if not (root / ".git").exists() or next(source_files(root), None) is None:
+            return  # not a code project — hooks must never spam unrelated dirs
+        # First map in this repo -> one visible nudge (SessionStart hook output
+        # reaches the session); already mapped -> stay silent.
+        first_time = not (a.out and Path(a.out).exists()) and not map_path(root).exists()
+        if not first_time:
+            a.quiet = True
+            sys.stdout = open(os.devnull, "w", encoding="utf-8")
     if a.budget is None:
         a.budget = settings.load(root)["budget"]
 
     if a.command == "build":
         cmd_build(root, out, a.budget, a.sync_intel)
     elif a.command == "refresh":
-        cmd_refresh(root, out, a.budget, a.sync_intel)
+        if a.auto and not a.quiet:
+            # first-time nudge: compact, single purpose — tell the session
+            # shrinkage is live and how to use it.
+            index = build_index(root)
+            out.parent.mkdir(parents=True, exist_ok=True)
+            out.write_text(format_map(index, root, a.budget), encoding="utf-8")
+            if not settings.load(root)["commit_map"]:
+                ensure_ignored(root, out)
+            n = sum(len(v) for v in index.values())
+            print(f"[shrinkage] active — codemap built: {n} symbols. "
+                  f"Use /srk:gate \"<task>\" before writing code and /srk:score after; "
+                  f"/srk:onboard to set preferences.")
+        else:
+            cmd_refresh(root, out, a.budget, a.sync_intel)
     elif a.command == "query":
         if not a.arg:
             sys.exit("usage: codemap.py query <term> [--deep]")
@@ -382,6 +410,14 @@ def main():
         cmd_dupes(root)
     elif a.command == "clones":
         cmd_clones(root)
+    elif a.command == "vendor":
+        import platformmap as srk_platform
+        if not a.arg:
+            sys.exit("usage: codemap.py vendor <term> [--deep]")
+        proot = srk_platform.find_root(root)
+        if not proot:
+            sys.exit("no composer.json found — vendor search is for Composer projects")
+        srk_platform.search(proot, a.arg, deep=a.deep)
     elif a.command == "scope":
         if not a.arg:
             sys.exit("usage: codemap.py scope <dir> [--budget N]")

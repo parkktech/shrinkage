@@ -54,6 +54,36 @@ For **GitHub Copilot**, and other runtimes, see [Other runtimes](#other-runtimes
 
 ---
 
+## Zero setup
+
+Install the plugin and you're done: a session-start hook builds/refreshes the
+codemap automatically in any repo with code (silently skips everything else),
+and the skill triggers itself on coding tasks — the first build announces
+itself with a one-line tip in the session. `/srk:onboard` exists only to set
+preferences. Optional: point your status line at `scripts/statusline.py` for
+an always-visible `srk ▼-123 LOC · streak N` (or the getting-started nudge)
+under the input box.
+
+## Composer frameworks: Laravel, Magento 2, Drupal
+
+Framework apps are where reuse pays biggest — the platform already has most of
+what you're about to write. Shrinkage reads **Composer's own class index**
+(`vendor/composer/autoload_classmap.php` — no vendor parsing, instant even on
+a 60k-class Magento install), detects your framework from `composer.json`, and:
+
+- **`/srk:query` + `codemap.py vendor <term>`** — before writing anything, the
+  gate sweeps vendor: "does Illuminate/Magento/Drupal core already provide
+  this?" Calling code you don't own is the ultimate shrink.
+- **Framework-aware extension ladder** — dedicated rules map changes onto each
+  framework's sanctioned seams: Laravel macros, listeners, FormRequests;
+  Magento plugins, observers, view models (di.xml preferences last, with
+  justification); Drupal alter hooks, service decoration, plugins. Core is
+  never edited; parallel classes are never the reflex.
+- **Framework-safe deletion** — the dynamic-reference checklists cover each
+  ecosystem's string-reference graph (di.xml/layout XML, services.yml/routing
+  YAML, hooks-by-naming-convention, generated factories, queued job class
+  names), so "zero references" can't fool the shave where frameworks hide them.
+
 ## Reduce code size in an existing project
 
 This is Shrinkage's home turf. Three steps:

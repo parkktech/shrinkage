@@ -1,0 +1,14 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/skills/shrinkage/scripts/codemap.py\" refresh --auto 2>/dev/null || true"
+          }
+        ]
+      }
+    ]
+  }
+}

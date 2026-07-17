@@ -186,3 +186,11 @@ are refreshed around every plan.
 Monthly (or per retro): `/srk:trend`. Cumulative app LOC should trend down or
 flat-with-features; a sustained climb means gates are being skipped — fix the
 habit, not the hook.
+
+## Status line
+
+Show shrinkage state under the input box: point Claude Code's status line at
+`scripts/statusline.py` (run `/statusline` and ask for it, or set
+`statusLine.command` in settings). It shows `srk: run /srk:onboard ...` before
+first use, the mapped-tip once the codemap exists, and `srk ▼-123 LOC ·
+streak N` once you're scoring with `--log`.

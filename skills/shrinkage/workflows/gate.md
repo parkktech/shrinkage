@@ -28,6 +28,16 @@ nothing to remove later.
    synonyms, singular/plural, the framework's vocabulary. Collect 2–5
    candidate symbols with their signatures and ref counts.
 
+2b. **Platform sweep (Composer projects).** Before concluding new code is
+   needed, search the vendor surface: `codemap.py vendor <term>` (reads
+   Composer's prebuilt classmap — cheap even on a 60k-class Magento install;
+   `--deep` lists a match's methods). A framework class that already does the
+   job beats every rung of the ladder — calling code you don't own is the
+   ultimate shrink. When a framework was detected (build output names it),
+   its `rules/frameworks/<fw>.md` seams govern HOW to extend: Laravel macros/
+   listeners, Magento plugins/observers, Drupal alters/decorators — not new
+   parallel classes.
+
 3. **Judge each candidate** — write one line per candidate, no skipping:
    - **extend** — name the ladder rung (parameter? branch? new method on it?)
    - **not applicable because X** — X must be a *fact* (wrong layer, different

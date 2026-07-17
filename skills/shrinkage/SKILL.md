@@ -89,6 +89,29 @@ further, drop the auditor's sweeps to a mid model too. The full role protocols
 live in `agents/shrink-{auditor,surgeon,verifier}.md`. The audit workflow fans
 out auditors; every surgeon commit on T1+ work deserves a verifier pass.
 
+## Composer / framework projects (Laravel, Magento 2, Drupal, ...)
+
+When `composer.json` exists, the map build detects the framework and names the
+`rules/frameworks/<fw>.md` file to read alongside the language rules. The
+**platform sweep** is mandatory at the gate: `codemap.py vendor <term>`
+searches Composer's prebuilt classmap (vendor/composer/autoload_classmap.php —
+zero parsing, works at Magento scale) so the framework's existing classes are
+candidates before any new code. Framework rules map the ladder onto sanctioned
+seams — Laravel macros/listeners/FormRequests, Magento plugins/observers/view
+models (preferences last), Drupal alter hooks/decorators/plugins — and extend
+the dynamic-reference checklists with each framework's string-reference graph
+(di.xml, services.yml, routes, generated factories, hooks), which is what
+makes deletion safe there.
+
+## Zero-init
+
+The plugin ships a SessionStart hook that runs `codemap.py refresh --auto
+--quiet` — the map builds/refreshes itself the moment a session opens in any
+git repo with supported code (silent no-op elsewhere). Installing the plugin
+IS the setup; the skill auto-triggers on coding tasks from that point.
+`/srk:onboard` is optional — run it only to set preferences (gate hardness,
+map commit policy, comedy).
+
 ## GSD integration
 
 In a GSD project (`.planning/` present) everything auto-connects: the map
