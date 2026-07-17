@@ -38,8 +38,10 @@ def git(*args):
 
 def collect(ref):
     net_app = net_test = 0
-    files, new_syms, removed_syms = [], [], []
-    for line in git("diff", "--numstat", ref).strip().splitlines():
+    files, new_syms, removed_syms, sig_changes = [], [], [], []
+    # --no-renames: rename paths like "src/{a.py => b.py}" would break path
+    # handling; with it, a rename is a clean delete+add pair.
+    for line in git("diff", "--numstat", "--no-renames", ref).strip().splitlines():
         add, rm, path = line.split("\t", 2)
         files.append(path)
         if add == "-":  # binary
@@ -54,11 +56,38 @@ def collect(ref):
     for path in files:
         if not language_of(path):
             continue
-        old = {s.key() for s in parse_text(path, git("show", f"{ref}:{path}"))}
-        new = {s.key() for s in (parse_file(Path(path)) if Path(path).exists() else [])}
-        new_syms += [f"{p + '.' if p else ''}{n}" for _, p, n in new - old]
-        removed_syms += [f"{p + '.' if p else ''}{n}" for _, p, n in old - new]
-    return net_app, net_test, files, sorted(new_syms), sorted(removed_syms)
+        old = {s.key(): s.signature for s in parse_text(path, git("show", f"{ref}:{path}"))}
+        new = {s.key(): s.signature
+               for s in (parse_file(Path(path)) if Path(path).exists() else [])}
+        def label(k):
+            _, p, n = k
+            return f"{p + '.' if p else ''}{n}"
+        new_syms += [label(k) for k in new.keys() - old.keys()]
+        removed_syms += [label(k) for k in old.keys() - new.keys()]
+        # Zeroth Law watch: an existing symbol whose signature changed is a
+        # potential compatibility break — surface it every time.
+        sig_changes += [f"{label(k)} [{old[k]} -> {new[k]}]"
+                        for k in old.keys() & new.keys() if old[k] != new[k]]
+    return net_app, net_test, files, sorted(new_syms), sorted(removed_syms), sorted(sig_changes)
+
+
+def gate_ledger_check(new_syms):
+    """Cross-check new symbols against recorded gate justifications (v0.8).
+
+    Opt-in: only runs when .claude/shrinkage-gates.jsonl exists (written by
+    gatelog.py at gate time). Returns the new symbols with no gate record.
+    """
+    ledger = Path(".claude/shrinkage-gates.jsonl")
+    if not ledger.exists():
+        return None
+    justified = set()
+    for line in ledger.read_text(encoding="utf-8").splitlines():
+        try:
+            justified.update(json.loads(line).get("symbols", []))
+        except (ValueError, AttributeError):
+            continue
+    short = {s.split(".")[-1] for s in justified} | justified
+    return [s for s in new_syms if s not in short and s.split(".")[-1] not in short]
 
 
 def signed(n):
@@ -87,6 +116,12 @@ def show_trend():
     for e in entries[-10:]:
         print(f"  {e['ts']}  app {signed(e['net_app']):>6}  test {signed(e['net_test']):>6}  "
               f"files {e['files']}")
+    dep = Path("DEPRECATIONS.md")
+    if dep.exists():
+        pending = sum(1 for l in dep.read_text(encoding="utf-8").splitlines()
+                      if l.strip().startswith("- [ ]"))
+        if pending:
+            print(f"deprecation shims pending removal: {pending} (DEPRECATIONS.md)")
     if app < 0:
         q = settings.quip(".", "shrunk", net=app)
         if q:
@@ -100,13 +135,20 @@ def main():
         return
     pos = [a for a in argv if not a.startswith("--")]
     ref = pos[0] if pos else "HEAD"
-    net_app, net_test, files, new_syms, removed_syms = collect(ref)
+    net_app, net_test, files, new_syms, removed_syms, sig_changes = collect(ref)
     net = net_app + net_test
 
     print(f"net LOC: {signed(net)} (app {signed(net_app)}, test {signed(net_test)}) | "
           f"files touched: {len(files)} | "
           f"new symbols: {len(new_syms)}{names(new_syms)} | "
           f"removed symbols: {len(removed_syms)}{names(removed_syms)}")
+    if sig_changes:
+        print(f"compat-watch: {len(sig_changes)} signature change(s) on existing symbols — "
+              f"verify additive-only (Zeroth Law): " + "; ".join(sig_changes[:5]))
+    unjustified = gate_ledger_check(new_syms)
+    if unjustified:
+        print(f"unjustified new symbols (no gate record): {', '.join(unjustified[:8])} — "
+              f"run the gate or record via gatelog.py")
 
     kind = ("shrunk" if net_app < 0 else
             "grew" if net_app > 25 else

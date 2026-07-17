@@ -1,7 +1,7 @@
 ---
 name: shave
 description: "Safe subtraction pass: remove/consolidate code with evidence chains, atomic commits, and zero behavior change"
-argument-hint: "[dir or file...]"
+argument-hint: "[dir or file...] [--dry-run]"
 allowed-tools: [Bash, Read, Grep, Edit, Write, Agent]
 ---
 

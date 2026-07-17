@@ -11,7 +11,7 @@ Find existing symbols related to a term at map cost, not repo-exploration cost.
 
 <process>
 1. Locate the shrinkage skill dir — `${CLAUDE_PLUGIN_ROOT}/skills/shrinkage` when installed as a plugin, else `.claude/skills/shrinkage` or `~/.claude/skills/shrinkage` — call it $SKILL.
-2. Run: `python $SKILL/scripts/codemap.py query $ARGUMENTS`
+2. Run: `python3 $SKILL/scripts/codemap.py query $ARGUMENTS`
    (map missing? run `/srk:map` first).
 3. Present the hits grouped by file. If a relevant file shows as collapsed,
    re-run with `--deep`. Open only the files the hits point at.

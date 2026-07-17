@@ -8,8 +8,20 @@ nothing to remove later.
 </objective>
 
 <process>
-1. **Prepare.** Map current (workflow: map). Language rules loaded. Task
-   stated in one sentence — if you can't state it in one sentence, split it.
+0. **Size the gate (context economy).** Not every change deserves the full
+   ceremony. Take the **lite path** when the change is small and low-risk
+   (roughly: ≤ ~15 expected lines, at most one new symbol, not touching the
+   compatibility surface) OR when the codemap is tiny (< ~30 symbols — a
+   near-empty repo has nothing to reuse): one `codemap.py query` for the
+   obvious owner symbol, name it, record the gate (step 7), proceed. Full
+   ceremony (steps 1–6) for everything larger, and always when the map flags a
+   likely duplicate. Don't re-read `rules/<lang>.md` if already loaded this
+   session, and do NOT load `safety-model.md` here — that's for deletions
+   (shave/audit), not for adding code.
+
+1. **Prepare.** Map current (workflow: map). Language rules loaded (once per
+   session). Task stated in one sentence — if you can't state it in one
+   sentence, split it.
 
 2. **Harvest candidates.** Query the map for the task's domain nouns AND verbs
    (`codemap.py query invoice`, `query export`, `query notify`). Cast wide:
@@ -50,9 +62,18 @@ nothing to remove later.
    (safety-model §0)? Then changes must be additive-only; removals/renames go
    through the deprecation cycle instead.
 
-8. **Emit the gate record** (goes in the response, the plan, or the GSD plan
-   task): candidates + verdicts, chosen rung(s), justifications, compat notes,
-   expected net-LOC sign.
+8. **Emit AND persist the gate record.** In the response: candidates +
+   verdicts, chosen rung(s), justifications, compat notes, expected net-LOC
+   sign. On disk (v0.8 — this is what lets the scoreboard verify you later):
+
+   ```
+   python3 $SKILL/scripts/gatelog.py add --task "<task>" --rung <n> \
+     --symbols "<symbols this gate justifies>" [--note "<rung 7-8 justification>"]
+   ```
+
+   diffstat cross-checks new symbols against this ledger and prints
+   `unjustified new symbols` for anything that never passed a gate — the
+   discipline becomes mechanical, not honor-system.
 </process>
 
 End with a terse result line + a **Next** menu of 1-3 `/srk:` commands (see the command file's <next> block). No wall of prose.

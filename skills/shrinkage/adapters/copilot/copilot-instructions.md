@@ -5,7 +5,7 @@
 The measure of a change is the goal achieved with the least code. Before
 writing code, orient from the codemap, not by exploring the repo:
 
-- Refresh/read the map: `python .github/shrinkage/scripts/codemap.py refresh`
+- Refresh/read the map: `python3 .github/shrinkage/scripts/codemap.py refresh`
   (map at `.claude/codemap.txt` or `.planning/intel/codemap.txt`); query it
   with `codemap.py query <term>`.
 - Read `.github/shrinkage/rules/<language>.md` for each language you touch.
@@ -36,7 +36,7 @@ value that never varied, no pass-through wrappers (deprecation shims exempt),
 no utils growth when the logic has a home.
 
 **Scoreboard** — after every change run
-`python .github/shrinkage/scripts/diffstat.py` and include its line in the PR
+`python3 .github/shrinkage/scripts/diffstat.py` and include its line in the PR
 description (`--pr` prints a ready markdown block). Negative net app LOC is
 the high score.
 

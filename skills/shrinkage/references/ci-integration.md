@@ -62,6 +62,52 @@ number instead of the codebase — splitting PRs, deleting tests, gaming
 whitespace. The gate for growth is the reuse gate, enforced in review by the
 justifications the scoreboard makes visible.
 
+## T0 auto-PR bot (the safest automation)
+
+Tier-0 removals — commented-out code blocks, dead imports, stale TODOs, noise
+(catalog C10) — are mechanical enough to automate end-to-end. A weekly action
+that audits and opens a PR containing ONLY T0 items gives recurring cleanup
+with human review as the gate:
+
+```yaml
+name: srk-t0-bot
+on:
+  schedule:
+    - cron: "0 7 * * 1"
+  workflow_dispatch: {}
+jobs:
+  t0:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            Run the shrinkage audit (skill: shrinkage). Then execute ONLY
+            tier-T0, catalog-C10 removals (commented-out code, dead imports,
+            stale TODOs) — nothing T1 or above, no symbol deletions. One
+            commit per file group, tests green after each. Open a PR titled
+            "shrink: T0 noise sweep" with the diffstat scoreboard in the body.
+            If nothing qualifies, exit without a PR.
+```
+
+The PR review is the human gate; the tier restriction is what makes unattended
+execution safe.
+
+## Shrink badge
+
+Make the metric visible in the README:
+
+```bash
+python3 <skill>/scripts/badge.py --out .claude/shrinkage-badge.svg
+```
+
+reads the trend log and writes a badge with the cumulative app-LOC delta
+(green when negative). Commit it and embed:
+`![shrinkage](.claude/shrinkage-badge.svg)`. Regenerate in the same hook/CI
+step that runs `diffstat.py --log`.
+
 ## Scheduled weekly audit
 
 Keep SHRINK-PLAN.md standing and fresh instead of auditing ad hoc.

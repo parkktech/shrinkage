@@ -6,7 +6,7 @@ the trait as base context on the method's parent name `Type`).
 """
 import re
 
-from parsers import Symbol, scan_braced
+from parsers import Symbol, _neutralize, scan_braced
 
 DECL = re.compile(
     r"^\s*(?:pub(?:\([^)]*\))?\s+)?(?P<kw>struct|enum|trait|union)\s+(?P<name>\w+)"
@@ -30,7 +30,8 @@ def parse(text):
     syms = []
     depth = 0
     impl_stack = []  # (target, trait, depth_at_open)
-    for n, line in enumerate(text.splitlines(), 1):
+    for n, raw in enumerate(text.splitlines(), 1):
+        line = _neutralize(raw)
         dm = DECL.search(line)
         im = IMPL.search(line) if not dm else None
         fm = FN.search(line) if not (dm or im) else None

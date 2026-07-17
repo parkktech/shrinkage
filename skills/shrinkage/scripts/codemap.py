@@ -14,6 +14,7 @@ into .planning/intel/api-map.json so GSD intel consumers (plan_review
 source grounding, API-SURFACE.md) see every language this skill parses.
 """
 import argparse
+import hashlib
 import json
 import os
 import re
@@ -39,6 +40,27 @@ def est_tokens(text):
     return len(text) // 4
 
 
+COMMENT_BLOCK = re.compile(r"/\*.*?\*/", re.S)
+COMMENT_LINE = re.compile(r"(//|#).*")
+
+
+def strip_comments(text):
+    """Remove comments before identifier counting so commented-out code doesn't
+    inflate reference counts (a symbol mentioned only in comments is not alive)."""
+    text = COMMENT_BLOCK.sub(" ", text)
+    return "\n".join(COMMENT_LINE.sub(" ", l) for l in text.splitlines())
+
+
+def fingerprint(root):
+    """Content fingerprint of the source set: catches edits, ADDS, and DELETES
+    (pure mtime comparison misses deletions and git checkouts to older refs)."""
+    h = hashlib.sha1()
+    for p in source_files(root):
+        st = p.stat()
+        h.update(f"{p.relative_to(root).as_posix()}:{st.st_size}:{st.st_mtime_ns}|".encode())
+    return h.hexdigest()[:12]
+
+
 def map_path(root):
     if (root / ".planning").is_dir():
         return root / ".planning" / "intel" / "codemap.txt"
@@ -61,17 +83,21 @@ def source_files(root):
 
 def build_index(root):
     """{relpath: [Symbol]} with reference counts filled in."""
-    index, idents = {}, Counter()
+    index, idents, defs = {}, Counter(), Counter()
     for path in source_files(root):
         rel = path.relative_to(root).as_posix()
         index[rel] = parse_file(path)
         try:
-            idents.update(IDENT.findall(path.read_text(encoding="utf-8", errors="replace")))
+            idents.update(IDENT.findall(strip_comments(
+                path.read_text(encoding="utf-8", errors="replace"))))
         except OSError:
             pass
     for syms in index.values():
         for s in syms:
-            s.refs = max(0, idents[s.name] - 1)  # minus the definition itself
+            defs[s.name] += 1
+    for syms in index.values():
+        for s in syms:
+            s.refs = max(0, idents[s.name] - defs[s.name])  # minus ALL definitions
     return index
 
 
@@ -111,6 +137,7 @@ def format_map(index, root, budget):
     stamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%MZ")
     header = (f"# codemap v1 | root: {root.name} | generated: {stamp} | "
               f"files: {len(index)} | symbols: {n_syms} | ~{est_tokens(body)} tokens"
+              f" | fp: {fingerprint(root)}"
               + (f" | {len(collapsed)} files collapsed to fit budget {budget}" if collapsed else ""))
     return header + "\n" + body + "\n"
 
@@ -143,15 +170,21 @@ def sync_intel(index, root):
         data = json.loads(api_path.read_text(encoding="utf-8")) if api_path.exists() else {}
     except (OSError, json.JSONDecodeError):
         data = {}
-    entries = {}
+    ours = {}
     for rel, syms in index.items():
         for s in syms:
             key = f"{s.parent}.{s.name}" if s.parent else s.name
-            if key in entries:
+            if key in ours:
                 key = f"{key} ({rel})"
-            entries[key] = {"file": rel, "kind": s.kind, "signature": s.signature,
-                            "line": s.line, "refs": s.refs,
-                            "language": language_of(rel)}
+            ours[key] = {"file": rel, "kind": s.kind, "signature": s.signature,
+                         "line": s.line, "refs": s.refs,
+                         "language": language_of(rel), "src": "srk"}
+    # Merge, don't clobber: keep entries other tools (e.g. GSD's intel-updater)
+    # wrote; replace only entries we generated previously.
+    old = data.get("entries") or {}
+    entries = {k: v for k, v in old.items()
+               if not (isinstance(v, dict) and v.get("src") == "srk")}
+    entries.update(ours)
     data["entries"] = entries
     meta = data.get("_meta") or {}
     meta.update({"updated_at": datetime.now(timezone.utc).isoformat(),
@@ -195,8 +228,8 @@ def cmd_build(root, out, budget, do_sync):
 
 def cmd_refresh(root, out, budget, do_sync):
     if out.exists():
-        map_mtime = out.stat().st_mtime
-        if all(p.stat().st_mtime <= map_mtime for p in source_files(root)):
+        m = re.search(r"\| fp: (\w+)", out.read_text(encoding="utf-8").splitlines()[0])
+        if m and m.group(1) == fingerprint(root):
             print(f"codemap up to date: {out}")
             q = settings.quip(root, "current")
             if q:

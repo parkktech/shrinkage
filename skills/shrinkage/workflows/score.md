@@ -7,8 +7,14 @@ the model on every task, and optionally for humans on every PR.
 </objective>
 
 <process>
-1. **Run:** `python $SKILL/scripts/diffstat.py [REF] [--pr]` (default REF:
+1. **Run:** `python3 $SKILL/scripts/diffstat.py [REF] [--pr]` (default REF:
    HEAD → scores the working diff; pass `main` to score a whole branch).
+   **This step is script-only:** run it and echo its output verbatim — no
+   re-analysis pass, no subagent, no re-reading the codebase. The script now
+   prints everything that needs judgment flags: `compat-watch` lines
+   (signature changes on existing symbols — Zeroth Law check) and
+   `unjustified new symbols` (gate-ledger cross-check). Only those two lines
+   warrant follow-up reasoning; a clean scoreboard needs none.
 
 2. **Read the line:** net app LOC, net test LOC (counted separately — test
    deletions never flatter the score), files touched, new symbols (named),

@@ -134,6 +134,11 @@ surface, unknown external callers — don't delete. Instrument:
 This converts "unprovable" into "measured" — the only honest path to shrinking
 a public surface.
 
+Every shim and deprecation created under this cycle is recorded in
+**DEPRECATIONS.md** (repo root) as `- [ ] <old> -> <new> (remove <when>)`, and
+the trend report counts unchecked entries — a shim without a scheduled,
+tracked removal is just a wrapper with paperwork.
+
 ## 6. The transformation protocol
 
 One transform = one atomic commit. Never batch unrelated removals.

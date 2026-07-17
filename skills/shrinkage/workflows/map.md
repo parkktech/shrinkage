@@ -11,7 +11,7 @@ read instead of 15k–40k tokens of greps and file dumps per task.
    `.claude/codemap.txt`, or `.planning/intel/codemap.txt` when `.planning/`
    exists (GSD project — the scripts detect this automatically).
 
-2. **Refresh.** `python $SKILL/scripts/codemap.py refresh` — no-op when
+2. **Refresh.** `python3 $SKILL/scripts/codemap.py refresh` — no-op when
    current (mtime-based), full rebuild otherwise. Run this at the START of
    every coding task; it costs nothing when the map is fresh.
 

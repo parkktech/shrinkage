@@ -16,18 +16,21 @@ never sacrificed** (the Zeroth Law) and **behavior is provably preserved**
 
 ## Core loop (every coding task)
 
-1. **Map** — `python <skill>/scripts/codemap.py refresh` (builds on first
+1. **Map** — `python3 <skill>/scripts/codemap.py refresh` (builds on first
    run; asks the user once whether to commit or gitignore the map — default
    gitignored). Load the `rules/<lang>.md` files it names.
    → detail: `workflows/map.md`
 2. **Orient** — read the map, not the repo. `codemap.py query <term>`
    (`--deep` to expand), `scope <dir>` for monorepo subtrees.
-3. **Gate** — list 2–5 candidate symbols to extend; extend-or-justify each;
-   walk the extension ladder; rungs 7–8 (new file/module) need justification —
-   and user confirmation when `gate: "hard"`. → detail: `workflows/gate.md`
+3. **Gate** — size it first: small low-risk change (or near-empty map) → the
+   lite path (one query, name the owner, record, go); otherwise list 2–5
+   candidate symbols to extend, extend-or-justify each, walk the extension
+   ladder; rungs 7–8 (new file/module) need justification — and user
+   confirmation when `gate: "hard"`. Either path, persist the record:
+   `gatelog.py add` — the scoreboard cross-checks it. → `workflows/gate.md`
 4. **Implement** — smallest diff, plus a subtraction pass in every touched
    file. Deletions follow the safety model — no exceptions for drive-bys.
-5. **Score** — `python <skill>/scripts/diffstat.py` and report its line (app
+5. **Score** — `python3 <skill>/scripts/diffstat.py` and report its line (app
    and test LOC counted separately). `--pr` for the PR block, `--log` for the
    trend log. → detail: `workflows/score.md`
 6. **Re-map** — run `codemap.py refresh` again after implementing: your new
@@ -117,7 +120,15 @@ instead copy `commands/*.md` into `.claude/commands/`:
 
 Extra signals for shave/audit: `codemap.py dupes` (same-name symbols),
 `codemap.py clones` (renamed copy-paste via normalized shingles), and
-`coverage_check.py <files>` (coverage-aware tier escalation).
+`coverage_check.py <files>` (coverage-aware tier escalation). Bookkeeping:
+`gatelog.py` (persistent gate ledger — diffstat flags new symbols with no
+record), `badge.py` (shrink badge SVG from the trend log), DEPRECATIONS.md
+(shim removal schedule — trend nags on unchecked entries). `/srk:shave`
+accepts `--dry-run`: full plan with evidence, zero edits.
+
+Context economy: load `rules/<lang>.md` once per session; the gate never loads
+`safety-model.md` (that's deletion reading); score is script-only — run
+diffstat, echo verbatim.
 
 CI/hook integration (pre-commit scoreboard, PR comment action):
 `references/ci-integration.md`.

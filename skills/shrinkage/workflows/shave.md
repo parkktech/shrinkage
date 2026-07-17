@@ -13,6 +13,13 @@ Deleting is part of the feature; this workflow is how deletion earns trust.
 </required_reading>
 
 <process>
+0. **Dry-run mode (v0.8).** If invoked with `--dry-run`: execute steps 1–4
+   fully (scope, baseline check, hunt, tier + evidence), then produce the
+   complete transform plan — per candidate: catalog entry, tier, evidence
+   chain, the exact edit intended, expected net LOC — and STOP. No file is
+   modified, no commit made. This is the review artifact before letting the
+   surgeon loose.
+
 1. **Scope.** Target = the argument given, or the files in
    `git diff --name-only HEAD` when riding along with a feature change.
    Keep a shave scoped — a repo-wide hunt is the audit workflow's job.
@@ -49,9 +56,13 @@ Deleting is part of the feature; this workflow is how deletion earns trust.
    `srk-verifier` pass.
 
 6. **Compatibility check per transform:** old entry points on the surface
-   keep working (deprecation shims where needed, marked and scheduled).
+   keep working (deprecation shims where needed, marked and scheduled). Every
+   shim created gets a line in **DEPRECATIONS.md** at the repo root:
+   `- [ ] <old entry point> -> <replacement> (remove <date/release>)`. The
+   trend report nags about unchecked entries, so shims can't accumulate
+   silently forever — check the box when the shim is finally removed.
 
-7. **Score.** `python $SKILL/scripts/diffstat.py` — the shave should read
+7. **Score.** `python3 $SKILL/scripts/diffstat.py` — the shave should read
    net-negative in app LOC with test LOC steady or up (characterization tests
    added count as investment, not weight). Report the scoreboard line and, in
    a GSD project, put it in the plan SUMMARY.md.

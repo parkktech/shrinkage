@@ -27,6 +27,11 @@ phases) consuming the plan.
 3. **Verify before ranking.** Ref counts and name matches are signals — each
    candidate gets a source-level look before it enters the plan (the auditor
    brief requires quoting the evidence). No candidate ships on map data alone.
+   **Join coverage into the signal:** run `coverage_check.py` on candidate
+   files — 0 refs AND uncovered is a much stronger dead-code case (nothing
+   calls it, nothing tests it), while 0 refs but well-covered says the refs
+   are hiding somewhere (fixtures, dynamic dispatch) — walk the checklist
+   harder before believing it's dead.
 
 4. **Tier and estimate.** Per candidate: catalog entry, risk tier, estimated
    net LOC, effort (S/M/L), confidence (evidence completeness), and blast
@@ -36,10 +41,18 @@ phases) consuming the plan.
    (they're free wins that build trust in the process) and T2s last, each
    carrying its deprecation-cycle proposal.
 
-6. **Write SHRINK-PLAN.md** (repo root, or `.planning/` in a GSD project):
-   ranked table + per-candidate evidence notes + a "hidden dependencies
-   discovered" section that future audits and shaves append to. This file is
-   the audit's product and the shave's input.
+6. **Write SHRINK-PLAN.md** (repo root, or `.planning/` in a GSD project).
+   Fixed schema so shaves can consume it mechanically — ranked table with
+   EXACTLY these columns:
+
+   ```
+   | # | candidate | file:line | catalog | tier | est. net LOC | effort | confidence | coverage | evidence |
+   ```
+
+   followed by a `## Hidden dependencies discovered` section that future
+   audits and shaves append to (reverted attempts land here), and a
+   `## Deferred (T2)` section where each entry carries its deprecation-cycle
+   proposal. This file is the audit's product and the shave's input.
 
 7. **Offer execution:** top T0/T1 items via `/srk:shave <target>` —
    or, in a GSD project, as planned phases so executors run them with fresh

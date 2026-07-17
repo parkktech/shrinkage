@@ -78,6 +78,17 @@ def parse_file(path):
         return []
 
 
+_STR_RE = re.compile(r'"(?:\\.|[^"\\])*"' + r"|'(?:\\.|[^'\\])*'" + r"|`(?:\\.|[^`\\])*`")
+_LINE_COMMENT_RE = re.compile(r"(//|#).*")
+
+
+def _neutralize(line):
+    """Blank out string literals and line comments so braces inside them don't
+    skew depth tracking (e.g. Go's `fmt.Sprintf("{%s}")`). Crude but effective
+    for line-based scanning; multi-line strings remain a documented limitation."""
+    return _LINE_COMMENT_RE.sub(" ", _STR_RE.sub('""', line))
+
+
 def scan_braced(text, decl_re, members, tops):
     """Shared line scanner for brace-delimited languages (JS, PHP, Java, Go, ...).
 
@@ -94,7 +105,8 @@ def scan_braced(text, decl_re, members, tops):
     depth = 0
     stack = []  # [class_name, body_depth or None until its "{" is seen]
 
-    for n, line in enumerate(text.splitlines(), 1):
+    for n, raw in enumerate(text.splitlines(), 1):
+        line = _neutralize(raw)
         dm = decl_re.search(line)
         if dm:
             g = dm.groupdict()

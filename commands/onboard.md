@@ -12,7 +12,7 @@ as conscious choices, user ready to work.
 
 <process>
 1. Locate the shrinkage skill dir ($SKILL: `${CLAUDE_PLUGIN_ROOT}/skills/shrinkage` when installed as a plugin, else `.claude/skills/shrinkage` or `~/.claude/skills/shrinkage`). Run
-   `python $SKILL/scripts/codemap.py build` and show the summary (files,
+   `python3 $SKILL/scripts/codemap.py build` and show the summary (files,
    symbols, ~tokens, languages, any unsupported languages worth an adapter).
 2. Walk the user through every setting, one question with a recommended
    default (interactive sessions — unattended runs take defaults silently):

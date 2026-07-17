@@ -12,7 +12,7 @@ of map instead of repo-wide exploration.
 
 <execution_context>
 Locate the shrinkage skill dir ($SKILL: `${CLAUDE_PLUGIN_ROOT}/skills/shrinkage` when installed as a plugin, else `.claude/skills/shrinkage` or `~/.claude/skills/shrinkage`), then follow
-`$SKILL/workflows/map.md`: run `python $SKILL/scripts/codemap.py refresh
+`$SKILL/workflows/map.md`: run `python3 $SKILL/scripts/codemap.py refresh
 $ARGUMENTS`, handle the first-build commit-vs-gitignore question, read the
 language report, and load the named `rules/<lang>.md` files. GSD projects
 sync to `.planning/intel/` automatically — confirm the sync line.
