@@ -39,3 +39,15 @@ no utils growth when the logic has a home.
 `python .github/shrinkage/scripts/diffstat.py` and include its line in the PR
 description (`--pr` prints a ready markdown block). Negative net app LOC is
 the high score.
+
+**Reducing existing code** — to shrink a project: build the map
+(`codemap.py build`), find candidates via the audit sweeps (`codemap.py dupes`,
+`codemap.py clones`, plus zero-reference symbols), then remove them following
+`.github/shrinkage/references/safety-model.md` and `consolidation-catalog.md` —
+one revertible commit per transform, tests green before and after, never
+touching the compatibility surface.
+
+**Economy** — when delegating: the mechanical edits (applying a decided
+transform) can run on a cheaper/faster model; reserve the capable model for
+deciding *what* to change and for verifying nothing broke. The test gate, not
+the model, guarantees safety.

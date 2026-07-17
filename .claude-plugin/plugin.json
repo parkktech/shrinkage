@@ -1,6 +1,6 @@
 {
   "name": "srk",
-  "version": "0.6.1",
+  "version": "0.7.0",
   "description": "Shrinkage — write less, better code: token-lean codemaps, a reuse-first extension ladder, and provably-safe code reduction with backwards compatibility as the Zeroth Law. Commands: /srk:onboard, /srk:map, /srk:gate, /srk:score, /srk:shave, /srk:audit, /srk:trend, /srk:config.",
   "author": {
     "name": "Jason @ Parkk Tech"

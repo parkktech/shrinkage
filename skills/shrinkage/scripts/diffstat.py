@@ -25,6 +25,10 @@ import settings  # noqa: E402
 from parsers import language_of, parse_file, parse_text  # noqa: E402
 
 TEST_PATH = re.compile(r"(^|/)(tests?|specs?|__tests__)(/|$)|(^|[./_])(test|spec)s?[._]", re.I)
+# Docs/config/lockfiles are not code — excluded from LOC so "app LOC" means code.
+NON_CODE = re.compile(
+    r"\.(md|markdown|rst|txt|json|ya?ml|toml|ini|cfg|conf|lock|env|csv|svg)$"
+    r"|(^|/)\.gitignore$|(^|/)(\.planning|\.claude)/", re.I)
 
 
 def git(*args):
@@ -39,6 +43,8 @@ def collect(ref):
         add, rm, path = line.split("\t", 2)
         files.append(path)
         if add == "-":  # binary
+            continue
+        if NON_CODE.search(path):  # docs/config don't count as code LOC
             continue
         delta = int(add) - int(rm)
         if TEST_PATH.search(path):

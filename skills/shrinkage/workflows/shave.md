@@ -42,7 +42,11 @@ Deleting is part of the feature; this workflow is how deletion earns trust.
 5. **Execute, one transform per commit,** per the transformation protocol
    (§6): apply one catalog entry → gates green → commit with the evidence
    template → next. Any red → revert that transform fully, record the hidden
-   dependency you just discovered in the report.
+   dependency you just discovered in the report. **Economy:** spawn the
+   `srk-surgeon` agent to apply each transform — it runs on the cheap model
+   (the what/how is already decided here), with the test gate guaranteeing
+   safety. Reserve the capable model for the analysis (this workflow) and the
+   `srk-verifier` pass.
 
 6. **Compatibility check per transform:** old entry points on the surface
    keep working (deprecation shims where needed, marked and scheduled).

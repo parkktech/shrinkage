@@ -64,14 +64,27 @@ varied; no wrapper that only delegates (deprecation shims exempt — labeled and
 scheduled); no `utils` growth when the logic has a home. Add the abstraction
 when the second concrete case arrives.
 
-## Subagents
+## Subagents & economy mode
 
-For parallel or high-stakes work, spawn agents with these briefs:
-`agents/shrink-auditor.md` (read-only candidate finding, evidence required),
-`agents/shrink-surgeon.md` (executes exactly ONE catalog transform,
-revert-on-red), `agents/shrink-verifier.md` (adversarial: paid to find
-breakage). The audit workflow fans out auditors; every surgeon commit on T1+
-work deserves a verifier pass.
+Three roles, deliberately tiered by model to keep cost down — the expensive
+model decides *what and how*, the cheap model does the mechanical work:
+
+- **srk-auditor** (`model: inherit` — capable model) — finds and evidences
+  reduction candidates. Read-only. Judging what's truly removable is the hard
+  part, so it runs on the session's model.
+- **srk-surgeon** (`model: haiku` — cheap/fast) — executes exactly ONE
+  already-decided catalog transform, revert-on-red. The "what/how" is settled;
+  this is mechanical lift-and-shift, and the test gate (not the model) is what
+  guarantees safety.
+- **srk-verifier** (`model: inherit`) — adversarial, tries to prove the change
+  broke something. A missed break costs more than the tokens.
+
+That's the default **economy tiering**: the flagship model finds and verifies,
+Haiku shifts. To run everything on the flagship (max quality, higher cost) set
+the surgeon's `model:` to `inherit` in `agents/srk-surgeon.md`; to push economy
+further, drop the auditor's sweeps to a mid model too. The full role protocols
+live in `agents/shrink-{auditor,surgeon,verifier}.md`. The audit workflow fans
+out auditors; every surgeon commit on T1+ work deserves a verifier pass.
 
 ## GSD integration
 
