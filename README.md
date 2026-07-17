@@ -18,7 +18,9 @@ agent one of those devs.
 ## What it does
 
 - **Maps your repo cheaply.** A script parses your code (Python, JS/TS, PHP, Go,
-  Rust, Java, C#) into a compact symbol map — the agent reads ~4k tokens of map
+  Rust, Java, C# — plus Blade/.phtml/Twig/Vue templates, with reference-only
+  indexing for Handlebars/Jinja/Smarty/ERB and framework XML/YAML config) into
+  a compact symbol map — the agent reads ~4k tokens of map
   instead of grepping half the repo to rediscover what already exists.
 - **Writes less as you go.** Before new code is written, a *reuse gate* makes the
   agent extend an existing function/class instead of adding a parallel one —

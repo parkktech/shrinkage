@@ -58,3 +58,17 @@ Plan tasks name the seam and target ("after-plugin on
 core", rarely "preference". Verify: XML references resolve (a renamed class
 breaks di.xml silently until runtime), `setup:di:compile` passes, no new
 Helper grab-bag, and every around-plugin justifies why after/before couldn't.
+
+## Templates (.phtml)
+
+- Templates are now indexed: a view-model/block method "unused" in PHP but
+  called in a .phtml shows real refs in the map — trust the map, then still
+  grep layout XML before any deletion.
+- Logic in templates is a smell: it belongs in the view model (rung 4-5), not
+  `<?php` blocks in .phtml. A template needing new data = a view-model method.
+- Overriding a template in your theme copies the WHOLE file (Magento's
+  mechanism — unavoidable), so keep core templates' overrides minimal and
+  diff-reviewed against the original at upgrade time; never fork a template
+  to change what a plugin/view model could.
+- `codemap.py clones` across app/design themes finds the copied-template
+  drift that accumulates over upgrades.

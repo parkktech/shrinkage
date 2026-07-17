@@ -59,3 +59,12 @@ Plan tasks name the seam ("form_alter on node_form", "decorate
 no core/contrib duplicate written, YAML references resolve (`drush cr` +
 config validation), no deleted hook that config/update sequencing still
 needs, services injected not statically fetched.
+
+## Templates (Twig)
+
+- .twig files are indexed: blocks and macros appear in the codemap as
+  extend/override candidates, and template identifier references count.
+- Read `rules/twig.md` for the template ladder (extends+block over copy,
+  macro over repetition, logic upstream in preprocess).
+- Theme suggestions resolve templates by NAME PATTERN — a "dead" template may
+  be selected at runtime; check hook_theme/suggestions before deleting.

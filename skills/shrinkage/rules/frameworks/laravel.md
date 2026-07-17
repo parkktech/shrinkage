@@ -53,3 +53,14 @@ Plan tasks name the seam ("macro on Collection", "listener on OrderShipped")
 rather than "new class". Verify: no Illuminate duplicate got written (sweep
 the diff's new symbols against `vendor` search), seams used over layers, and
 queued/route/config string references still resolve after any change.
+
+## Templates (Blade)
+
+- .blade.php files are indexed (they're PHP to the map): component/method
+  references in Blade count toward refs — but @-directive and kebab-case
+  component references still need the grep pass before deletion.
+- Repeated markup becomes a component with @props defaults or a slot — not a
+  copied include. `clones` catches copy-pasted partials.
+- Logic in templates belongs in the component class, a view composer, or an
+  accessor — @php blocks are a smell.
+- Extend layouts via @section/@push overrides, never by copying the layout.

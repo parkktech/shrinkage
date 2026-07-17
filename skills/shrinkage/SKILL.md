@@ -196,8 +196,14 @@ brand. Celebrate net-negative; tease growth gently, never scold.
 
 ## Languages and parser precision
 
-Supported now: Python, JavaScript/TypeScript, PHP, Go, Rust, Java, C# — each
-with a parser adapter AND a `rules/<lang>.md`. Parsing is exact where cheap
+Supported now: Python, JavaScript/TypeScript, PHP, Go, Rust, Java, C#, plus
+templates — Blade/.phtml (via the PHP adapter), Twig (blocks + macros mapped,
+`rules/twig.md`), Vue/Svelte/Astro (via the JS adapter). Reference-only
+indexing covers Handlebars/EJS/Jinja/Smarty/Latte/ERB/Liquid templates and
+framework config (Magento XML, services/routing YAML): they define no map
+symbols but their usage COUNTS as references, so template-only or config-only
+usage can't make a symbol look dead. Each language has a parser adapter AND a
+`rules/<lang>.md`. Parsing is exact where cheap
 (Python via stdlib ast; JS/TS/PHP upgrade automatically to tree-sitter when
 `pip install tree-sitter tree-sitter-javascript tree-sitter-typescript
 tree-sitter-php` is present) and regex-based otherwise — same map either way.

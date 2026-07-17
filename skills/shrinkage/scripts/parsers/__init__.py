@@ -33,12 +33,36 @@ EXTENSIONS = {
     ".mjs":  ("javascript", "javascript"),
     ".ts":   ("javascript", "javascript"),
     ".tsx":  ("javascript", "javascript"),
-    ".php":  ("php", "php"),
+    ".php":  ("php", "php"),      # .blade.php lands here too (splitext -> .php)
+    ".phtml": ("php", "php"),     # Magento/Zend templates: PHP+HTML — few symbols,
+                                  # but indexing them makes template REFS count
+    ".twig": ("twig", "twig"),    # Drupal/Symfony: blocks + macros mapped
     ".go":   ("go_lang", "go"),
     ".rs":   ("rust", "rust"),
     ".java": ("java_like", "java"),
     ".cs":   ("java_like", "csharp"),
+    ".vue":    ("javascript", "javascript"),  # SFC: script parsed, template refs counted
+    ".svelte": ("javascript", "javascript"),
+    ".astro":  ("javascript", "javascript"),
 }
+
+# Reference-only types: define no symbols worth mapping, but REFERENCE code —
+# they feed the identifier counter so template/config usage keeps symbols
+# alive in the map (the classic deletion trap).
+REF_ONLY_EXTS = {".hbs", ".mustache", ".ejs", ".j2", ".jinja", ".jinja2",
+                 ".tpl", ".latte", ".erb", ".liquid"}
+# Framework config that references classes/methods by string (Magento XML,
+# Drupal/Symfony YAML, Laravel config dirs are .php and already indexed).
+REF_ONLY_FILES = re.compile(
+    r"(^|/)(di|events|webapi|system|crontab|widget|acl|menu|sections)\.xml$"
+    r"|(^|/)view/.*/(layout|ui_component)/.*\.xml$"
+    r"|\.services\.ya?ml$|(^|/)routing\.ya?ml$|\.links\.[\w.]+\.ya?ml$"
+    r"|(^|/)config/schema/.*\.ya?ml$")
+
+
+def is_ref_only(path):
+    p = str(path).replace("\\", "/")
+    return os.path.splitext(p)[1].lower() in REF_ONLY_EXTS or bool(REF_ONLY_FILES.search(p))
 
 
 def language_of(path):

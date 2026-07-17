@@ -25,7 +25,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import settings  # noqa: E402
-from parsers import EXTENSIONS, Symbol, language_of, parse_file  # noqa: E402
+from parsers import EXTENSIONS, Symbol, is_ref_only, language_of, parse_file  # noqa: E402
 
 SKIP_DIRS = {
     ".git", "node_modules", "vendor", "dist", "build", "out", "__pycache__",
@@ -81,6 +81,21 @@ def source_files(root):
         yield p
 
 
+def ref_only_files(root):
+    """Templates/config that reference code without defining it (parsers.is_ref_only)."""
+    for p in sorted(root.rglob("*")):
+        if not p.is_file() or not is_ref_only(p):
+            continue
+        if any(part in SKIP_DIRS for part in p.relative_to(root).parts):
+            continue
+        try:
+            if p.stat().st_size > MAX_FILE_BYTES:
+                continue
+        except OSError:
+            continue
+        yield p
+
+
 def build_index(root):
     """{relpath: [Symbol]} with reference counts filled in."""
     index, idents, defs = {}, Counter(), Counter()
@@ -90,6 +105,11 @@ def build_index(root):
         try:
             idents.update(IDENT.findall(strip_comments(
                 path.read_text(encoding="utf-8", errors="replace"))))
+        except OSError:
+            pass
+    for path in ref_only_files(root):  # refs only — no symbols, no comment strip
+        try:
+            idents.update(IDENT.findall(path.read_text(encoding="utf-8", errors="replace")))
         except OSError:
             pass
     for syms in index.values():
