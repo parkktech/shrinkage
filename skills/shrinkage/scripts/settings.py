@@ -18,6 +18,7 @@ DEFAULTS = {
     "auto_max_items": 0,     # /srk:shave --auto: optional review cap (0 = run to completion).
     "auto_context_stop": 75, # fallback only: --auto offloads each item to a subagent so the
                              # main context stays flat; this % is the safety net if it doesn't.
+    "allow_dangerous": True, # team kill-switch: False refuses `/srk:shave --auto --dangerous`.
 }
 
 QUIPS = {

@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.18.0
+- Clearer --auto halt: a drained T0/T1 backlog now reports what got done, why
+  it stopped, and the continue options — never a bare "0 transforms" that
+  reads like a bug.
+- `/srk:shave --auto --dangerous` (alias --full-send): explicit escape hatch
+  that executes T2/public-surface items too (direct removal, no deprecation
+  cycle). KEEPS the free safety — atomic commit + tests-green-or-revert per
+  item, hard-stop on a red/absent suite. Refused when allow_dangerous:false
+  (team kill-switch). Documented in the safety model as the one opt-in
+  override.
+
 ## 0.17.0
 - `/srk:update` + selfupdate.py: reliable updates. Reports installed vs latest
   version and clears Claude Code's pinned plugin cache (the thing that leaves

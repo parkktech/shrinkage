@@ -166,6 +166,28 @@ catalog: <catalog entry #>, tier T<0|1>
 net LOC: <n>
 ```
 
+## 6b. The escape hatch (`--auto --dangerous`)
+
+The safety model's autonomy limits (§2) exist to protect you by default. There
+is one explicit, opt-in override — `/srk:shave --auto --dangerous` — for when
+you knowingly accept the risk (you own/control every consumer of the code).
+What it changes and, crucially, what it does NOT:
+
+- **Drops:** the human-confirmation halt on T2/public-surface items, and the
+  deprecation cycle — it removes public symbols directly.
+- **Keeps (non-negotiable, even here):** one atomic commit per transform;
+  tests green before and after each or auto-revert; a **hard stop on a red or
+  absent test suite** (revertibility is meaningless without a green baseline);
+  evidence re-verified per item.
+- **The risk it accepts:** external consumers of your public API are not
+  covered by your tests, so a direct removal can break callers outside the
+  repo. That's the whole danger, and why it's named `--dangerous`.
+
+It is refused when `allow_dangerous: false` (team kill-switch), and every run
+opens with a loud banner naming the risk. This is the honest way to offer
+"full send": loud, opt-in, still atomic and revertible — never a silent
+loosening of the defaults.
+
 ## 7. The never-list
 
 - Never delete on map evidence alone (§1).

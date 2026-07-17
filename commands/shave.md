@@ -1,7 +1,7 @@
 ---
 name: shave
 description: "Safe subtraction pass: remove/consolidate code with evidence chains, atomic commits, and zero behavior change"
-argument-hint: "[plan item # | --auto | dir | file] [--dry-run]"
+argument-hint: "[plan item # | --auto [--dangerous] | dir | file] [--dry-run]"
 allowed-tools: [Bash, Read, Grep, Edit, Write, Agent]
 ---
 
@@ -23,8 +23,12 @@ Locate the shrinkage skill dir ($SKILL: `${CLAUDE_PLUGIN_ROOT}/skills/shrinkage`
 Targets: a plan item number (default one-at-a-time), `--auto`/`all` (work the
 whole backlog until a stop condition), a dir/file path, or nothing (current
 diff). After a single item, ALWAYS prompt for the next one (name it + its
-tier + est LOC); `--auto` runs without prompting and halts only on the first
-T2/T3 item, first red gate, or empty backlog.
+tier + est LOC); `--auto` runs without prompting and halts on the first T2/T3 item,
+first red gate, or empty backlog. `--auto --dangerous` (alias --full-send)
+proceeds THROUGH T2/public-surface too (direct removal, no deprecation cycle) —
+still atomic + tests-green-or-revert per item, still hard-stops on a red/absent
+suite; refused if allow_dangerous:false. When --auto halts safely, report what
+got done + why it stopped + the two continue options (never a bare '0 done').
 </execution_context_extra>
 
 <success_criteria>
@@ -39,5 +43,6 @@ T2/T3 item, first red gate, or empty backlog.
 Next:
 • /srk:shave <next #>  — the item just named (one more reviewable step)
 • /srk:shave --auto    — run the rest of the backlog until it needs you
+• /srk:shave --auto --dangerous — full send: execute T2/public items too (risky)
 • /srk:score           — confirm the shave came out net-negative
 </next>

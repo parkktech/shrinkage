@@ -48,21 +48,61 @@ Deleting is part of the feature; this workflow is how deletion earns trust.
 
    ```
    for each open item, highest rank first:
-     if item.tier is T2/T3:        STOP — needs your judgment (report, halt)
+     if item.tier is T2/T3 or plan-routed-as-a-phase:
+         if NOT --dangerous:       STOP — needs your judgment (report, halt)
+         else (--dangerous):       proceed (remove public surface directly;
+                                   no deprecation cycle — the accepted risk)
      if auto_max_items set and reached:  STOP (optional review checkpoint)
      dispatch the item to a fresh srk-surgeon subagent (see below): it
        re-verifies evidence, gates, applies ONE transform, runs tests, commits,
        marks the plan row done, returns a one-line result
-     if it returned RED/reverted:  STOP (a break means the plan's assumptions
-                                   are off — don't keep going blind)
+     if it returned RED/reverted:  STOP (even in --dangerous — you cannot verify
+                                   against a red suite; a break means the plan's
+                                   assumptions are off)
    ```
 
-   `--auto` runs **until done** — it halts only on the first T2/T3 item, the
-   first red gate, an empty backlog, or an optional `auto_max_items` review cap
-   (default 0 = no cap, run to completion). Never a whole-repo rampage of
-   *unreviewed* commits: each is atomic and `git revert`-able, and on a
-   production codebase you review the batch before pushing. Report cumulative
-   net LOC, a per-item line (done / reverted), and what stopped it.
+   `--auto` runs **until done** — it halts on the first T2/T3 item, the first
+   red gate, an empty backlog, or an optional `auto_max_items` review cap
+   (default 0). Never a whole-repo rampage of *unreviewed* commits: each is
+   atomic and `git revert`-able, and on a production codebase you review the
+   batch before pushing. Report cumulative net LOC, a per-item line (done /
+   reverted), and what stopped it.
+
+   ### Communicate the halt clearly (this is NOT a failure)
+   0 transforms with a drained T0/T1 backlog is the tool working, not breaking.
+   When `--auto` halts, say so plainly with a report the user can act on:
+
+   ```
+   --auto complete for the safe backlog.
+     done this session: <n> items, <net LOC>    total: <N>/<M> plan items
+     stopped at: #<k> <candidate> — <why: T2 public surface / planned phase>
+     remaining (<r>): all need your judgment —
+       #k <candidate> (T2, ~<LOC>) — <recommended: confirm / deprecation cycle>
+       ...
+   To continue:
+     • /srk:shave <k>            — confirm this one (deprecation cycle for T2)
+     • /srk:shave --auto --dangerous  — execute ALL remaining autonomously
+                                        (removes public surface directly; each
+                                        commit still tested + revertible)
+     • /gsd-plan-phase           — for a plan-routed big merge
+   ```
+
+   Lead with what got DONE and that it's safe-drained — never a bare "0
+   transforms, nothing to do" that reads like a bug.
+
+   ### --dangerous ("full send") — explicit escape hatch
+   `/srk:shave --auto --dangerous` (alias `--full-send`) proceeds through T2 and
+   public-surface items without stopping for confirmation. What it KEEPS (the
+   free safety, never dropped): one atomic commit per item, tests green before
+   and after or auto-revert, evidence re-verified, and a **hard stop on a red or
+   absent test suite** — "revertible" is only meaningful with a green baseline.
+   What it DROPS: the human-confirmation halt and the deprecation cycle — it
+   removes public methods/interfaces directly. The real risk it accepts:
+   **external consumers of your public API aren't covered by your tests**, so a
+   direct removal can break callers outside the repo. Use only when you own or
+   control all consumers. Refused when `allow_dangerous: false` in settings
+   (team kill-switch). Open the run with a loud one-line banner naming the risk
+   and the item count, then go.
 
    ### Keep the main context flat — dispatch each item to a subagent
    The way `--auto` runs the whole backlog WITHOUT needing a manual `/clear`:

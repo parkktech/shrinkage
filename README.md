@@ -119,6 +119,7 @@ does **not** cut. Safe to run anytime.
 ```
 /srk:shave 1                  # item #1 from SHRINK-PLAN.md, then prompts for the next
 /srk:shave --auto             # work the WHOLE backlog until it needs you
+/srk:shave --auto --dangerous # full send: execute T2/public-surface items too
 /srk:shave src/billing        # sweep one folder
 /srk:shave src/Invoice.php    # sweep one file
 /srk:shave                    # no target: the files in your current diff
@@ -129,7 +130,13 @@ instantly if anything breaks. A single item ends by naming the next one so you
 can step through; **`--auto`** runs the backlog top-to-bottom unattended and
 stops at the first item needing your judgment (a T2/public-surface change), the
 first red gate, or an empty plan — never a rampage of unreviewed commits on a
-live codebase. It's also **context-durable**: each item runs in a fresh subagent so the main
+live codebase. When it stops, it tells you what got done, why it stopped, and
+your options — a drained T0/T1 backlog reads as "safe work complete," not a
+failure. For the remaining human-judgment items, `--auto --dangerous`
+("full send") executes them too — direct removal of public surface, still one
+tested, atomic, revertible commit each, still hard-stopping on a red suite.
+It's the explicit escape hatch: loud, opt-in, and off-limits when a team sets
+`allow_dangerous: false`. It's also **context-durable**: each item runs in a fresh subagent so the main
 context barely grows, and all progress is committed + tracked in
 SHRINK-PLAN.md. A long backlog runs to completion in one session — no manual
 `/clear` needed (and if context ever does fill, it auto-resumes). Then:
