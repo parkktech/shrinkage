@@ -41,6 +41,13 @@ Releases (that needs the `gh` CLI or the API, which the CI token lacks). So:
 If the homepage looks like nothing shipped, check the **Tags** page, not the
 Releases box — or promote the latest tag to a Release for visibility.
 
+## Never force-push this repo
+
+Force-pushing rewrites commit SHAs and breaks every client's cached plugin
+clone (Claude Code pins the install to a SHA), turning a normal update into a
+stuck-cache reinstall. Always fast-forward. If history ever must change, tell
+users to run `/srk:update` (which clears the cache) and then reinstall.
+
 ## How users get the new version
 
 `/plugin marketplace update parkktech` refreshes the catalog but leaves the

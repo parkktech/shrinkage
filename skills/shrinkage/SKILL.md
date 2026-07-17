@@ -144,6 +144,7 @@ instead copy `commands/*.md` into `.claude/commands/`:
 | `/srk:shave [target]` | safe subtraction pass | workflows/shave.md |
 | `/srk:audit [dir]` | ranked shrink backlog → SHRINK-PLAN.md | workflows/audit.md |
 | `/srk:config` | all settings, comedy included | — |
+| `/srk:update` | check version + clear stale plugin cache for a clean update | — |
 
 Extra signals for shave/audit: `codemap.py dupes` (same-name symbols),
 `codemap.py clones` (renamed copy-paste via normalized shingles), and

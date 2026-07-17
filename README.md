@@ -62,6 +62,9 @@ Nothing to configure, nothing to run per-repo.
 <summary><b>Optional extras</b> (skip these unless you want them)</summary>
 
 - `/srk:onboard` — set preferences: strict gate, team-shared map, humor off.
+- `/srk:update` — reliable update: checks version, clears the stale plugin
+  cache, hands you the two reinstall lines (fixes "update available but won't
+  apply").
 - Live status under the input box (`srk ▼-123 LOC · streak 3`): run
   `/statusline` and point it at `skills/shrinkage/scripts/statusline.py`.
 - Exact parsing (regex fallback already works):

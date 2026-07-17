@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.17.0
+- `/srk:update` + selfupdate.py: reliable updates. Reports installed vs latest
+  version and clears Claude Code's pinned plugin cache (the thing that leaves
+  `/plugin update` silently no-opping after a version bump or force-push),
+  then prints the exact reinstall lines. Answers the recurring "update shows
+  available but won't apply."
+
 ## 0.16.0
 - Output discipline (anti context-rot): SKILL.md rule that the agent reports
   one result line, never reprints diffs/maps/evidence, keeps records on disk
