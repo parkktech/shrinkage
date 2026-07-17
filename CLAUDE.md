@@ -10,6 +10,11 @@ tagging it, and pushing both** — not just committing.
 - Shrinkage practices its own doctrine: extend existing scripts/rules over
   adding new files; keep diffs minimal; a net-negative diff is a good diff.
 
+## Commit attribution
+All commits are authored and committed by **Jason Ratzlaff
+<jasonratz@gmail.com>**. Do NOT add `Co-Authored-By` or `Claude-Session`
+trailers, or any AI attribution, to commit messages in this repo.
+
 ## Every release — do ALL of these (see RELEASING.md for detail)
 1. Bump `"version"` in `.claude-plugin/plugin.json` (semver).
 2. Add a top entry to `CHANGELOG.md`.
