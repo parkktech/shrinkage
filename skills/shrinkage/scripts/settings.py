@@ -14,7 +14,9 @@ DEFAULTS = {
     "pr_scoreboard": False,  # True: diffstat also emits a markdown block for PR descriptions.
     "budget": 4000,          # codemap token budget.
     "humor": True,           # False: the tools deliver their news with a straight face.
-    "quiet_startup": False,   # True: no session-start [shrinkage] active line.
+    "quiet_startup": False,  # True: no session-start [shrinkage] active line.
+    "auto_max_items": 8,     # /srk:shave --auto: max items per run before checkpoint & stop.
+    "auto_context_stop": 75, # /srk:shave --auto: stop when context window use passes this %.
 }
 
 QUIPS = {

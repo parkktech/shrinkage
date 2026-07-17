@@ -23,8 +23,13 @@ important ones and the comedy one.
      `codemap.py scope <dir>` in monorepos.
    - `humor` — `true` (default): the scripts crack one joke per run and the
      agent matches the tone. `false`: everyone plays it straight.
+   - `auto_max_items` — items `/srk:shave --auto` does before it checkpoints
+     and stops (default 8).
+   - `auto_context_stop` — `--auto` stops when the context window passes this
+     percent (default 75), so long runs stay resumable.
+   - `quiet_startup` — `true`: suppress the session-start [shrinkage] line.
 2. With `key value`: validate (gate ∈ soft|hard; commit_map, pr_scoreboard,
-   humor ∈ true|false; budget = positive int), update the file, confirm the
+   humor/quiet_startup ∈ true|false; budget/auto_max_items/auto_context_stop = positive int), update the file, confirm the
    change in one line.
 3. Side effects: `commit_map` → true: remove the map path from `.gitignore`;
    → false: re-run `/srk:map` so the ignore entry is restored. `humor` →

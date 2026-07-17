@@ -9,6 +9,16 @@
           }
         ]
       }
+    ],
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "PY=$(command -v python3 || command -v python); [ -n \"$PY\" ] && \"$PY\" \"${CLAUDE_PLUGIN_ROOT}/skills/shrinkage/scripts/progress.py\" 2>/dev/null; true"
+          }
+        ]
+      }
     ]
   }
 }

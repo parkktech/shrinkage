@@ -48,19 +48,37 @@ Deleting is part of the feature; this workflow is how deletion earns trust.
 
    ```
    for each open item, highest rank first:
-     if item.tier is T2/T3:  STOP — needs your judgment (report and halt)
+     if item.tier is T2/T3:        STOP — needs your judgment (report, halt)
+     if hit auto_max_items OR context is filling (see below):
+                                   CHECKPOINT & STOP (resume-clean)
      run the single-item shave (steps 2–7): re-verify evidence, gate,
        apply ONE transform, tests green, commit, update the plan row to Done
-     if the gate went RED:   revert that item, record the hidden dependency,
-                             STOP (a break means the plan's assumptions are off —
-                             don't keep going blind)
+     if the gate went RED:         revert that item, record the hidden
+                                   dependency, STOP (a break means the plan's
+                                   assumptions are off — don't keep going blind)
    ```
 
-   `--auto` halts on the **first T2/T3 item, the first red gate, or an empty
+   `--auto` halts on the **first T2/T3 item, the first red gate, the item
+   budget (`auto_max_items`, default 8), a context-pressure signal, or an empty
    backlog** — never a whole-repo rampage of unreviewed commits. On a
    production codebase, review the batch before pushing; each commit is
    independently `git revert`-able. Report cumulative net LOC and a per-item
    line (done / reverted / halted-at), then name what stopped it.
+
+   ### Context monitoring (durable-state runs)
+   State lives on disk (git + SHRINK-PLAN.md), NOT in this conversation — so a
+   long run survives a context clear. Read `references/context-management.md`.
+   During the loop: after each committed item the plan is already up to date;
+   when the item budget is hit OR the harness signals the context window is
+   filling (low-context warning, or past `auto_context_stop`% — default 75),
+   finish the current atomic item (never mid-transform), confirm the plan
+   reflects reality, then STOP and tell the user verbatim:
+
+   > Progress committed, SHRINK-PLAN.md current. Run `/clear` (or `/compact`),
+   > then `/srk:shave --auto` to resume from the remaining items — nothing lost.
+
+   Re-running `--auto` after a clear reads the plan's open rows and continues;
+   no re-audit needed unless the plan reads stale.
 
 2. **Baseline.** Relevant test suite green. Red baseline → stop and report;
    you cannot detect breakage against a red baseline.

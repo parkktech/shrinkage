@@ -157,6 +157,13 @@ Context economy: load `rules/<lang>.md` once per session; the gate never loads
 `safety-model.md` (that's deletion reading); score is script-only — run
 diffstat, echo verbatim.
 
+Long runs: `/srk:shave --auto` is context-durable — state lives in git +
+SHRINK-PLAN.md, not the conversation, so it checkpoints per item and survives
+a `/clear`. It stops at `auto_max_items` (default 8) or when context fills
+(`auto_context_stop`%, default 75); resume by re-running it. Detail:
+`references/context-management.md`. A PreCompact hook writes a resume
+breadcrumb so even auto-compaction knows where to continue.
+
 CI/hook integration (pre-commit scoreboard, PR comment action):
 `references/ci-integration.md`.
 

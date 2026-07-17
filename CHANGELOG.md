@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.15.0
+- Context monitoring & clearing for long runs. `/srk:shave --auto` is now
+  context-durable: state lives in git + SHRINK-PLAN.md (not the conversation),
+  it checkpoints after every item, and stops at `auto_max_items` (default 8)
+  or `auto_context_stop`% context (default 75) with a clear-and-resume prompt.
+  Re-running --auto after /clear continues from open plan items. New
+  progress.py + a PreCompact hook write a resume breadcrumb so even automatic
+  compaction knows where to continue. references/context-management.md.
+
 ## 0.14.0
 - /srk:shave gains `--auto` (alias `all`): work the whole SHRINK-PLAN backlog
   top-to-bottom, one gated commit per item, halting on the first T2/public-
