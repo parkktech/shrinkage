@@ -65,3 +65,69 @@ def test_restamp_recomputes_est_savings(repo):
     assert code == 0, out
     text = (repo / "SHRINK-PLAN.md").read_text()
     assert "est-savings: -80" in text, text                     # -50 + -30 (Done row excluded)
+
+
+GATES = """# SHRINK-PLAN
+| # | candidate | file:line | catalog | tier | est. net LOC | effort | confidence | coverage | evidence |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | a | a.py:1 | C6 | T1 | -10 | S | high | gate: tests/GoodTest.php | x |
+| 2 | b | b.py:1 | C6 | T1 | -10 | S | high | gate: tests/ZeroTest.php | x |
+| 3 | c | c.py:1 | C9 | T1 | -10 | S | high | gate: tests/RedTest.php | x |
+"""
+
+FAKE_RUNNER = """import sys
+s = sys.argv[-1]
+if "Good" in s:
+    print("OK (4 tests, 12 assertions)"); sys.exit(0)
+if "Zero" in s:
+    print("OK (21 tests, 0 assertions)"); sys.exit(0)
+print("Tests: 5, Assertions: 2, Errors: 3.")
+print("ERRORS!"); sys.exit(2)
+"""
+
+
+def test_verify_gates_runs_and_stamps_actual_colors(repo):
+    # #1/#2 field report: a named gate nobody ran is how a red suite gets
+    # recorded green. verify-gates runs each suite in its own process and
+    # stamps the truth into the row; RED/0-ASSERT make it exit 1.
+    import sys as _sys
+    (repo / "SHRINK-PLAN.md").write_text(GATES)
+    (repo / "fake_runner.py").write_text(FAKE_RUNNER)
+    code, out = run("plan.py", "verify-gates", "--runner",
+                    f"{_sys.executable} fake_runner.py", cwd=repo)
+    assert code == 1, out                                      # RED + 0-ASSERT present
+    text = (repo / "SHRINK-PLAN.md").read_text()
+    assert "verified: green" in text and "verified: 0-ASSERT" in text \
+        and "verified: RED" in text, text
+    assert "repair-first" in out, out
+
+
+def test_done_handles_deferred_rows(repo):
+    (repo / "SHRINK-PLAN.md").write_text(
+        SAMPLE + "\n## Deferred\n\n"
+        "| id | candidate | est | why it needs YOU |\n|---|---|---|---|\n"
+        "| D-30 | orphan views | -2417 | eyeball the markup |\n")
+    (repo / "app.py").write_text("x = 1\n")
+    commit(repo, "shrink: views\n\ncatalog: C6, tier T1")
+    code, out = run("plan.py", "done", "D-30", "HEAD", cwd=repo)
+    assert code == 0, out
+    text = (repo / "SHRINK-PLAN.md").read_text()
+    assert "~~D-30~~" in text and "done " in text, text
+
+
+def test_todo_check_and_adjudicate(repo):
+    (repo / "SHRINK-PLAN.md").write_text(
+        SAMPLE + "\n## TODO before shaving\n\n"
+        "- [ ] **[bug]** fix the fees\n      → wire keys\n\n"
+        "- [ ] **[tooling]** update plugin\n      → git pull\n\n"
+        "## Deferred\n\n"
+        "| id | candidate | est | why it needs YOU |\n|---|---|---|---|\n"
+        "| D-32 | sharpe convention | -500 | pick canonical |\n")
+    code, out = run("plan.py", "todo-check", "1", cwd=repo)
+    assert code == 0 and "1 item(s) remaining" in out, out
+    code, out = run("plan.py", "todo-check", "plugin", cwd=repo)
+    assert code == 0 and "CLEAR" in out, out
+    assert (repo / "SHRINK-PLAN.md").read_text().count("- [x]") == 2
+    code, out = run("plan.py", "adjudicate", "D-32", "with-rf, note the change", cwd=repo)
+    assert code == 0, out
+    assert "⚖ ruled" in (repo / "SHRINK-PLAN.md").read_text()
