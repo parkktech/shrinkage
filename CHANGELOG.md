@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.37.1
+README articulates the field-tested value, not the marketing value.
+
+- **"Where the value actually is"** — three layers, ranked honestly: the
+  one-time backlog drain (real, but once), the compounding steady-state habit
+  (gate + scoreboard + ratchet + per-milestone re-audits, with the token cost
+  stated plainly), and the surprise dividend — evidence-first auditing keeps
+  finding production bugs nothing else caught, with the field list (the inert
+  kill-switch, the no-op cache invalidation, prior-day dates, lying test
+  gates). Duplication divergence is a bug detector.
+- **Safety machinery framed as field-scarred** — every mechanical guard traces
+  to a real incident, named.
+- **Roadmap section** from the field verdicts: LSP-grade reference resolution
+  (kill the false-x0 class, cut audit cost), runtime deprecation telemetry
+  (auto-instrument → zero-hit window → the removal PRs itself), CI-native
+  continuous sweeps, divergence-as-bug as a first-class product, ecosystem
+  awareness (co-installed tooling that shares .planning/).
+- Stale bits fixed: six→seven sweeps, status-line extras updated (chaining,
+  update nudge, onboard-first). Doc-only.
+
 ## 0.37.0
 The meta-gaps: what two deployments' worth of transcripts show the audit still
 doesn't ask for.

@@ -37,8 +37,51 @@ agent one of those devs.
 - **Keeps score.** After every change it reports net lines (app vs test,
   separately), new/removed symbols, and a trend over time. Negative is the high
   score.
+- **Finds real bugs while it works.** Evidence-first auditing keeps surfacing
+  production defects nothing else caught — because when two copies of "the
+  same" logic have drifted, one of them is usually wrong, and because the
+  suite-health sweep runs your test gates instead of trusting them.
 - **Costs less to run** (economy mode): the cheap model does the mechanical
   lift-and-shift; the capable model is reserved for deciding *what* to change.
+
+---
+
+## Where the value actually is (field-tested)
+
+Two production deployments in, the honest picture has three layers — and the
+headline number is the *smallest* of them:
+
+**1. The one-time payoff.** A mature repo carries a removable backlog once.
+Draining it is real — a ~2,900-file Laravel/Python trading platform banked
+**≈ −9,900 lines** across three audits; a fresh SaaS repo went **−1,977 in 42
+atomic commits** in a single supervised run — but it happens once. If this were
+the whole product, you'd uninstall afterward.
+
+**2. The compounding habit (why you keep it live).** After the drain, the value
+inverts: `/srk:gate` before features (growth stopped at the door costs nothing
+to remove later), the scoreboard on PRs, the status-line ratchet, and a small
+re-audit per milestone — diff-sized cost, permanent effect. The first full
+audit+shave on a big repo is genuinely heavy (a million-plus subagent tokens);
+steady-state is cheap. Run it like a ratchet, not a weekly big-bang.
+
+**3. The surprise dividend: it finds bugs nothing else caught.** The discipline
+of *proving things about code before touching it* keeps turning up production
+defects as a side effect. From the field: an emergency kill-switch on a live
+trading platform that silently did nothing under `config:cache`; a dashboard
+cache invalidation that had been a no-op for months; dates rendering a day
+early for every US user; failures showing success toasts; a tax-findings
+scanner suppressing findings its spec said to always surface; test gates that
+were lies (a 21-error suite with zero assertions "guarding" live-money risk
+guards). **Duplication divergence is a bug detector** — that finding reshaped
+this plugin's doctrine.
+
+And the safety machinery is field-scarred, not theoretical: every mechanical
+guard exists because something real happened — the staging guard because a
+broad `git add` once swept 220 files of a user's in-flight work into a shave
+commit; the pre-flight disjointness check because a merge discovered a conflict
+only after committing; the symlink guard because an edit-through-a-link
+silently decoupled a tracked config; the TODO gate so nothing shaves past an
+unfixed bug. One incident each, then never again.
 
 ---
 
@@ -70,8 +113,10 @@ Nothing to configure, nothing to run per-repo.
 - `/srk:update` — reliable update: checks version, clears the stale plugin
   cache, hands you the two reinstall lines (fixes "update available but won't
   apply").
-- Live status under the input box (`srk ▼-123 LOC · streak 3`): run
-  `/statusline` and point it at `skills/shrinkage/scripts/statusline.py`.
+- Live status under the input box (`srk ▼-123 LOC · streak 3 · TODO clear`,
+  plus an `⬆ /srk:update` nudge when a release ships): `/srk:onboard` offers it
+  first thing — and if another tool already owns your status line (GSD, a
+  custom bar), Shrinkage **chains onto it** instead of replacing it.
 - Exact parsing (regex fallback already works):
   `pip install tree-sitter tree-sitter-javascript tree-sitter-typescript tree-sitter-php`
 - GitHub Copilot instead of Claude Code: see [Other runtimes](#other-runtimes).
@@ -141,9 +186,11 @@ is where the agent stops re-reading everything and starts working from the index
 ```
 /srk:audit
 ```
-Runs six read-only evidence sweeps — dead symbols, duplication (same-name **and**
-renamed copy-paste), single-implementer abstractions, expired feature flags,
-hand-rolled code the platform already provides, and comment/zombie noise — and
+Runs seven read-only evidence sweeps — dead symbols, duplication (same-name
+**and** renamed copy-paste), single-implementer abstractions, expired feature
+flags, hand-rolled code the platform already provides, comment/zombie noise,
+and **suite health** (every named test gate actually RUN: red, zero-assertion,
+self-neutralizing, and live-external-API suites all flagged) — and
 writes a ranked **`SHRINK-PLAN.md`**: every candidate with a catalog tag, a risk
 tier, an evidence chain, and an estimated line saving. It finds and ranks; it
 does **not** cut. Safe to run anytime.
@@ -313,6 +360,33 @@ Two files, no core changes: a parser adapter in
 scanner — the PHP adapter is 40 lines) and a `rules/<lang>.md` with that
 language's idioms and — critically — its dynamic-reference checklist, which is
 what makes deletion safe in that ecosystem.
+
+---
+
+## Roadmap — the ceiling is higher than LOC golf
+
+Straight from the field verdicts, ranked by what would change outcomes:
+
+- **LSP-grade reference resolution.** Today's map is a token-lean *hint* and the
+  evidence chain does the proving — which is honest but expensive (~100 of 154
+  zero-ref flags on one repo were framework-convention false positives the
+  auditors had to hand-clear). Wiring the map to PHPStan/intelephense/tsserver
+  indexes kills the false-`x0` class and cuts audit cost several-fold.
+- **Production evidence, not just static evidence.** The deprecation cycle
+  (safety-model §5) is manual today. The end-state: flag a T2 candidate →
+  auto-instrument a one-line telemetry counter → an observation window of zero
+  hits closes the chain empirically → the removal PRs itself. The only honest
+  way to shrink public surface, end-to-end.
+- **Continuous instead of big-bang.** The seven sweeps scoped to each merged
+  PR's diff in CI, plus the unjustified-new-symbol check the gatelog already
+  does — dead code caught the week it's born, at diff-sized cost.
+- **Divergence-as-bug as a first-class product.** Partially shipped: the
+  `check` DIVERGENT verdict, the change-reason test, hollow-test detection.
+  The fuller product — "your copies disagree; one of them is a bug" as its own
+  sweep with its own report — is arguably bigger than dead-code removal.
+- **Ecosystem awareness.** Detect co-installed tooling that shares state
+  (`.planning/`, hooks) and coordinate instead of colliding; symlink and
+  generated-file identity is already mechanically guarded.
 
 ---
 
