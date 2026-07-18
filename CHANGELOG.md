@@ -1,5 +1,30 @@
 # Changelog
 
+## 0.30.0
+Visibility release: the status line finally shows up, tells you when you're
+behind, and the audit stops re-sweeping unchanged trees without asking.
+
+- **Status line update nudge (GSD-style).** The status line appends
+  `⬆ /srk:update to vX.Y.Z` when the marketplace has a newer release than the
+  installed plugin. Renders never block: displays read a 6h-TTL cache; a stale
+  cache spawns a detached background worker that runs `git ls-remote --tags`
+  against the marketplace clone's ORIGIN — catching new tags even when the
+  local marketplace clone is stale (the lag that kept a deployment on 0.26.2
+  through three releases). +4 tests, fully offline.
+- **Onboard now offers the status line.** Field report: it "has never shown."
+  Correct — Claude Code renders a status line only when settings.json defines
+  one, a plugin cannot set that for itself, and onboarding never offered it, so
+  `statusline.py` shipped dormant since v0.5. `/srk:onboard` now asks and, on
+  yes, merges a version-agnostic command (`ls -dv … | tail -1` — survives plugin
+  updates) into `.claude/settings.json`.
+- **Audit freshness gate.** Re-running `/srk:audit` over an unchanged tree
+  produced an unclear skip-and-restamp narration. New step 0: when a current
+  plan exists and nothing changed, ASK — work the plan / re-verify only /
+  `--force` a full re-sweep (unattended runs default to re-verify and say so);
+  code moved → full audit with carry-over. Every path, sweeps or not, ends with
+  the same `Results:` / `TODO before advancing:` close so the next action is
+  never ambiguous.
+
 ## 0.29.1
 Readable reports: spacing and short lines, no walls of text.
 
