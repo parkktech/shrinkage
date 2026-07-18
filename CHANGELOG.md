@@ -22,6 +22,14 @@ Continuing the field-report hardening (P1.4–P2.12).
   existing `.claude/shrinkage-log.jsonl` on first read; the status line reads the
   new location first, falling back to the old. Off-git repos still use `.claude/`.
   +2 tests.
+- **P2.7 — Suite-gated mode for coverage-absent repos.** safety-model §4 now
+  defines a fallback tiering for repos with no coverage artifact at all: instead
+  of capping every target at T2 (which flattens the tier system), a target keeps
+  its earned T0/T1 tier when the plan row names the specific suite that would
+  observe a regression in it and that suite runs green before+after. No nameable
+  observing suite → the row stays T2. The audit workflow declares the standing
+  condition once in the plan header (not per-row noise) and records each row's
+  `gate: <suite>` in the coverage column. Doc-only.
 
 ## 0.25.0
 Field-report-driven hardening from a production Laravel deployment (~2,900 files

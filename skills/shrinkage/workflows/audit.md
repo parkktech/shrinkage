@@ -37,6 +37,13 @@ phases) consuming the plan.
    calls it, nothing tests it), while 0 refs but well-covered says the refs
    are hiding somewhere (fixtures, dynamic dispatch) — walk the checklist
    harder before believing it's dead.
+   **No coverage report at all → suite-gated mode** (safety-model §4): don't
+   cap the whole plan at T2. Declare the standing condition **once** in the plan
+   header (see step 6) and then, per row, name the specific suite that would
+   observe a regression in that target — put it in the **coverage** column as
+   `gate: <suite>` (e.g. `gate: tests/Feature/InvoiceTest.php`). A row with no
+   nameable observing suite stays T2. Naming "the tests" doesn't qualify — name
+   the file/group that actually exercises the target.
    **Dirty check:** run `git status --porcelain -- <file>` per candidate. A
    target with uncommitted changes is marked **DIRTY** in its evidence column —
    the shave skips dirty targets by default (they're blocked on the user's
@@ -76,6 +83,16 @@ phases) consuming the plan.
    ("~1240 LOC to reclaim") without re-reading the whole plan. Keep the tier
    letter (T0–T3) visible in each row so the startup line can summarize the
    mix (T0×3 T1×5 …).
+
+   **When there's no coverage report,** state the suite-gated standing
+   condition once, right under the stamps, so every row is read against it
+   instead of repeating it per row:
+
+   ```
+   > **Tiering: suite-gated** (no coverage artifact in this repo). T0/T1 rows
+   > execute only when the `coverage` column names an observing suite that runs
+   > green before+after; rows with no nameable suite stay T2. (safety-model §4)
+   ```
 
    Then the fixed schema so shaves can consume it mechanically — ranked table
    with EXACTLY these columns:

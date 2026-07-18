@@ -106,7 +106,27 @@ evidence can't be written down in four lines isn't ready.
   below the low-water mark is auto-escalated to **T2** — test gates cannot
   protect code the tests never execute. The path back to T1 is writing the
   characterization tests, not arguing with the tier. No coverage report at
-  all → every deletion target is T2 until one exists.
+  all → every deletion target is T2 until one exists, **unless the repo runs in
+  suite-gated mode** (next bullet).
+- **Suite-gated mode (no coverage artifact at all).** Some real repos have no
+  coverage report and no cheap way to produce one — by the letter of the rule
+  above, *every* target caps at T2, which flattens the whole tier system and
+  makes the tool useless there. The sanctioned substitute: a target keeps its
+  earned tier (T0/T1) **only if the plan row names the specific suite(s) that
+  would observe a regression in it, and those named suites run green immediately
+  before and immediately after the transform.** The named suite stands in for the
+  coverage line — you're proving the change is *felt* by a test, which is what
+  coverage was buying. Hard conditions, none optional: (a) the gate suite is
+  named per row (a bare "the tests" doesn't qualify — name the file/group that
+  actually exercises the target); (b) **no named observing suite for a target →
+  it stays T2**, no exceptions; (c) the suite is green *before* — a red or absent
+  baseline still hard-stops (§6b); (d) this is behavior-preservation only, so the
+  suite must assert current behavior, characterization tests written first if the
+  observing suite is thin. This is a deployment-wide standing mode, not a per-row
+  override: the audit records the "no coverage → suite-gated" condition **once**
+  in the plan header (not as per-row noise) and every row then carries its gate
+  suite. Where a report is one command away (`pytest --cov`, `php artisan test
+  --coverage`, etc.), prefer bootstrapping real coverage over suite-gating.
 - **Green-before**: the full relevant suite passes before the first transform.
   If it's already red, stop — you cannot detect breakage against a red baseline.
 - **Characterization first**: if the code being consolidated has no meaningful
