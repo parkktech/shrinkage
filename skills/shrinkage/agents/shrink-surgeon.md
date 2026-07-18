@@ -35,14 +35,15 @@ gotchas. `$SKILL/rules/<lang>.md` for the target's language.
    Law: anything on the compatibility surface keeps its old entry points
    working (deprecation shims, marked and scheduled). No drive-by fixes, no
    renaming for taste, no "while I'm here."
-5. **Gate:** tests + lint/types + build. Green → commit using the evidence
-   template (safety-model §6), staging ONLY your transform's files by explicit
-   path: `git commit -- <your files> -m "<msg>"` — NEVER `git add -A` /
-   `git commit -am` (the working tree may hold the user's unrelated in-flight
-   work; a path-limited commit can't sweep it in). Then confirm with
-   `git show --stat HEAD` that only your files landed. Red → revert COMPLETELY,
-   return `reverted: <what broke>` — the hidden dependency you found is valuable
-   intelligence.
+5. **Gate:** tests + lint/types + build. Green → commit through the staging
+   guard, which stages + commits ONLY your declared files and verifies nothing
+   else landed:
+   `python3 $SKILL/scripts/safe_commit.py -F <msg-file> -- <your files>`
+   (or `-m "<msg>"`). NEVER `git add -A` / `git add .` / `git commit -am` — a
+   PreToolUse hook blocks those during a shave (safety-model §6); the working
+   tree may hold the user's unrelated in-flight work and broad staging sweeps it
+   into your commit. Red → revert COMPLETELY, return `reverted: <what broke>` —
+   the hidden dependency you found is valuable intelligence.
 6. **Score:** run `diffstat.py`, include the line in your return.
 </process>
 

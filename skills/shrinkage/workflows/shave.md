@@ -164,12 +164,15 @@ Deleting is part of the feature; this workflow is how deletion earns trust.
    route to the normal gate/plan flow.
 
 5. **Execute, one transform per commit,** per the transformation protocol
-   (§6): apply one catalog entry → gates green → commit with the evidence
-   template, **staged by explicit file path** (`git commit -- <files>`, never
-   `git add -A` — the working tree may hold the user's unrelated in-flight work,
-   and a path-limited commit can't sweep it in) → next. Any red → revert that
-   transform fully, record the hidden dependency you just discovered in the
-   report. **Economy:** spawn the
+   (§6). First **activate the staging guard** for the run:
+   `mkdir -p .claude && touch .claude/srk-shave-active` — a PreToolUse hook then
+   rejects broad `git add -A` / `git commit -a` until you clear it. Then per
+   candidate: apply one catalog entry → gates green → **commit through the
+   staging guard**: `python3 $SKILL/scripts/safe_commit.py -m "<evidence msg>"
+   -- <your files>` (stages + commits only those paths and verifies nothing else
+   landed) → next. Any red → revert that transform fully, record the hidden
+   dependency you just discovered in the report. When the run ends OR halts,
+   `rm -f .claude/srk-shave-active` so normal work isn't guarded afterward. **Economy:** spawn the
    `srk-surgeon` agent to apply each transform — it runs on the cheap model
    (the what/how is already decided here), with the test gate guaranteeing
    safety. Reserve the capable model for the analysis (this workflow) and the

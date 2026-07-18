@@ -10,6 +10,17 @@
         ]
       }
     ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "PY=$(command -v python3 || command -v python); if [ -n \"$PY\" ]; then exec \"$PY\" \"${CLAUDE_PLUGIN_ROOT}/hooks/guard_staging.py\"; fi"
+          }
+        ]
+      }
+    ],
     "PreCompact": [
       {
         "hooks": [

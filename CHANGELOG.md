@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.25.0
+Field-report-driven hardening from a production Laravel deployment (~2,900 files
+/ ~17,800 symbols, ~−5,500 app LOC banked in one day, one near-miss incident).
+
+- **P0.1 — Staging guard (mechanical, not just prose).** New
+  `scripts/safe_commit.py` stages + commits ONLY an explicitly declared file
+  list (deletions included) and verifies nothing else landed; a scoped
+  PreToolUse hook (`hooks/guard_staging.py`) rejects `git add -A|.|--all|-u` and
+  `git commit -a|--all` while a shave is active (marker `.claude/srk-shave-active`
+  the shave workflow writes/removes), leaving normal sessions untouched. Closes
+  the hole where a surgeon's broad `git add` swept 220 files / +85,027 insertions
+  of the user's in-flight work into a shave commit. Surgeon briefs, shave
+  workflow, and safety-model §6/§7 updated; the incident is now a named
+  never-list failure mode.
+
 ## 0.24.2
 - Point users to auto-update — the real one-time answer to update friction.
   `/srk:update`, the update command, and the README now lead with: enable

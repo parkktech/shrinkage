@@ -176,6 +176,17 @@ HEAD^` and re-commit by path. (A surgeon once swept ~220 dirty files / +85k
 lines of a user's in-flight feature work into one shave commit — this rule is
 why that can't recur.)
 
+The plugin enforces this **mechanically**, not just by instruction:
+
+- Commit through `scripts/safe_commit.py -m "<msg>" -- <files>` — it stages and
+  commits only the declared paths (deletions included), refuses if anything else
+  is or becomes staged, and verifies after the commit that only your files
+  landed.
+- A PreToolUse hook (`hooks/guard_staging.py`) rejects `git add -A|.|--all|-u`
+  and `git commit -a|--all` outright while a shave is active (marker
+  `.claude/srk-shave-active`, which the shave workflow writes at batch start and
+  removes at the end). Normal, non-shave sessions are never affected.
+
 ## 6b. The escape hatch (`--auto --dangerous`)
 
 The safety model's autonomy limits (§2) exist to protect you by default. There
@@ -210,6 +221,13 @@ loosening of the defaults.
   one diff makes both unverifiable. Two commits, two labels.
 - Never chase a percentage target at the expense of a single red test. The
   scoreboard is a compass, not a quota.
+- **Never stage broadly during a shave** (`git add -A` / `git add .` /
+  `git commit -a`). *The WIP-sweep incident:* on a working tree carrying ~179
+  dirty files of the user's in-flight work, one surgeon's broad `git add` swept
+  **220 files / +85,027 insertions** into a `shrink:`-labeled commit; only the
+  scoreboard on the committed range (`app +31k`) caught it, and recovery needed
+  a full history rebuild + a hash-verified restore of the WIP. Commit only your
+  transform's files via `safe_commit.py`; the staging-guard hook enforces it.
 
 ## 8. What "smaller" realistically means
 
