@@ -1,5 +1,42 @@
 # Changelog
 
+## 0.38.0
+The queue, drained — plus the ecosystem stone. Five capabilities from the
+standing backlog, each field-motivated.
+
+- **#10 — `/srk:coverage`** (`coverage_check.py bootstrap [--run]`): detects the
+  repo's test ecosystem (pest/phpunit with a pcov/xdebug driver check,
+  pytest-cov, vitest/jest, go + the gcov2lcov note, cargo-tarpaulin) and prints
+  the exact one-command upgrade from suite-gated to coverage-aware tiering;
+  --run executes it with user confirmation. Both deployments ran suite-gated
+  forever for want of exactly this. +3 tests.
+- **#7 — Staging guard self-cleans.** Stale markers from crashed shaves are
+  deleted on sight (the 2h TTL already stopped them guarding; now they can't
+  linger or re-arm), and the workflow arms the guard with forensic content
+  (session id + timestamp), not a bare touch. +1 test.
+- **#6 — Structured bugs table + `plan.py bug-done`.** `## Bugs found` is a
+  table with B-ids; `bug-done B-1 HEAD` strikes the row with sha + derived LOC
+  — the fix-first pipeline is as auditable as the shave pipeline. +1 test.
+- **#2 — Identical-failure-set gate.** `plan.py failset record|compare --
+  <suite cmd>`: capture the exact failing-test names of a permanently-red
+  corner (phpunit/pest, pytest, go), then require the IDENTICAL set after a
+  transform — new failures exit 1 as your break, vanished ones demand
+  verification. Safety-model §4 defines the mode; never shave the failing
+  tests' own subject. +1 test.
+- **#9 — The growth gate.** `diffstat.py <range> --ci-gate [--strict]`:
+  diff-sized checks on every push — net growth, public signature changes,
+  unjustified new symbols, and dupe-shaped new symbols (a name already living
+  elsewhere in the map: C1/C9 being born). Pre-push snippet + ci/growth-gate.yml
+  Actions example. Closes the front door the 78k-line commit walked through.
+  +1 test.
+- **Ecosystem self-defense** (new, from the GSD collision): every plan.py
+  operation stamps a content hash and warns — non-blocking — when the plan was
+  modified outside plan.py since the last srk write. +1 test.
+
+Deliberately NOT in this wave: LSP-grade reference resolution and runtime
+deprecation telemetry — the two revolutionary-ceiling items — each needs its
+own design-first pass, not a slot in a batch. They stay top of the roadmap.
+
 ## 0.37.1
 README articulates the field-tested value, not the marketing value.
 
