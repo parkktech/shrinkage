@@ -42,6 +42,25 @@ def die(code, msg):
     sys.exit(code)
 
 
+PHP_EXTS = {".php", ".phtml"}
+
+
+def _require_php(*paths):
+    """PHP-ONLY, mechanically enforced. The safety guarantee comes from
+    language-exact tokenization; this tokenizer is actively WRONG for other
+    languages (JS: backtick templates with ${} braces, regex literals, `#`
+    private fields — all would fool the span). Other languages get their own
+    exact engines (Python via ast, JS/TS via tree-sitter) — until then, refuse
+    loudly rather than slice wrong quietly."""
+    for p in paths:
+        if Path(p).suffix.lower() not in PHP_EXTS:
+            raise Refuse(
+                f"{p} is not a PHP file — extract_method is PHP-only (its "
+                "tokenizer would mis-slice other languages). For non-PHP "
+                "merges, apply the check→extract→remove→wire loop manually "
+                "with the identity verification done by eye + tests.")
+
+
 def _states(text):
     """Per-char state: 'code' | 'sq' | 'dq' | 'line' | 'block'. Refuses on
     heredoc/nowdoc (`<<<`) — guessing there is how surgery goes wrong."""
@@ -292,14 +311,20 @@ def main():
         return rest[rest.index(name) + 1] if name in rest else None
     try:
         if cmd == "find" and len(rest) >= 2:
+            _require_php(rest[0])
             cmd_find(rest[0], rest[1])
         elif cmd == "check" and len(rest) >= 3:
-            cmd_check(rest[0], [r for r in rest[1:] if not r.startswith("--")])
+            hosts = [r for r in rest[1:] if not r.startswith("--")]
+            _require_php(*hosts)
+            cmd_check(rest[0], hosts)
         elif cmd == "extract" and len(rest) >= 2 and opt("--to"):
+            _require_php(rest[0], opt("--to"))
             cmd_extract(rest[0], rest[1], opt("--to"), opt("--trait"), opt("--namespace"))
         elif cmd == "remove" and len(rest) >= 2:
+            _require_php(rest[0])
             cmd_remove(rest[0], rest[1])
         elif cmd == "wire" and len(rest) >= 1 and opt("--use"):
+            _require_php(rest[0])
             cmd_wire(rest[0], opt("--use"))
         else:
             die(2, "usage:\n  extract_method.py find <file> <method>\n"

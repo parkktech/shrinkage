@@ -231,7 +231,13 @@ Deleting is part of the feature; this workflow is how deletion earns trust.
    --use '\FQ\Trait'` each host. Tokenizer-guided brace matching (strings,
    comments, `{$interpolation}` can't fool it), atomic writes with a balance
    sanity check, loud refusals on heredoc/ambiguity — the failure modes of
-   hand-rolled extraction scripts are its test suite. First **activate the
+   hand-rolled extraction scripts are its test suite. The tool mechanically
+   refuses non-PHP files (its tokenizer is language-exact — on JS it would be
+   wrong, not approximate). **Other languages:** apply the same loop manually —
+   verify identity across hosts BEFORE deleting any copy (diff the bodies,
+   comment-normalized), extract byte-exactly, and run the gates per host —
+   until a per-language engine lands (Python via `ast` and JS/TS via
+   tree-sitter are the planned routes). First **activate the
    staging guard** for the run:
    `mkdir -p .claude && touch .claude/srk-shave-active` — a PreToolUse hook then
    rejects broad `git add -A` / `git commit -a` until you clear it. Then per

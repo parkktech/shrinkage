@@ -141,6 +141,25 @@ def test_refusals_leave_files_untouched(repo):
     assert code == 2 and "more than once" in out, out
 
 
+def test_php_only_guard_refuses_other_languages(repo):
+    # The tokenizer is PHP-exact; on JS it would be actively wrong (backtick
+    # templates, regex literals, # private fields). Refuse loudly, write nothing.
+    js = repo / "utils.js"
+    js.write_text("function helper(a) {\n  return `x ${a} y`;\n}\n")
+    before = js.read_text()
+    for args in (["find", str(js), "helper"],
+                 ["remove", str(js), "helper"],
+                 ["wire", str(js), "--use", "X\\Y"]):
+        code, out = run("extract_method.py", *args, cwd=repo)
+        assert code == 2 and "PHP-only" in out, (args, out)
+    assert js.read_text() == before
+    # extract refuses a non-PHP DEST too
+    php = _host(repo, "GuardHost")
+    code, out = run("extract_method.py", "extract", str(php), "aggregateGuardResults",
+                    "--to", str(repo / "home.ts"), cwd=repo)
+    assert code == 2 and "PHP-only" in out, out
+
+
 def test_new_home_in_other_dir_requires_namespace(repo):
     a = _host(repo, "RiskGuardService")
     (repo / "Support").mkdir()

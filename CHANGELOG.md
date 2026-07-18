@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.34.1
+The PHP-only boundary of extract_method is now mechanical, not just documented.
+
+- **Language guard.** The doctrine said "PHP" but the tool accepted any file —
+  and its tokenizer would be actively WRONG on other languages (JS backtick
+  templates with `${}` braces, regex literals, `#` private fields all fool the
+  span). Every command now refuses non-`.php`/`.phtml` paths (source AND
+  destination) with exit 2 before touching anything. The shave workflow gains
+  the cross-language rule: other languages run the same check→extract→remove→
+  wire loop manually (identity verified before any copy is deleted) until
+  per-language engines land — Python via stdlib `ast`, JS/TS via the existing
+  optional tree-sitter path. A loud single-language tool beats a quiet
+  multi-language liar. +1 test.
+
 ## 0.34.0
 Field-report item #3, as its own focused release: scripted C1/C9 surgery.
 
