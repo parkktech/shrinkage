@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.36.2
+Close-out lessons from the fresh-codebase run's final stretch.
+
+- **Surgeons mark their own rows done — immediately.** The workflow said
+  surgeons mark plan rows; the surgeon BRIEF never listed it as a step, so a
+  33-row run ended with zero rows struck and the orchestrator reconstructing
+  every sha↔row pair from memory at close (after reading plan.py's source to
+  debug why). New brief step 7: `plan.py done <row-id> HEAD` right after the
+  commit; batch-reconciling at close-out is forbidden — one transposed sha
+  silently corrupts calibration data.
+- **Suite-health flags live-external-API suites.** The run found 4 suites
+  hitting the real Anthropic API every run and surfaced it ad hoc; now it's a
+  standard suite-health category — each becomes an owner TODO with the
+  fake-or-record/replay recommendation (cost-per-run, flaky by weather, a
+  secrets surface, and it slows every gate that names it).
+- **Full-send leftovers carry recommendations.** The completion report's ⚖
+  list follows the decision-blocked format — recommended answer + evidence
+  rationale + reply syntax — not bare "which is intended?" questions. Doc-only.
+
 ## 0.36.1
 The symlink guard — from the CLAUDE.md → AGENTS.md incident.
 

@@ -97,7 +97,10 @@ Deleting is part of the feature; this workflow is how deletion earns trust.
      if auto_max_items set and reached:  STOP (optional review checkpoint)
      dispatch the item to a fresh srk-surgeon subagent (see below): it
        re-verifies evidence, gates, applies ONE transform, runs tests, commits,
-       marks the plan row done, returns a one-line result
+       marks the plan row done IMMEDIATELY (`plan.py done <id> HEAD`, its brief
+       step 7 — batch-reconciling rows at close-out is forbidden: sha↔row
+       reconstruction from memory is how calibration data gets corrupted),
+       returns a one-line result
      if it returned RED/reverted:  STOP (even in --dangerous — you cannot verify
                                    against a red suite; a break means the plan's
                                    assumptions are off)
@@ -160,9 +163,13 @@ Deleting is part of the feature; this workflow is how deletion earns trust.
    surface, so anything still open is something autonomy must NOT do on its own —
    a target dirty with the user's uncommitted work, a red/absent baseline, or a
    behavior-divergence adjudication. Frame it as COMPLETION: "full-send done —
-   everything I can safely execute is committed." List each leftover with the
-   reason it needs the USER (commit/stash in-flight work → re-audit unblocks
-   dirty targets; decide which behavior is correct for adjudications). Do NOT end
+   everything I can safely execute is committed." List each leftover in the
+   decision-blocked format (SKILL.md): the reason it needs the USER, plus a
+   **recommended answer with its evidence rationale** whenever the evidence
+   supports one — "which is intended?" with no recommendation costs the user a
+   research session — and the reply syntax so answering is one line
+   (commit/stash in-flight work → re-audit unblocks dirty targets; decide which
+   behavior is correct for adjudications). Do NOT end
    with a bare `/srk:shave <n>` as if more autonomous shaving is pending — it
    isn't; the leftovers are blocked on a human decision or a prerequisite.
 

@@ -63,7 +63,11 @@ phases) consuming the plan.
      applied-then-reverted purely because its gate was recorded green without
      being run). Red gate → the row is repair-first: a TODO item + a ledger
      `## red-baselines` entry. 0-assertion suite on live code → also a
-     `## Bugs found` entry — the suite itself is the defect.
+     `## Bugs found` entry — the suite itself is the defect. **Also flag suites
+     that call LIVE EXTERNAL APIs** (real provider keys, network I/O to a
+     third party): each is an owner TODO with the recommendation — fake or
+     record/replay the provider — because a live-API suite is cost-per-run,
+     flaky by weather, a secrets surface, and it slows every gate that names it.
    Subagents parallelize cleanly here: one sweep each, evidence-only briefs
    (see `agents/shrink-auditor.md`). **Inject the ledger** (`scripts/ledger.py`,
    file `references/ledger.md`) into every brief: `## keeps` (do NOT re-flag;

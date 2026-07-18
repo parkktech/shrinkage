@@ -64,7 +64,13 @@ gotchas. `$SKILL/rules/<lang>.md` for the target's language.
    tree may hold the user's unrelated in-flight work and broad staging sweeps it
    into your commit. Red → revert COMPLETELY, return `reverted: <what broke>` —
    the hidden dependency you found is valuable intelligence.
-7. **Score:** run `diffstat.py`, include the line in your return.
+7. **Mark your row done — NOW, not at close-out:**
+   `python3 $SKILL/scripts/plan.py done <row-id> HEAD` right after the commit
+   (it derives the sha + actual net LOC and feeds calibration). Never leave
+   row-marking for the orchestrator's closing sequence — a field run ended with
+   0 of 33 rows struck and had to reconstruct every sha↔row pair from memory;
+   one transposition silently corrupts the calibration data.
+8. **Score:** run `diffstat.py`, include the line in your return.
 </process>
 
 <output>
