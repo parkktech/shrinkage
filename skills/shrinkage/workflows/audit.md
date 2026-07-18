@@ -29,6 +29,21 @@ phases) consuming the plan.
    Append new keeps and hidden-dependency discoveries back to the ledger — it
    outlives the per-audit plan.
 
+   **Carry over a prior plan as explicit re-verify work (re-audit).** When a
+   SHRINK-PLAN.md already exists, don't start from a blank sheet — its still-open
+   rows are known candidates whose status may have changed. List them with
+   `python3 $SKILL/scripts/plan.py open` and **partition those rows among the
+   matching sweeps as explicit RE-VERIFY items** (a dead-symbol row → the
+   dead-symbol sweep, a dupe row → the duplication sweep). Each carried row's
+   brief says: re-confirm the evidence still holds and report the *current*
+   state, specifically the things that go stale between audits — a baseline that
+   was red is now green, a target that was DIRTY is now committed/clean, a ref
+   count that moved, a keep that no longer applies. This makes carry-over
+   systematic instead of a hand-written "RE-VERIFY these" list, and status
+   changes get re-checked every audit rather than silently rotting. Use
+   `plan.py carry <old-plan>` to seed the new plan skeleton from the still-open
+   rows + ledger sections.
+
 3. **Verify before ranking.** Ref counts and name matches are signals — each
    candidate gets a source-level look before it enters the plan (the auditor
    brief requires quoting the evidence). No candidate ships on map data alone.

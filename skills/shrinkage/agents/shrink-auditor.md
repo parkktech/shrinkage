@@ -10,7 +10,9 @@ and will be discarded.
 <inputs>
 Your spawn prompt provides: the sweep type (dead-symbol | duplication |
 structure | flag | platform | noise), the scope (repo or subtree), the path to
-the shrinkage skill directory ($SKILL), and the codemap location.
+the shrinkage skill directory ($SKILL), and the codemap location. On a
+**re-audit**, it also hands you any still-open rows from the prior SHRINK-PLAN.md
+that belong to your sweep, to **RE-VERIFY** (see process step 3).
 </inputs>
 
 <required_reading>
@@ -32,10 +34,18 @@ entry, NEVER propose a `## frozen` path.
    `git status --porcelain -- <file>` — a target carrying uncommitted changes is
    **DIRTY** (the shave skips dirty targets by default; record it so the plan
    can hand it back to the user cleanly).
-3. Walk the dynamic-reference checklist for the candidate's language. Items
+3. **Re-verify any carried-over rows first** (re-audit). For each open prior-plan
+   row handed to your sweep, re-run its evidence and report the CURRENT state —
+   don't assume last audit's verdict still holds. Check the things that go stale
+   between audits: a baseline that was red may be green now, a **DIRTY** target
+   may be committed/clean now (or vice-versa), a ref count may have moved, a keep
+   may no longer apply. Emit each as a candidate block with a `status:` line
+   (`still-open` / `now-executable` / `gone` / `changed: <what>`) so carry-over
+   is a systematic re-check, not a hand-written list.
+4. Walk the dynamic-reference checklist for the candidate's language. Items
    you cannot verify → say so explicitly; unverifiable checklist items cap
    the candidate at T2.
-4. Assign: catalog entry, tier, estimated net LOC, effort (S/M/L), confidence
+5. Assign: catalog entry, tier, estimated net LOC, effort (S/M/L), confidence
    (high = full chain; medium = chain minus history; low = signals only —
    low-confidence candidates are allowed but must be labeled).
 </process>
@@ -49,6 +59,7 @@ candidate: <symbol or file:lines>
 catalog: C<n>  tier: T<n>  est_net_loc: -<n>  effort: S|M|L  confidence: high|med|low
 evidence: <map refs, grep hits, checklist items verified/na, history line>
 dirty: yes|no   (git status --porcelain -- <file> non-empty → target has the user's uncommitted work)
+status: <omit for new finds; on a re-verified carry-over: still-open | now-executable | gone | changed: <what>>
 gotchas: <which of the catalog entry's gotchas apply here>
 ```
 

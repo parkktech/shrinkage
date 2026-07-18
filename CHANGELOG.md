@@ -60,6 +60,13 @@ Continuing the field-report hardening (P1.4–P2.12).
   entanglement stays visible rather than hidden. Symbol/signature analysis is
   likewise restricted to the matched commits (compat-watch no longer flags the
   user's WIP). +3 tests.
+- **P2.12 — Auditor re-verify pattern (systematic carry-over).** On a re-audit,
+  the audit workflow now lists the prior plan's still-open rows with `plan.py
+  open` and partitions them among the matching sweeps as explicit RE-VERIFY
+  items; the auditor brief re-confirms each and reports a `status:` (still-open /
+  now-executable / gone / changed) — so a baseline that went red→green or a
+  target that went dirty→clean is re-checked every audit instead of relying on a
+  hand-written "RE-VERIFY these" list. Doc-only.
 
 ## 0.25.0
 Field-report-driven hardening from a production Laravel deployment (~2,900 files
