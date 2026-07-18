@@ -12,6 +12,8 @@ maintain). Default view is terse; detail is opt-in.
 </objective>
 
 <execution_context>
+$SKILL is resolved FRESH for THIS invocation — never reuse a path remembered from earlier in the session (a mid-session plugin update strands version-pinned cache paths). Churn-proof order: `${CLAUDE_PLUGIN_ROOT}/skills/shrinkage` if set; else the newest installed copy `$(ls -dv ~/.claude/plugins/cache/*/shrinkage/*/skills/shrinkage 2>/dev/null | tail -1)`; else the vendored locations.
+
 No heavy logic. Read the argument and respond:
 
 - **bare** (no args): FIRST check the status line — if neither
@@ -68,7 +70,7 @@ Per-command "when to use" (for --full or a single-command lookup):
 - map — refresh after big changes; the ~4k-token map is what every other command reads instead of walking the tree.
 - query — "where is X?" without burning context on grep.
 - gate — starting a feature or fix; surfaces symbols to extend so you add less code in the first place.
-- audit — read-only sweep that fills SHRINK-PLAN.md with ranked, safe removals (six evidence sweeps, tiered by risk).
+- audit — read-only sweep that fills SHRINK-PLAN.md with ranked, safe removals (seven evidence sweeps, tiered by risk).
 - shave — the actual subtraction: one plan item, a folder, or `--auto` the whole backlog; atomic commit per cut, tests-green-or-revert.
 - score — after a change, see net app/test LOC and drop a PR scoreboard badge.
 - trend — the long view: cumulative LOC delta and your shrink streak over time.

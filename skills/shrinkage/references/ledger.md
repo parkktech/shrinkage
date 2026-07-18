@@ -35,6 +35,18 @@ edge-trades/           stale untracked clone (produced 369 phantom map files)
 storage/framework/**   compiled/cache artifacts
 ```
 
+## red-baselines
+
+Suites known to be red or quarantined — one per row, first token the suite
+path, rest the reason + date. Audits skip re-verifying them (the suite-health
+sweep reads this before running anything); shaves treat any row gated on one as
+**repair-first** without re-discovery. Remove the row when the suite is fixed.
+
+```
+## red-baselines
+tests/Unit/.../RegimeGatedTournamentRunnerTest.php   asserts retired Phase-84 behavior — delete-or-quarantine decision pending (D-8) — 2026-07
+```
+
 ## keeps
 
 One row per settled KEEP decision. Audit and the shrink-auditor load these and do

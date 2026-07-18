@@ -1,6 +1,6 @@
 ---
 name: srk-audit
-description: Repo-wide shrink audit — six evidence sweeps, ranked SHRINK-PLAN.md backlog
+description: Repo-wide shrink audit — seven evidence sweeps, ranked SHRINK-PLAN.md backlog
 argument-hint: "[dir]"
 agent: agent
 ---
@@ -8,7 +8,7 @@ agent: agent
 Follow `.claude/skills/shrinkage/workflows/audit.md` for ${input} (default: whole
 repo). FRESHNESS GATE FIRST: if a current plan exists and nothing changed, ask
 (work the plan / re-verify only / force full re-sweep) — never silently re-sweep;
-`--force` always sweeps. Then: fresh map, all six sweeps (dead-symbol,
+`--force` always sweeps. Then: fresh map, all seven sweeps (suite-health via `plan.py verify-gates`, dead-symbol,
 duplication via dupes+clones, structure, flags, platform, noise). Read the ledger first
 (`.shrinkage/ledger.md`): never flag `## keeps`, never propose `## frozen`
 paths; carry a prior plan's open rows in as explicit re-verify items (`plan.py

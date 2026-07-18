@@ -196,8 +196,13 @@ Deleting is part of the feature; this workflow is how deletion earns trust.
    Manual `/clear` is thus optional (a fresh-batch/review convenience), never
    required. Read `references/context-management.md`.
 
-2. **Baseline.** Relevant test suite green. Red baseline → stop and report;
-   you cannot detect breakage against a red baseline.
+2. **Baseline.** Check the ledger's `## red-baselines` FIRST — a suite listed
+   there is known-red/quarantined: any row gated on it is repair-first, no
+   re-discovery needed. Then: relevant test suite green (own process — suites
+   green individually can error when run together). Red baseline → stop and
+   report; you cannot detect breakage against a red baseline. A NEWLY
+   discovered red suite gets a ledger `## red-baselines` entry so the next
+   session doesn't re-spend the discovery.
 
 3. **Hunt, using signals in this order (cheap → expensive):**
    - `codemap.py refresh` then scan the target's symbols for `x0` refs (C6

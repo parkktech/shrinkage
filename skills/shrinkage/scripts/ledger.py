@@ -61,6 +61,12 @@ def frozen(root="."):
     return section(root, "frozen")
 
 
+def red_baselines(root="."):
+    """`## red-baselines` — suites known red/quarantined. Audits skip
+    re-discovering them; shaves treat any row gated on one as repair-first."""
+    return section(root, "red-baselines")
+
+
 def matches(rel, globs):
     """Does POSIX relpath `rel` match any glob/dir-prefix in `globs`?"""
     for g in globs:

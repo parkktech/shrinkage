@@ -30,7 +30,7 @@ phases) consuming the plan.
    - **Code moved** (fingerprint differs / code commits landed): run the full
      audit, carrying the prior plan's open rows into the sweeps as re-verify
      items (step 2).
-   - **`--force`**: skip this gate entirely — full six sweeps, no question.
+   - **`--force`**: skip this gate entirely — full seven sweeps, no question.
 
    WHICHEVER path runs — full, re-verify-only, or work-the-plan — the run ENDS
    with the same two-section close (step 8: `Results:` / `TODO before
@@ -53,6 +53,17 @@ phases) consuming the plan.
    - **Platform sweep:** walk `utils`/`helpers`/`lib` against the language's
      platform idioms (rules/<lang>.md) → C5
    - **Noise sweep:** commented-out blocks, stale TODOs → C10
+   - **Suite-health sweep (7th):** every suite a row will NAME as its gate gets
+     RUN — fresh, one process per suite (suites green individually can error
+     together; process pollution). Mechanized: `plan.py verify-gates` after the
+     table is drafted stamps the ACTUAL color into each row. Flag RED,
+     0-assertion, and all-skipped suites — a named gate that doesn't observe
+     anything is a lie (one deployment found three at once, including a
+     21-error/0-assertion suite "guarding" live-money risk guards; a shave was
+     applied-then-reverted purely because its gate was recorded green without
+     being run). Red gate → the row is repair-first: a TODO item + a ledger
+     `## red-baselines` entry. 0-assertion suite on live code → also a
+     `## Bugs found` entry — the suite itself is the defect.
    Subagents parallelize cleanly here: one sweep each, evidence-only briefs
    (see `agents/shrink-auditor.md`). **Inject the ledger** (`scripts/ledger.py`,
    file `references/ledger.md`) into every brief: `## keeps` (do NOT re-flag;
@@ -252,7 +263,9 @@ phases) consuming the plan.
 End with a terse result line + a **Next** block that LEADS with the one concrete action to take now, as a plain imperative — including a non-`srk` step (commit or stash in-flight work, land the branch, adjudicate a ⚖ item) when that's the real next move — then ≤2 alternatives (command file's <next> block + SKILL.md "Response style"). Never a bare command menu or a buried "becomes executable after…". No wall of prose.
 
 <success_criteria>
-- [ ] All six sweeps ran (or skipped with stated reason)
+- [ ] All seven sweeps ran (or skipped with stated reason) — incl. suite-health
+      (`plan.py verify-gates`): every named gate actually executed, no
+      recorded-green-without-running
 - [ ] Every plan entry: catalog #, tier, net-LOC estimate, effort, confidence
 - [ ] Zero candidates ranked on map evidence alone
 - [ ] SHRINK-PLAN.md written and self-contained (evidence travels with it)
