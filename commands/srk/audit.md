@@ -1,6 +1,6 @@
 ---
 name: srk:audit
-description: "Repo-wide shrink audit: six evidence sweeps, tiered candidates, ranked SHRINK-PLAN.md backlog"
+description: "Repo-wide shrink audit: seven evidence sweeps, tiered candidates, ranked SHRINK-PLAN.md backlog"
 argument-hint: "[dir] [--force]"
 allowed-tools: [Bash, Read, Grep, Write, Agent]
 ---
@@ -12,11 +12,13 @@ does not cut.
 </objective>
 
 <execution_context>
+$SKILL is resolved FRESH for THIS invocation — never reuse a path remembered from earlier in the session (a mid-session plugin update strands version-pinned cache paths). Churn-proof order: `${CLAUDE_PLUGIN_ROOT}/skills/shrinkage` if set; else the newest installed copy `$(ls -dv ~/.claude/plugins/cache/*/shrinkage/*/skills/shrinkage 2>/dev/null | tail -1)`; else the vendored locations.
+
 Locate the shrinkage skill dir ($SKILL: `${CLAUDE_PLUGIN_ROOT}/skills/shrinkage` when installed as a plugin, else `.claude/skills/shrinkage` or `~/.claude/skills/shrinkage`), then follow
 `$SKILL/workflows/audit.md` exactly — starting with its step-0 freshness gate:
 when a current plan already exists and nothing changed, ASK (work the plan /
 re-verify only / force a full re-sweep) instead of silently re-sweeping or
-silently re-stamping; `--force` in $ARGUMENTS always runs the full six sweeps.
+silently re-stamping; `--force` in $ARGUMENTS always runs the full seven sweeps.
 Every path ends with the step-8 two-section close (Results / TODO). Subagents for the parallel sweeps use the
 brief in `$SKILL/agents/shrink-auditor.md`. Required reading:
 `$SKILL/references/safety-model.md` §§0–3 and
@@ -24,7 +26,7 @@ brief in `$SKILL/agents/shrink-auditor.md`. Required reading:
 </execution_context>
 
 <success_criteria>
-- [ ] All six sweeps ran (dead-symbol, duplication, structure, flag, platform, noise)
+- [ ] All seven sweeps ran (suite-health, dead-symbol, duplication, structure, flag, platform, noise)
 - [ ] Every entry: catalog #, tier, net-LOC estimate, effort, confidence
 - [ ] Zero candidates ranked on map evidence alone
 - [ ] SHRINK-PLAN.md written; execution offered via /srk:shave or GSD phases
