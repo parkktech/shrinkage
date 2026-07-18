@@ -74,8 +74,9 @@ phases) consuming the plan.
    deployment saw ~40% twice, another netted −70 est → +1 actual). `plan.py done`
    feeds this loop automatically (derives the actual from git).
    **C1/C9 specifically — price the NEW HOME, don't just count removed lines.**
-   Net ≈ `block_LOC × (N−1) − (shared body + docblock + N call-lines)`; a
-   documented shared home often nets ~0. So **rank C1/C9 by duplicate definitions
+   Net ≈ `N × block_LOC − (merged body + docblock + N call-lines)`, where the
+   merged body is usually ≥ one block once it absorbs the variants; a documented
+   shared home often nets ~0. So **rank C1/C9 by duplicate definitions
    collapsed and bug-surface removed** (the shared fix touches one place, not N),
    NOT by net LOC — otherwise a realization factor near 0 silently buries
    genuinely valuable merges. Put the collapse count (e.g. "9 defs → 4") in the

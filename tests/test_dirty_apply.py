@@ -116,3 +116,8 @@ def test_precheck_aborts_overlap_before_any_commit(repo):
     assert code == 3, out
     assert "L5_USER" in _lines(repo), "precheck restores the original WIP"
     assert _commits(repo) == "1", "NO shave commit was created — nothing to hand-revert"
+    # the parked state is consumed by the abort — a blind follow-on unpark must
+    # refuse (rc=2), not re-apply anything on top of the restored file
+    code, out = run("dirty_apply.py", "unpark", "a.py", cwd=repo)
+    assert code == 2 and "no parked state" in out, out
+    assert "L5_USER" in _lines(repo), "file untouched by the refused unpark"

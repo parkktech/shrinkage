@@ -137,8 +137,9 @@ justification required). NOT a new `utils` entry by default.
 **Gotchas:** two copies that are one character different are two *behaviors* —
 find out which one is the bug before unifying on either.
 **Payoff (estimate honestly):** "lines removed" overcounts — the shared home
-costs real LOC: the moved body once + its docblock + one `use`/call line per
-site. Net ≈ `block_LOC × (N−1) − (shared body + docblock + N call-lines)`, and a
+costs real LOC: the merged body once (usually ≥ one block, since it absorbs the
+variants), its docblock, and one `use`/call line per site.
+Net ≈ `N × block_LOC − (merged body + docblock + N call-lines)`, and a
 *documented* shared home routinely nets ~0 or even positive (a deployment
 measured −70 estimated → **+1 actual**). So the real, rankable win is NOT net
 LOC — it's **duplicate definitions collapsed** (N → 1 canonical) and **bug-

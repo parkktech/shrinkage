@@ -70,7 +70,8 @@ def park(path):
     if r.returncode != 0:
         die(2, "could not reset the file to HEAD:\n" + r.stderr)
     print(f"parked {path}: user hunk saved, file reset to HEAD (edit the clean base, "
-          "safe_commit it, then `dirty_apply.py unpark`).")
+          "then `dirty_apply.py precheck` BEFORE committing, safe_commit, "
+          "then `dirty_apply.py unpark`).")
 
 
 def precheck(path):
