@@ -5,8 +5,12 @@ Usage:
   diffstat.py [REF]         score the working tree against REF (default HEAD)
   diffstat.py BASE..HEAD    score a COMMITTED range (e.g. a shave batch), so a
                             dirty working tree of unrelated work can't drown it
+  diffstat.py BASE..HEAD --shave-only   score ONLY the shave/fix commits in a
+                            range (subjects matching shrink:/fix:), and show the
+                            whole-range delta so entanglement stays visible
   diffstat.py --trend       cumulative trend + shrink streak
 Flags: --pr (PR markdown block) · --log (append a trend entry) ·
+       --shave-only / --prefix shrink:,fix: (range: matched commits only) ·
        --color / --no-color (force / disable ANSI; auto-on for a TTY)
 
 Prints a short, colored scoreboard: lines removed vs added and the net (app and
@@ -156,14 +160,15 @@ def gate_ledger_check(new_syms):
 
 
 def scoreboard(ref, app_ins, app_del, test_ins, test_del, files,
-               new_syms, removed_syms, sig_changes, root):
+               new_syms, removed_syms, sig_changes, root, label=None):
     net_app, net_test = app_ins - app_del, test_ins - test_del
     is_range = ".." in ref
-    if is_range:
-        n = git("rev-list", "--count", ref).strip() or "?"
-        label = f"{n} commit{'' if n == '1' else 's'} · {ref}"
-    else:
-        label = f"working tree (uncommitted) vs {ref}"
+    if label is None:
+        if is_range:
+            n = git("rev-list", "--count", ref).strip() or "?"
+            label = f"{n} commit{'' if n == '1' else 's'} · {ref}"
+        else:
+            label = f"working tree (uncommitted) vs {ref}"
     arrow = col(GREEN, "▼") if net_app < 0 else col(YELLOW, "▲") if net_app > 0 else "·"
 
     direction = (col(GREEN, "▼ smaller") if net_app < 0
@@ -281,6 +286,89 @@ def print_total(t=None):
     print(f"  test code         {net_test:>+8,} lines")
 
 
+def _matched_shas(ref, prefixes):
+    """SHAs in the range whose SUBJECT starts with one of the prefixes (e.g.
+    'shrink:', 'fix:') — the shave/fix commit templates."""
+    out = []
+    for line in git("log", "--format=%H%x1f%s", ref).splitlines():
+        if "\x1f" not in line:
+            continue
+        sha, subj = line.split("\x1f", 1)
+        if any(subj.startswith(p) for p in prefixes):
+            out.append(sha)
+    return out
+
+
+def collect_commits(shas):
+    """Aggregate LOC + symbol deltas across a SPECIFIC set of commits (each vs its
+    parent), rather than a start..end range. Lets --shave-only score only the
+    matching commits even when non-shave commits are interleaved in the range.
+    Returns the same 8-tuple shape as collect()."""
+    app_ins = app_del = test_ins = test_del = 0
+    files, new_syms, removed_syms, sig_changes = set(), [], [], []
+
+    def label(k):
+        _, p, n = k
+        return f"{p + '.' if p else ''}{n}"
+
+    for sha in shas:
+        for line in git("show", "--numstat", "--no-renames", "--format=", sha).strip().splitlines():
+            if "\t" not in line:
+                continue
+            add, rm, path = line.split("\t", 2)
+            files.add(path)
+            if add == "-":
+                continue
+            if not NON_CODE.search(path):
+                a, r = int(add), int(rm)
+                if TEST_PATH.search(path):
+                    test_ins += a; test_del += r
+                else:
+                    app_ins += a; app_del += r
+            if not language_of(path):
+                continue
+            old = {s.key(): s.signature for s in parse_text(path, git("show", f"{sha}^:{path}"))}
+            new = {s.key(): s.signature for s in parse_text(path, git("show", f"{sha}:{path}"))}
+            new_syms += [label(k) for k in new.keys() - old.keys()]
+            removed_syms += [label(k) for k in old.keys() - new.keys()]
+            sig_changes += [f"{label(k)} [{old[k]} -> {new[k]}]"
+                            for k in old.keys() & new.keys() if old[k] != new[k]]
+    return (app_ins, app_del, test_ins, test_del, sorted(files),
+            sorted(new_syms), sorted(removed_syms), sorted(sig_changes))
+
+
+def shave_only_board(ref, prefixes, root):
+    """--shave-only / --prefix: score ONLY the commits in a range whose subject
+    matches the shave/fix templates, then show the whole-range delta so any
+    entanglement (non-shave work mixed into the range) stays visible, not hidden."""
+    _, head = _endpoints(ref)
+    if head is None:
+        print("--shave-only needs a committed range (e.g. <base>..HEAD); a "
+              "working-tree diff has no commits to filter.")
+        return
+    all_shas = git("rev-list", ref).split()
+    matched = _matched_shas(ref, prefixes)
+    off = [s for s in all_shas if s not in set(matched)]
+    board = collect_commits(matched)
+    joined = ",".join(prefixes)
+    scoreboard(ref, *board, root,
+               label=f"shave-only · {len(matched)} of {len(all_shas)} commits match {joined}")
+    m_net = board[0] - board[1]
+    if off:
+        oi = od = 0
+        for s in off:
+            a, d, _t, _u = _commit_loc(s)
+            oi += a; od += d
+        off_net = oi - od
+        print("  " + col(YELLOW, "entanglement check"))
+        print(f"    {len(off)} of {len(all_shas)} commits are not {joined}"
+              + col(YELLOW, f"   {off_net:+,} app lines") + " from other work")
+        print(col(DIM, f"    whole range = shave {m_net:+,} + other {off_net:+,} "
+                       f"= {m_net + off_net:+,} lines"))
+    else:
+        print(col(DIM, "  all commits in the range matched — no non-shave entanglement"))
+
+
 def _optval(argv, name):
     return (argv[argv.index(name) + 1]
             if name in argv and argv.index(name) + 1 < len(argv) else None)
@@ -374,9 +462,14 @@ def main():
     if "--total" in argv:
         print_total()
         return
-    pos = _positionals(argv, {"--cat", "--est"})
+    pos = _positionals(argv, {"--cat", "--est", "--prefix"})
     ref = pos[0] if pos else "HEAD"
     root = Path(".")
+    if "--shave-only" in argv or "--prefix" in argv:
+        prefixes = [p.strip() for p in (_optval(argv, "--prefix") or "shrink:,fix:").split(",")
+                    if p.strip()]
+        shave_only_board(ref, prefixes, root)
+        return
     (app_ins, app_del, test_ins, test_del, files,
      new_syms, removed_syms, sig_changes) = collect(ref)
     net_app, net_test = app_ins - app_del, test_ins - test_del

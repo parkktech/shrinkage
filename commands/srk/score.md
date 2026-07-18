@@ -1,7 +1,7 @@
 ---
 name: srk:score
 description: "The minimalism scoreboard: lines removed/added/net, symbols, and how many plan items were removed/merged/cleaned"
-argument-hint: "[REF | BASE..HEAD] [--pr] [--log]"
+argument-hint: "[REF | BASE..HEAD] [--pr] [--log] [--shave-only]"
 allowed-tools: [Bash]
 ---
 
@@ -22,6 +22,12 @@ One script call, inline — no subagent, no re-analysis. Locate $SKILL
      `python3 $SKILL/scripts/diffstat.py <base>..HEAD --color`
      (the shave batch's parent: `<firstShaveCommit>^..HEAD`). This is the fix
      for "the score shows +1700 of stuff I didn't touch."
+   - The committed range itself got ENTANGLED — it contains non-shave commits
+     (a feature landed mid-batch, or an incident swept unrelated work in)? Add
+     `--shave-only` to score just the `shrink:`/`fix:` commits and still see the
+     whole-range delta, so the mixing is visible instead of drowning the board:
+     `python3 $SKILL/scripts/diffstat.py <base>..HEAD --shave-only --color`
+     (custom subjects: `--prefix shrink:,fix:,refactor:`).
    - Otherwise score the working tree:
      `python3 $SKILL/scripts/diffstat.py --color`.
 

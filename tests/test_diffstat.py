@@ -156,6 +156,44 @@ def test_trend_shows_realization_factor(repo):
     assert "C9" in out and "40%" in out, out          # actual 40 / est 100
 
 
+def test_shave_only_isolates_matched_commits_in_a_mixed_range(repo):
+    # P2.11: a range holding a shave (-4) AND unrelated feature work (+20) scores
+    # +16 as a whole (misleading) — --shave-only isolates the shave and flags the rest.
+    (repo / "app.py").write_text("".join(f"x{i} = {i}\n" for i in range(10)))
+    commit(repo)
+    (repo / "app.py").write_text("".join(f"x{i} = {i}\n" for i in range(6)))
+    commit(repo, "shrink: drop dead tail\n\ncatalog: C6, tier T1\nnet LOC: -4")
+    (repo / "feature.py").write_text("".join(f"f{i} = {i}\n" for i in range(20)))
+    commit(repo, "feat: unrelated feature work")
+    code, out = run("diffstat.py", "HEAD~2..HEAD", "--shave-only", "--no-color", cwd=repo)
+    assert code == 0, out
+    assert "1 of 2 commits match shrink:,fix:" in out, out
+    assert "-4 lines" in out, out                       # the shave alone, not the +16 whole
+    assert "entanglement" in out, out
+    assert "1 of 2 commits are not shrink:,fix:" in out, out
+    assert "+20 app lines" in out and "= +16 lines" in out, out
+
+
+def test_shave_only_custom_prefix(repo):
+    (repo / "app.py").write_text("a = 1\n")
+    commit(repo)
+    (repo / "app.py").write_text("a = 1\nb = 2\nc = 3\n")
+    commit(repo, "feat: add two")
+    (repo / "app.py").write_text("a = 1\nb = 2\n")
+    commit(repo, "shrink: trim one\n\ncatalog: C6, tier T1\nnet LOC: -1")
+    code, out = run("diffstat.py", "HEAD~2..HEAD", "--prefix", "feat:", "--no-color", cwd=repo)
+    assert code == 0, out
+    assert "1 of 2 commits match feat:" in out, out
+    assert "+2 lines" in out, out                       # only the feat commit, not the -1 shave
+
+
+def test_shave_only_requires_a_range(repo):
+    (repo / "app.py").write_text("a = 1\n")
+    commit(repo)
+    code, out = run("diffstat.py", "HEAD", "--shave-only", "--no-color", cwd=repo)
+    assert "needs a committed range" in out, out
+
+
 def test_log_lives_in_git_dir_not_working_tree(repo):
     # P2.6: the log must land in .git/info/ so it can't block a checkout during
     # recovery or get swept into a commit — never in the working tree.

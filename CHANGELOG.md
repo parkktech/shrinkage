@@ -51,6 +51,15 @@ Continuing the field-report hardening (P1.4–P2.12).
   planners have a stable place to harvest fix work. A dedupe row touching buggy
   twin code must name that bug as a blocking prerequisite (fix first, then merge).
   The lean report now surfaces the bug count. Doc-only.
+- **P2.11 — Scoreboard shave-only filtering.** `diffstat.py <range> --shave-only`
+  (or `--prefix shrink:,fix:`) scores only the commits in a range whose subject
+  matches the shave/fix templates, so a range entangled with unrelated work (a
+  feature landed mid-batch, or the WIP-sweep incident) can be scored honestly
+  instead of drowning the board. It shows both totals — the isolated shave and
+  the whole-range delta with the non-shave contribution called out — so
+  entanglement stays visible rather than hidden. Symbol/signature analysis is
+  likewise restricted to the matched commits (compat-watch no longer flags the
+  user's WIP). +3 tests.
 
 ## 0.25.0
 Field-report-driven hardening from a production Laravel deployment (~2,900 files
