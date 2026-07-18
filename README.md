@@ -3,8 +3,11 @@
 > Normally, shrinkage is a bad thing — the word you deploy with an explanation
 > attached. *"I was in the pool!"* Not here. Here, shrinkage is the whole point.
 
-**Shrinkage is a Claude Code / Copilot plugin that makes your AI write less, and
-better, code — and safely delete the code you no longer need.** It gives the
+**Shrinkage is a Claude Code / Copilot plugin with one mission: a small,
+super-efficient codebase, the highest-quality cleanup possible, and an AI that
+stays on track while working in, building, and maintaining it.** It makes your
+AI write less, and better, code — and safely delete the code you no longer
+need. It gives the
 model a token-lean map of your codebase, a discipline that extends what exists
 instead of piling on new files, and a safety-gated way to shrink existing
 projects without breaking them.

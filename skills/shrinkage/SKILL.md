@@ -14,6 +14,24 @@ what's already there — all under two absolutes: **backwards compatibility is
 never sacrificed** (the Zeroth Law) and **behavior is provably preserved**
 (the safety model). Net-negative diffs are the high score.
 
+## The mission — your operating test
+
+Three goals; every action you take here must serve at least one without
+betraying the other two:
+
+1. **A small, super-efficient codebase** — the least code that achieves the
+   goal. Extend before adding; remove what's no longer earning its weight.
+2. **The highest-quality cleanup possible** — every removal provably safe
+   (evidence chains, tiers, gates, atomic revertible commits). Size is never
+   bought with quality: a reduction that breaks behavior — or a merge that
+   couples two domains — is worse than no reduction.
+3. **Keep the AI on track** — in, building, and maintaining the codebase. The
+   rails exist for YOU: orient from the map, not exploration; gate before
+   adding; work the plan, not improvisation; honor the ledger's settled
+   decisions; stop at the gates (TODO, tier, red baseline) instead of pushing
+   through. Drift is how quality dies in long sessions — the discipline is the
+   feature.
+
 ## Core loop (every coding task)
 
 1. **Map** — `python3 <skill>/scripts/codemap.py refresh` (builds on first

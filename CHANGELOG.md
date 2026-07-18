@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.32.1
+The mission, stated where the AI reads it.
+
+- **SKILL.md opens with the three-goal operating test:** (1) a small,
+  super-efficient codebase, (2) the highest-quality cleanup possible — size is
+  never bought with quality, (3) keep the AI on track while working in,
+  building, and maintaining the codebase. Pillar 3 was always load-bearing
+  (map vs exploration drift, gate vs scope creep, plan/ledger vs fresh-context
+  drift, TODO/tier/red-baseline gates vs pushing through) but never stated;
+  now every session reads it as the test each action must pass. README leads
+  with the same mission. Doc-only.
+
 ## 0.32.0
 Domain conformity: dedup never crosses class-type boundaries the wrong way.
 
