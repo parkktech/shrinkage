@@ -1,5 +1,42 @@
 # Changelog
 
+## 0.35.0
+Language-matrix parity: the PHP-era improvements now cover every supported
+language, template family, and test ecosystem.
+
+- **`extract_method.py` goes multi-engine.** Java, C#, Kotlin, Go, and Rust get
+  per-language exact tokenizers (each language's traps handled or refused: Java
+  text blocks, C# interpolated/verbatim strings, Kotlin `${}` templates and raw
+  strings, Go backtick raw strings, Rust lifetimes-vs-char-literals, NESTED
+  block comments, and raw strings). Python gets a stdlib-`ast` engine — exact
+  spans including decorators and leading comments, and a stronger comment-only
+  verdict (AST-identity with docstrings stripped) — plus `wire --mixin
+  'pkg.mod.Class'` (import + first-class bases). JS/TS gets the tree-sitter
+  engine (the plugin's existing optional exact path): JSDoc-inclusive spans,
+  auto-`export` on extraction, `wire --import`; absent tree-sitter → loud
+  install-hint refusal, and JS class methods refuse extract (`this`-binding is
+  behavior). Templates (Blade markup, Twig, Vue/Svelte/…) refuse with the real
+  guidance — dedupe there is partial/component extraction, gated by the
+  template compile. `wire --import '<verbatim>'` works across Java/C#/Kotlin/
+  Go/Rust/Python/JS. Cross-language extract refuses. +6 language tests (the
+  JS test runs live against tree-sitter and skips when it's not installed).
+- **`plan.py verify-gates` learns every test ecosystem.** Suite tokens now
+  match `FooTest.java`/`FooTests.cs`/`FooTest.kt`, `*_test.go`,
+  `*.test|spec.[jt]sx?` alongside phpunit/pytest paths; runner auto-detect adds
+  gradlew, `go test`, `cargo test`, `dotnet test --filter`, and `npm test --`
+  (with per-runner argument adaptation — gradle wants a class name, go wants
+  `./pkg`); output classification reads go/cargo/gradle/jest/dotnet results
+  (and "0 failed" no longer reads as red). +1 matrix test.
+- **Compat-watch knows Go and Rust visibility.** Go: unexported (lowercase)
+  functions no longer warn on signature change; Rust: `fn` without `pub` on
+  both sides is internal. Keyword languages were already covered; Python stays
+  conservative. +1 test.
+- **Gate recipes for the other frameworks.** `rules/frameworks/{android,
+  magento2,drupal}.md` gain the same file-type → cheapest-sufficient-gate
+  section Laravel got: `compileDebugKotlin`/`lintDebug`/`testDebugUnitTest`,
+  `setup:di:compile`/`module:status`/`cache:clean`, `drush cache:rebuild`/
+  `config:status` — framework institutional memory, not session memory.
+
 ## 0.34.1
 The PHP-only boundary of extract_method is now mechanical, not just documented.
 
