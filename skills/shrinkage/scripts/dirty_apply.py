@@ -68,14 +68,24 @@ def unpark(path):
     patch, bak = slot(path)
     if not patch.exists() or not bak.exists():
         die(2, f"no parked state for {path} (run `park` first).")
-    # Re-apply the user's hunk onto the (now shaved + committed) working file.
-    r = git("apply", "--recount", str(patch))
+    # Re-apply the user's hunk with a real 3-way merge (against the base blob the
+    # patch was cut from), NOT fragile context matching. This is the fix for the
+    # false "NOT DISJOINT": a genuinely disjoint hunk must re-apply even when the
+    # shave deleted lines that fell inside the hunk's few lines of diff *context*
+    # — plain `git apply` refused exactly that (the common case this tool exists
+    # for), while a real overlap still conflicts and is caught below.
+    r = git("apply", "--3way", "--recount", str(patch))
     if r.returncode == 0:
+        # Keep the restored WIP an UNSTAGED working-tree change (never let it slip
+        # into the next commit); --3way can leave the merged path staged.
+        git("reset", "-q", "--", path)
         patch.unlink(missing_ok=True)
         bak.unlink(missing_ok=True)
         print(f"unparked {path}: user's in-flight hunk re-applied on top of the shave.")
         return
-    # Not disjoint — restore the byte-exact pre-shave file, leave a signal.
+    # Not disjoint — clear the unmerged index entry --3way leaves on conflict,
+    # restore the byte-exact pre-shave file, and signal.
+    git("reset", "-q", "--", path)
     Path(path).write_bytes(bak.read_bytes())
     patch.unlink(missing_ok=True)
     bak.unlink(missing_ok=True)

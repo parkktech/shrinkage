@@ -31,6 +31,33 @@ def test_disjoint_hunk_round_trips(repo):
     assert "L8" not in final and "L9" not in final, "shave stays committed"
 
 
+def test_disjoint_hunk_adjacent_to_shave_still_round_trips(repo):
+    # The production case that plain `git apply` false-refused: the user's edited
+    # line doesn't overlap the shave, but the shave deletes lines that fall inside
+    # the hunk's few lines of diff CONTEXT. A 3-way merge must still re-apply it.
+    _write(repo, [f"L{i}" for i in range(1, 21)])
+    commit(repo)
+    ls = _lines(repo); ls[1] = "L2_USER_EDIT"          # WIP on line 2 (context reaches L5)
+    _write(repo, ls)
+    code, out = run("dirty_apply.py", "park", "a.py", cwd=repo)
+    assert code == 0, out
+
+    removed = {f"L{i}" for i in range(4, 13)}           # shave deletes L4..L12 (into the context)
+    _write(repo, [l for l in _lines(repo) if l not in removed])
+    run("safe_commit.py", "-m", "shrink: drop L4-L12", "--", "a.py", cwd=repo)
+
+    code, out = run("dirty_apply.py", "unpark", "a.py", cwd=repo)
+    assert code == 0, out                               # 3-way applies it; plain apply refused
+    final = _lines(repo)
+    assert final[0] == "L1" and final[1] == "L2_USER_EDIT", final
+    assert "L4" not in final and "L12" not in final, "shave stays committed"
+    # WIP must be an UNSTAGED change, never quietly staged into the next commit
+    import subprocess
+    staged = subprocess.run(["git", "diff", "--cached", "--name-only"],
+                            cwd=repo, capture_output=True, text=True).stdout
+    assert "a.py" not in staged, "restored WIP must be unstaged"
+
+
 def test_overlap_restores_backup_and_signals(repo):
     _write(repo, [f"L{i}" for i in range(1, 11)])
     commit(repo)

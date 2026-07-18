@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.26.2
+Fix `dirty_apply.py unpark` false-refusing genuinely disjoint hunks — caught
+empirically before the first production park/unpark on the edge-trades WIP.
+
+- **`unpark` re-applies with a 3-way merge, not fragile context matching.** Plain
+  `git apply --recount` matched the parked hunk by its few lines of surrounding
+  diff context, so when the shave deleted lines that fell inside that context the
+  re-apply failed and the tool wrongly reported "NOT DISJOINT" — refusing exactly
+  the disjoint case `--allow-dirty-disjoint` exists to handle (reproduced: a WIP
+  edit two lines above a removed cluster). It now uses `git apply --3way --recount`,
+  merging against the base blob the patch was cut from: a genuinely disjoint hunk
+  re-applies cleanly even when its context was shaved, while a true overlap still
+  conflicts and triggers the byte-exact restore. Unmerged index residue from a
+  conflicting 3-way is cleared, and the restored WIP is kept unstaged so it can't
+  slip into the next commit. Nothing was ever unsafe — the backup/restore
+  guarantee held throughout — but the tool now actually works for its intended
+  case. +1 test (disjoint hunk adjacent to the shave region).
+
 ## 0.26.1
 Hotfix for the ledger reader (reported from the edge-trades deployment).
 
