@@ -42,10 +42,13 @@ gotchas. `$SKILL/rules/<lang>.md` for the target's language.
 4. **Apply the ONE transform** exactly as the catalog entry describes. Zeroth
    Law: anything on the compatibility surface keeps its old entry points
    working (deprecation shims, marked and scheduled). No drive-by fixes, no
-   renaming for taste, no "while I'm here." **C1/C9 method merges (PHP): use
+   renaming for taste, no "while I'm here." **C1/C9 method merges: use
    `$SKILL/scripts/extract_method.py` (check → extract → remove → wire) — do
-   NOT hand-script the slicing; the tool's `check` DIVERGENT verdict (exit 3)
-   is a stop, not an obstacle.
+   NOT hand-script the slicing. It covers PHP/Java/C#/Kotlin/Go/Rust (exact
+   tokenizers), Python (ast), JS/TS (tree-sitter). Its refusals are stops, not
+   obstacles: `check` DIVERGENT (exit 3) = two behaviors; an un-sliceable
+   literal or a JS class method = handle manually with tests; a template =
+   partial/component extraction, not method surgery.
 5. **Gate:** tests + lint/types + build. Green → commit through the staging
    guard, which stages + commits ONLY your declared files and verifies nothing
    else landed:

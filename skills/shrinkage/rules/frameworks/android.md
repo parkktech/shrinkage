@@ -52,3 +52,17 @@ Plan tasks name the seam ("parameter on CheckoutSummary composable",
 Verify: no Jetpack duplicate written, every deleted class checked against
 manifest + XML + generated wiring + keep rules, `assemble` green across
 flavors, and lint's UnusedResources run before believing a resource is dead.
+
+## Gate recipes (file-type → cheapest sufficient gate)
+
+- **Kotlin/Java source:** `./gradlew :app:compileDebugKotlin` (or
+  `compileDebugJavaWithJavac`) — compile-level, catches removed/renamed symbols
+  fast without a device.
+- **Layout / nav / manifest XML:** `./gradlew :app:processDebugResources` then
+  `lintDebug` — unresolved `@id`s, missing custom-view classes referenced from
+  XML (the references the static map can't see).
+- **Unit tests:** `./gradlew testDebugUnitTest --tests <ClassName>` — one
+  class, own process.
+- **ProGuard/R8 keep rules touched:** only a minified build proves them —
+  `./gradlew assembleRelease` is the honest (heavy) gate; say so in the row
+  rather than pretending lint covers it.

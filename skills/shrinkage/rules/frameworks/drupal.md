@@ -68,3 +68,15 @@ needs, services injected not statically fetched.
   macro over repetition, logic upstream in preprocess).
 - Theme suggestions resolve templates by NAME PATTERN — a "dead" template may
   be selected at runtime; check hook_theme/suggestions before deleting.
+
+## Gate recipes (file-type → cheapest sufficient gate)
+
+- **Services / hooks / plugin annotations:** `drush cache:rebuild` — rebuilds
+  the container and re-discovers plugins; a broken service definition or a
+  removed class referenced in services.yml fails HERE, not in production.
+- **Config / schema:** `drush config:status` after changes — drift shows
+  immediately.
+- **Twig templates:** recompiled on next render after `drush cache:rebuild`;
+  for behavior, a kernel/functional test on the route beats hand-loading pages.
+- **Module code:** `vendor/bin/phpunit -c core <module tests>` — one suite,
+  own process (kernel tests catch container wiring unit tests can't).

@@ -72,3 +72,17 @@ Helper grab-bag, and every around-plugin justifies why after/before couldn't.
   to change what a plugin/view model could.
 - `codemap.py clones` across app/design themes finds the copied-template
   drift that accumulates over upgrades.
+
+## Gate recipes (file-type → cheapest sufficient gate)
+
+- **Classes / DI (di.xml, plugins, preferences):** `bin/magento setup:di:compile`
+  — resolves the full DI graph, proxies, and interceptors; fails loudly on any
+  class-string reference to a removed/renamed class (the checklist's biggest
+  hiding place).
+- **Module registration:** `bin/magento module:status` after touching
+  registration.php / module.xml.
+- **config/layout XML:** `bin/magento cache:clean config layout` + load the
+  affected page/CLI once — layout XML errors surface on rebuild, not on edit.
+- **Templates (.phtml):** `php -l` per file + `setup:di:compile` (block class
+  references); the map indexes .phtml so refs count, but the grep pass before
+  deletion still applies.

@@ -224,21 +224,23 @@ Deleting is part of the feature; this workflow is how deletion earns trust.
    route to the normal gate/plan flow.
 
 5. **Execute, one transform per commit,** per the transformation protocol
-   (§6). **C1/C9 merges (PHP) run through `scripts/extract_method.py` — never
-   hand-sliced:** `check <method> <hostA> <hostB>` (byte/comment-normalized
-   identity verdict; DIVERGENT → stop, two behaviors) → `extract <host>
-   <method> --to <home> [--namespace NS]` → `remove` from each host → `wire
-   --use '\FQ\Trait'` each host. Tokenizer-guided brace matching (strings,
-   comments, `{$interpolation}` can't fool it), atomic writes with a balance
-   sanity check, loud refusals on heredoc/ambiguity — the failure modes of
-   hand-rolled extraction scripts are its test suite. The tool mechanically
-   refuses non-PHP files (its tokenizer is language-exact — on JS it would be
-   wrong, not approximate). **Other languages:** apply the same loop manually —
-   verify identity across hosts BEFORE deleting any copy (diff the bodies,
-   comment-normalized), extract byte-exactly, and run the gates per host —
-   until a per-language engine lands (Python via `ast` and JS/TS via
-   tree-sitter are the planned routes). First **activate the
-   staging guard** for the run:
+   (§6). **C1/C9 merges run through `scripts/extract_method.py` — never
+   hand-sliced:** `check <method> <hostA> <hostB>` (identity verdict; DIVERGENT
+   → stop, two behaviors) → `extract <host> <method> --to <home>` → `remove`
+   from each host → `wire` each host (`--use '\FQ\Trait'` for PHP, `--mixin
+   'pkg.mod.Class'` for Python, `--import '<verbatim line>'` everywhere else).
+   **The language matrix:** PHP/Java/C#/Kotlin/Go/Rust use per-language exact
+   tokenizers (each language's traps are handled or refused: heredocs, C#
+   interpolated/verbatim strings, Rust raw strings and lifetimes, Go raw
+   strings); Python uses stdlib `ast` (the comment-only verdict is
+   AST-identity); JS/TS uses tree-sitter — absent → loud install-hint refusal,
+   and JS class methods refuse extract (`this`-binding is behavior, not
+   mechanics). Templates (Blade markup, Twig, Vue): dedupe there is
+   partial/component extraction — manual, gated by the template compile — not
+   method surgery. Unsupported languages: the same loop manually, identity
+   verified before any copy is deleted. Every mutation is atomic with a
+   balance/re-parse sanity check; a failed check writes nothing. First
+   **activate the staging guard** for the run:
    `mkdir -p .claude && touch .claude/srk-shave-active` — a PreToolUse hook then
    rejects broad `git add -A` / `git commit -a` until you clear it. Then per
    candidate: apply one catalog entry → gates green → **commit through the
