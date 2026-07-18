@@ -1,5 +1,36 @@
 # Changelog
 
+## 0.33.0
+Field-report wave 4 (sixth production day): gates that are actually run, a plan
+CLI that touches everything, and churn-proof paths. Items #1/#2/#4/#5/#6/#7 of
+the report; #3 (`extract_method.py` surgery helper) ships next as its own
+focused release — it edits production code and deserves an undivided pass.
+
+- **#1 — Suite-health, the seventh audit sweep.** The day's biggest find wasn't
+  dead code — three named gate suites were lies (a 21-error/0-assertion suite
+  guarding live-money risk guards; a born-red shell; 5F asserting retired
+  behavior), and row 9 was applied-then-reverted purely because its gate was
+  recorded green without being run. The audit now RUNS every named gate.
+- **#2 — `plan.py verify-gates [--runner CMD]`.** The mechanization: every open
+  row's named suite runs in its OWN process (suites green individually errored
+  together — process pollution), and the ACTUAL color is stamped into the row
+  (`verified: green|RED|0-ASSERT|SKIPPED <date>`); exit 1 on RED/0-ASSERT.
+  Runner auto-detected (phpunit/pest/pytest). +1 test, offline fake-runner.
+- **#4 — Ledger `## red-baselines`.** Known-red/quarantined suites become
+  institutional memory: audits stop re-discovering them, shaves treat rows
+  gated on them as repair-first, the entry is removed when fixed.
+- **#5 — `plan.py` reaches the whole plan.** `done D-30 HEAD` strikes
+  deferred-table rows (sha + actual derived as usual), `todo-check <n|text>`
+  ticks TODO-gate checkboxes and reports remaining/CLEAR, `adjudicate D-32
+  "<ruling>"` records operator rulings durably in the row — four hand-edit
+  sessions' worth of sed, gone. +2 tests.
+- **#6 — `$SKILL` resolves fresh per invocation.** Five mid-session updates
+  stranded version-pinned cache paths in every command. All command files now
+  resolve churn-proof: `${CLAUDE_PLUGIN_ROOT}`, else the newest installed copy
+  (`ls -dv … | tail -1`), else vendored — never a remembered path.
+- **#7 — Status line shows the gate.** `srk ▼-6189 · streak 7 · TODO 3` (or
+  `· TODO clear`) — whether shaving is unblocked, at a glance. +1 test.
+
 ## 0.32.3
 The decision-blocked close: when only your calls remain, the tool says so.
 
