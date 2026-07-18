@@ -1,5 +1,29 @@
 # Changelog
 
+## 0.28.0
+First-class GitHub Copilot support via the Agent Skills standard.
+
+- **Skills-native install.** Copilot (cloud agent, code review, CLI, VS Code/
+  JetBrains agent mode) now loads SKILL.md agent skills, discovering them from
+  `.claude/skills`, `.github/skills`, and `~/.copilot/skills` — so ONE vendored
+  copy at `.claude/skills/shrinkage/` serves Claude Code and every Copilot
+  surface. The adapter README is rewritten around this path; the old
+  instructions-append + prompt-files install remains as the fallback/extras.
+- **SKILL.md "Other runtimes" portability section.** How the skill degrades
+  outside Claude Code: $SKILL = the skill folder, workflows stand in for
+  `/srk:*` commands, agent briefs run inline — and with no PreToolUse
+  staging-guard hook, `safe_commit.py` and the `dirty_apply.py park → precheck →
+  unpark` cycle are mandatory discipline, not belt-and-suspenders.
+- **Copilot doctrine caught up to the field hardening.** The always-on
+  instructions file (stuck at v0.5-era rules) now carries the P0/P1 rails:
+  path-limited commits via `safe_commit.py` (never `git add -A` — Copilot has no
+  hook to save you), the frozen/excluded/keeps ledger, the dirty-target
+  protocol, the plan CLI (`done <id> HEAD` derives actuals), and suite-gated
+  tiering. Shave/audit prompt files refreshed to match; all adapter paths
+  re-anchored from `.github/shrinkage/` to the vendored skill at
+  `.claude/skills/shrinkage/`. No `allowed-tools` pre-approval on purpose —
+  keep Copilot's command confirmations for a tool that deletes code.
+
 ## 0.27.0
 Field-report wave 3 (second production day, edge-trades): the four highest-impact
 gaps, each hit as a real incident, plus a pre-release review pass that corrected

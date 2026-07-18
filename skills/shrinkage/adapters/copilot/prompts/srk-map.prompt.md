@@ -4,7 +4,7 @@ description: Build/refresh the Shrinkage codemap; report detected languages and 
 agent: agent
 ---
 
-Run `python3 .github/shrinkage/scripts/codemap.py refresh`, report the summary
+Run `python3 .claude/skills/shrinkage/scripts/codemap.py refresh`, report the summary
 (files, symbols, ~tokens, languages), then read the `rules/<lang>.md` files it
-names under `.github/shrinkage/rules/`. Full process:
-`.github/shrinkage/workflows/map.md`.
+names under `.claude/skills/shrinkage/rules/`. Full process:
+`.claude/skills/shrinkage/workflows/map.md`.

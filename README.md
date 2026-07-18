@@ -292,9 +292,12 @@ reduction engine shines hardest on existing codebases, per the flow above.
 
 ## Other runtimes
 
-- **GitHub Copilot** — [`skills/shrinkage/adapters/copilot/`](skills/shrinkage/adapters/copilot/):
-  repo-level instructions plus `.prompt.md` slash-command files for VS Code,
-  Visual Studio, and JetBrains, and instructions the Copilot coding agent reads.
+- **GitHub Copilot** — native, via the Agent Skills standard: vendor the skill
+  once (`cp -r skills/shrinkage .claude/skills/shrinkage`) and the Copilot cloud
+  agent, code review, CLI, and VS Code/JetBrains agent mode all load it — same
+  copy Claude Code reads. [`skills/shrinkage/adapters/copilot/`](skills/shrinkage/adapters/copilot/)
+  has the install guide, optional `/srk-*` prompt files for IDE chat, and an
+  always-on instructions file (doctrine + the no-hook commit discipline).
 - **Anything with a shell** — the map and scoreboard are plain Python scripts;
   any agent that can run a command can use them.
 

@@ -8,5 +8,5 @@ agent: agent
 Manage `.claude/shrinkage.json`: no args -> show effective settings (defaults:
 gate=soft, commit_map=false, pr_scoreboard=false, budget=4000, humor=true)
 with one line of meaning each; with `key value` -> validate, write, confirm.
-Side effects per `.github/shrinkage/commands/srk-config.md` (gitignore sync on
+Side effects per `.claude/skills/shrinkage/commands/srk-config.md` (gitignore sync on
 commit_map changes).

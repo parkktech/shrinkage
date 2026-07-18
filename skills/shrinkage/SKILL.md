@@ -268,9 +268,27 @@ ecosystem.
 
 ## Other runtimes
 
-GitHub Copilot: `adapters/copilot/` ships repo instructions + `/srk:*` prompt
-files (install guide inside). The scripts are runtime-agnostic Python — any
-agent that can run a shell command can use the map and scoreboard.
+This skill follows the open Agent Skills standard (SKILL.md + bundled
+scripts/references), so it loads natively in runtimes beyond Claude Code —
+GitHub Copilot (cloud agent, code review, CLI, VS Code/JetBrains agent mode)
+discovers it from `.claude/skills/`, `.github/skills/`, or `~/.copilot/skills/`.
+`adapters/copilot/` has the install guide plus optional IDE prompt files and an
+instructions-file fallback. When running OUTSIDE Claude Code, adapt like this:
+
+- **$SKILL is this folder.** Resolve every `scripts/`, `rules/`, `references/`,
+  `workflows/` path relative to the directory holding this SKILL.md.
+- **No `/srk:*` commands** — follow the workflow files directly (`workflows/
+  shave.md`, `workflows/audit.md`, …); they are the commands' full content.
+- **No PreToolUse staging-guard hook.** The hook that blocks `git add -A`
+  during a shave is Claude-Code-only — so committing through
+  `scripts/safe_commit.py -m "<msg>" -- <files>` is MANDATORY discipline here,
+  not belt-and-suspenders. Same for the dirty-target flow: park → precheck →
+  safe_commit → unpark via `scripts/dirty_apply.py`, never hand-staged.
+- **No subagents** — run the `agents/` briefs (auditor / surgeon / verifier)
+  inline as your own checklist, one at a time.
+- **No statusline/session hooks** — open each session with `codemap.py refresh`
+  yourself; everything else (ledger, plan CLI, scoreboard, trend) is plain
+  Python and works unchanged.
 
 ## File index
 
