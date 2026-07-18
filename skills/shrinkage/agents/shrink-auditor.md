@@ -26,7 +26,10 @@ dynamic-reference checklist tells you what makes a candidate NOT dead).
 2. For EVERY shortlisted candidate, open the source and verify the smell is
    real. Quote the evidence: the signature, the ref count, the grep results
    (run repo-wide grep including configs/templates for dead-symbol sweeps),
-   the git-history line (`git log -1 --format='%ar %s' -- <file>`).
+   the git-history line (`git log -1 --format='%ar %s' -- <file>`), and
+   `git status --porcelain -- <file>` — a target carrying uncommitted changes is
+   **DIRTY** (the shave skips dirty targets by default; record it so the plan
+   can hand it back to the user cleanly).
 3. Walk the dynamic-reference checklist for the candidate's language. Items
    you cannot verify → say so explicitly; unverifiable checklist items cap
    the candidate at T2.
@@ -43,6 +46,7 @@ candidate:
 candidate: <symbol or file:lines>
 catalog: C<n>  tier: T<n>  est_net_loc: -<n>  effort: S|M|L  confidence: high|med|low
 evidence: <map refs, grep hits, checklist items verified/na, history line>
+dirty: yes|no   (git status --porcelain -- <file> non-empty → target has the user's uncommitted work)
 gotchas: <which of the catalog entry's gotchas apply here>
 ```
 

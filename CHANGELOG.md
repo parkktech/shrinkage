@@ -14,6 +14,14 @@ Field-report-driven hardening from a production Laravel deployment (~2,900 files
   of the user's in-flight work into a shave commit. Surgeon briefs, shave
   workflow, and safety-model §6/§7 updated; the incident is now a named
   never-list failure mode.
+- **P0.2 — Dirty-target protocol (first-class).** Auditors run
+  `git status --porcelain` per candidate and mark DIRTY targets; the shave now
+  SKIPS dirty targets by default and reports them as blocked on the user's
+  in-flight work (was improvised per-session). Opt-in `--allow-dirty-disjoint`
+  uses a new `scripts/dirty_apply.py` (park/unpark) that shaves a dirty target
+  only when the user's hunk is disjoint from the shave region — never entangling
+  or losing it; a failed re-apply restores the byte-exact pre-shave file. +2
+  tests.
 
 ## 0.24.2
 - Point users to auto-update — the real one-time answer to update friction.

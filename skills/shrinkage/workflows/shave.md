@@ -34,6 +34,20 @@ Deleting is part of the feature; this workflow is how deletion earns trust.
    `/srk:audit` first. Keep a single-item shave scoped — a repo-wide *hunt* is
    the audit workflow's job.
 
+   **Dirty targets (default: SKIP).** Before executing any item, run
+   `git status --porcelain -- <target file(s)>`. Non-empty → the file carries
+   the user's uncommitted work: SKIP the item and list it in the completion
+   report as "blocked on your uncommitted work — commit/stash, then re-audit."
+   Never shave a file with unrelated dirty changes — that's exactly the
+   WIP-sweep incident (§7). Opt-in exception **`--allow-dirty-disjoint`**: only
+   when the audit verified the dirty hunk is DISJOINT from the shave region, use
+   the scripted park/unpark so the user's hunk is never entangled or lost —
+   `python3 $SKILL/scripts/dirty_apply.py park <file>` → apply the shave on the
+   clean base → `safe_commit.py -- <file>` → `dirty_apply.py unpark <file>`
+   (re-applies the user hunk; on overlap it aborts and restores the exact
+   pre-shave file, and you revert the shave commit). Never hand-roll hunk
+   staging.
+
    ### Interactive vs --auto
    - **Single item / bare** (no `--auto`): do the ONE item, then **prompt for
      the next** — end with "next up: #N `<candidate>` (Tstier, ~N LOC) —

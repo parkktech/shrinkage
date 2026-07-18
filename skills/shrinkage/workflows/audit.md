@@ -32,6 +32,11 @@ phases) consuming the plan.
    calls it, nothing tests it), while 0 refs but well-covered says the refs
    are hiding somewhere (fixtures, dynamic dispatch) — walk the checklist
    harder before believing it's dead.
+   **Dirty check:** run `git status --porcelain -- <file>` per candidate. A
+   target with uncommitted changes is marked **DIRTY** in its evidence column —
+   the shave skips dirty targets by default (they're blocked on the user's
+   in-flight work), so recording it here lets the plan hand them back cleanly
+   instead of the shave re-discovering it item by item.
 
 4. **Tier and estimate.** Per candidate: catalog entry, risk tier, estimated
    net LOC, effort (S/M/L), confidence (evidence completeness), and blast
