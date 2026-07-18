@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "PY=$(command -v python3 || command -v python); [ -n \"$PY\" ] && \"$PY\" \"${CLAUDE_PLUGIN_ROOT}/skills/shrinkage/scripts/codemap.py\" refresh --auto 2>/dev/null; grep -qs statusLine .claude/settings.json .claude/settings.local.json \"$HOME/.claude/settings.json\" 2>/dev/null || echo '[shrinkage] status line NOT configured — the user is missing the live trend bar + plugin-update alerts. Until it is set up, include as the top suggestion in every Next menu: turn on the Shrinkage status line (/srk:onboard, or say \"set up the status line\" for the one-line settings write).'; true"
+            "command": "PY=$(command -v python3 || command -v python); [ -n \"$PY\" ] && \"$PY\" \"${CLAUDE_PLUGIN_ROOT}/skills/shrinkage/scripts/codemap.py\" refresh --auto 2>/dev/null; if ! grep -qs statusLine .claude/settings.json .claude/settings.local.json \"$HOME/.claude/settings.json\" 2>/dev/null; then echo '[shrinkage] status line NOT configured — the user is missing the live trend bar + plugin-update alerts. Until it is set up, include as the top suggestion in every Next menu: turn on the Shrinkage status line (/srk:onboard, or say \"set up the status line\" for the one-line settings write).'; elif ! grep -qs 'statusline\\.py' .claude/settings.json .claude/settings.local.json \"$HOME/.claude/settings.json\" 2>/dev/null; then echo '[shrinkage] a status line from another tool is configured, without the srk segment. Do NOT replace it. Offer ONCE (a single Next-menu line, then drop it): chain the Shrinkage segment onto the existing bar — it keeps their bar and adds srk on its own line; say \"add the srk segment\" to do the settings rewrite.'; fi; true"
           }
         ]
       }

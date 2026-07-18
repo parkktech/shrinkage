@@ -19,13 +19,32 @@ as conscious choices, user ready to work.
    `⬆ /srk:update` nudge when a newer plugin release exists). This NEVER
    appears unless configured — Claude Code only renders a status line when
    settings define one, and a plugin cannot set it for you, so this question is
-   the only reliable install point. On yes, merge into `.claude/settings.json`
-   (create it if absent, preserve existing keys):
+   the only reliable install point. **Check the existing settings first**
+   (`.claude/settings.json`, `.claude/settings.local.json`,
+   `~/.claude/settings.json`) — there is only ONE statusLine slot:
 
-   ```json
-   {"statusLine": {"type": "command", "command":
-     "python3 $(ls -dv ~/.claude/plugins/cache/parkktech/shrinkage/*/ | tail -1)skills/shrinkage/scripts/statusline.py"}}
-   ```
+   - **No status line configured** → install the full bar. Standalone mode
+     also renders the session basics (model │ dir │ ctx %) from stdin, so
+     nothing is missing versus a general-purpose bar. Merge into
+     `.claude/settings.json` (create if absent, preserve other keys):
+
+     ```json
+     {"statusLine": {"type": "command", "command":
+       "python3 $(ls -dv ~/.claude/plugins/cache/parkktech/shrinkage/*/ | tail -1)skills/shrinkage/scripts/statusline.py"}}
+     ```
+
+   - **A status line already exists (GSD's, a custom one) → NEVER replace it.**
+     CHAIN instead: keep their command verbatim and add the srk segment on its
+     own line beneath (multi-line status lines are supported). Rewrite the slot
+     to a wrapper that tees stdin to both:
+
+     ```json
+     {"statusLine": {"type": "command", "command":
+       "sh -c 'IN=$(cat); printf \"%s\" \"$IN\" | { <their existing command, verbatim>; }; printf \"%s\" \"$IN\" | python3 $(ls -dv ~/.claude/plugins/cache/parkktech/shrinkage/*/ | tail -1)skills/shrinkage/scripts/statusline.py --segment'"}}
+     ```
+
+     Show the user the before/after command and confirm before writing —
+     you are rewrapping a setting another tool installed.
 
    The `ls -dv | tail -1` picks the newest installed plugin copy, so the
    setting survives updates. Vendored (non-plugin) installs point at

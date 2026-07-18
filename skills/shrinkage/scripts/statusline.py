@@ -1,20 +1,26 @@
 #!/usr/bin/env python3
 """statusline — a Claude Code status line for Shrinkage.
 
-Point your status line at this script (run /statusline and ask for it, or set
-settings.json statusLine.command). Shows the shrink trend when active, or the
-getting-started nudge when the repo hasn't scored anything yet — plus an
-update hint (`⬆ /srk:update to vX.Y.Z`) when the marketplace has a newer
-release than the installed plugin (the GSD-style bottom-bar nudge).
+Two modes, because settings.json has ONE statusLine slot:
 
-The update check NEVER blocks a render: every display reads a small cache
-(~/.claude/shrinkage-update.json, override with $SRK_UPDATE_CACHE); when the
-cache is older than 6h, a detached background `--check-update` process
-refreshes it with `git ls-remote --tags` against the marketplace's origin.
-A version-agnostic settings.json command (survives plugin updates):
-
+STANDALONE (no status line configured yet) — this script IS the bar. It reads
+the session JSON Claude Code pipes on stdin and renders the basics an existing
+bar would have shown, plus the Shrinkage part:
+  Opus │ public_html │ ctx ███░░░░░░░ 31% │ srk ▼-7,348 LOC · streak 4 · ⬆ /srk:update to v0.31.0
   "statusLine": {"type": "command", "command":
     "python3 $(ls -dv ~/.claude/plugins/cache/parkktech/shrinkage/*/ | tail -1)skills/shrinkage/scripts/statusline.py"}
+
+CHAINED (`--segment`) — a status line ALREADY exists (GSD's, a custom one):
+never replace it. `--segment` prints just the srk part; wrap the existing
+command so stdin reaches both and srk renders on its own line beneath
+(multi-line status lines are supported):
+  sh -c 'IN=$(cat); printf "%s" "$IN" | { <existing command>; }; printf "%s" "$IN" | python3 <this script> --segment'
+
+The update hint (`⬆ /srk:update to vX.Y.Z`) NEVER blocks a render: displays
+read a small cache (~/.claude/shrinkage-update.json, $SRK_UPDATE_CACHE
+override); when stale (>6h) a detached `--check-update` worker refreshes it
+with `git ls-remote --tags` against the marketplace's origin.
+Mock test:  echo '{"model":{"display_name":"Opus"},"context_window":{"used_percentage":25}}' | python3 statusline.py
 """
 import json
 import os
@@ -137,10 +143,28 @@ def update_hint():
     return ""
 
 
-def main():
-    if "--check-update" in sys.argv:
-        check_update()
-        return
+def session_info():
+    """Parse the JSON Claude Code pipes on stdin (model, workspace,
+    context_window, …). Tolerant: a tty (manual run), empty stdin (tests), or
+    bad JSON all yield {} — the bar just renders without those segments."""
+    try:
+        if sys.stdin.isatty():
+            return {}
+        raw = sys.stdin.read()
+        return json.loads(raw) if raw.strip() else {}
+    except (OSError, ValueError):
+        return {}
+
+
+def meter(pct, width=10):
+    filled = min(width, max(0, round(pct / 100 * width)))
+    return "█" * filled + "░" * (width - filled)
+
+
+def srk_segment():
+    """Just the Shrinkage part: trend/streak (or the setup nudge) + update hint.
+    This is what `--segment` prints, for CHAINING onto an existing status line
+    (e.g. GSD's) — never replace a bar the user already has."""
     log = Path(".git/info/shrinkage-log.jsonl")
     if not log.exists():
         log = Path(".claude/shrinkage-log.jsonl")
@@ -158,7 +182,32 @@ def main():
         line = "srk: mapped — /srk:gate before code, /srk:score --log after"
     else:
         line = "srk: run /srk:onboard to start shrinkage-optimized coding"
-    print(line + update_hint())
+    return line + update_hint()
+
+
+def main():
+    if "--check-update" in sys.argv:
+        check_update()
+        return
+    if "--segment" in sys.argv:
+        print(srk_segment())
+        return
+    # Standalone full bar: when this script IS the status line, also carry the
+    # basics an existing bar would have shown (model │ dir │ context) from the
+    # stdin session JSON, so choosing Shrinkage's bar never loses them.
+    info = session_info()
+    segs = []
+    model = (info.get("model") or {}).get("display_name")
+    if model:
+        segs.append(model)
+    cur = (info.get("workspace") or {}).get("current_dir")
+    if cur:
+        segs.append(Path(cur).name or cur)
+    pct = (info.get("context_window") or {}).get("used_percentage")
+    if isinstance(pct, (int, float)):
+        segs.append(f"ctx {meter(pct)} {round(pct)}%")
+    segs.append(srk_segment())
+    print(" │ ".join(segs))
 
 
 if __name__ == "__main__":

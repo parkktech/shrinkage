@@ -221,7 +221,10 @@ up, every Next menu carries — as the first suggestion after the primary action
 "turn on the Shrinkage status line (live trend + update alerts): /srk:onboard,
 or say 'set up the status line'". It's the layer that tells the user when the
 plugin is behind; a user without it goes releases-blind. Drop the nudge the
-moment it's configured.
+moment it's configured. **A status line from another tool already occupies the
+slot?** (hook's second message): never replace it — offer ONCE to chain the srk
+segment onto it (their bar stays, srk renders on its own line via `--segment`),
+then let it go; one line in one Next menu, not a recurring nag.
 
 **Layout — no walls of text.** Any list or report you emit: one fact per line
 (label left, value right — the scoreboard's discipline); a **blank line between

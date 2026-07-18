@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.31.0
+The status line composes with what you already have — never replaces it.
+
+- **Chained mode (`--segment`).** settings.json has ONE statusLine slot; a user
+  with GSD's bar (model, phase progress, context %) would have LOST it by
+  installing Shrinkage's. Now: an existing status line is never replaced —
+  setup wraps their command verbatim and appends the srk segment on its own
+  line beneath (multi-line bars are supported; stdin is tee'd to both).
+  `statusline.py --segment` prints just the srk part for exactly this.
+- **Standalone mode renders the session basics.** When Shrinkage's bar IS the
+  status line, it now reads the stdin session JSON and shows model │ directory
+  │ `ctx ███░░░░░░░ 31%` │ srk … — so choosing it never loses what a
+  general-purpose bar would have shown.
+- **Three-state setup detection.** The SessionStart hook distinguishes: no
+  status line → nudge setup in every Next menu; a foreign status line without
+  the srk segment → offer the chain ONCE (a single Next-menu line, never a
+  recurring nag); srk present → silent. Onboard checks the slot first and shows
+  a before/after confirmation before rewrapping a setting another tool
+  installed. +2 tests (standalone bar renders basics; segment prints only srk).
+
 ## 0.30.1
 The status line becomes unmissable until it's on.
 

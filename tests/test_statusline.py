@@ -1,11 +1,18 @@
 """statusline.py — trend line + GSD-style update hint (cached, never blocking)."""
 import json
 import subprocess
+import sys
 import time
 
-from conftest import run
+from conftest import SCRIPTS, run
 
 import statusline
+
+
+def _run_stdin(args, stdin_text, cwd):
+    r = subprocess.run([sys.executable, str(SCRIPTS / "statusline.py"), *args],
+                       capture_output=True, text=True, input=stdin_text, cwd=cwd)
+    return r.returncode, r.stdout + r.stderr
 
 
 def test_semver_and_latest_from_tags():
@@ -39,6 +46,37 @@ def test_no_hint_when_current(repo, monkeypatch):
     code, out = run("statusline.py", cwd=repo)
     assert code == 0, out
     assert "⬆" not in out, out
+
+
+def test_standalone_bar_renders_session_basics(repo, monkeypatch):
+    # Standalone mode: model │ dir │ ctx meter │ srk — so choosing Shrinkage's
+    # bar never loses what an existing status line would have shown.
+    cache = repo / "update-cache.json"
+    cache.write_text(json.dumps({"checked_at": int(time.time()), "latest": "0.0.1"}))
+    monkeypatch.setenv("SRK_UPDATE_CACHE", str(cache))
+    info = json.dumps({"model": {"display_name": "Opus"},
+                       "workspace": {"current_dir": str(repo)},
+                       "context_window": {"used_percentage": 31}})
+    code, out = _run_stdin([], info, repo)
+    assert code == 0, out
+    assert "Opus │" in out and repo.name in out, out
+    assert "ctx ███░░░░░░░ 31%" in out, out
+    assert "srk" in out, out
+
+
+def test_segment_mode_prints_only_the_srk_part(repo, monkeypatch):
+    # --segment is for chaining onto an EXISTING status line (e.g. GSD's):
+    # just the srk part, no model/dir/ctx duplication.
+    cache = repo / "update-cache.json"
+    cache.write_text(json.dumps({"checked_at": int(time.time()), "latest": "9.9.9"}))
+    monkeypatch.setenv("SRK_UPDATE_CACHE", str(cache))
+    info = json.dumps({"model": {"display_name": "Opus"},
+                       "context_window": {"used_percentage": 31}})
+    code, out = _run_stdin(["--segment"], info, repo)
+    assert code == 0, out
+    assert "Opus" not in out and "ctx" not in out and "│" not in out, out
+    assert out.startswith("srk"), out
+    assert "⬆ /srk:update to v9.9.9" in out, out
 
 
 def test_check_update_reads_tags_from_remote(repo, monkeypatch, tmp_path):
