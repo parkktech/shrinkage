@@ -43,6 +43,15 @@ nothing to remove later.
    - **not applicable because X** — X must be a *fact* (wrong layer, different
      lifecycle, would couple two change-reasons), not a vibe ("feels off").
 
+   **Domain boundary rule:** a candidate living in a DIFFERENT domain than the
+   task (the task is stock-type work; the matching method is on UserProfile) is
+   NOT extendable across the boundary — never plan "call the other domain's
+   method" for reuse. It qualifies only if the concept is domain-neutral, and
+   then the plan is *hoist to a neutral shared home + both domains call it*
+   (catalog: "Cross-domain merges — the home-selection rule"). Otherwise the
+   honest verdict is "not applicable because cross-domain — would couple two
+   change-reasons", even when the bytes match perfectly.
+
 4. **Walk the extension ladder** for the chosen approach — stop at the first
    rung that achieves the goal:
    1. value/config change

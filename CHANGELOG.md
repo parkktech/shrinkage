@@ -1,5 +1,29 @@
 # Changelog
 
+## 0.32.0
+Domain conformity: dedup never crosses class-type boundaries the wrong way.
+
+- **The cross-domain home-selection rule** (consolidation catalog). Same bytes ≠
+  same concept: byte-identical methods on, say, `UserProfile` and `StockType`
+  are exactly one of — *neutral concept* (hoist to a domain-neutral home named
+  for the concept, `Support\MoneyFormat` not `UserProfileHelper`; BOTH domains
+  depend on it, arrows point domain → shared only), *one true owner*
+  (T2/adjudication — never auto-merge, and never "just call the other domain's
+  method"), or *coincidental twins* (identical today, different reasons to
+  change → do NOT merge; ledger keep "will diverge"). The change-reason test
+  decides: "would A's copy ever need to change differently from B's?" — yes or
+  unsure → keep the duplication; it's cheaper than the wrong abstraction. The
+  neutral home still pays the full quality bill: ladder-governed creation, no
+  grab-bag utils, C9's honest defs-collapsed pricing.
+- **Wired at both ends.** The duplication sweep + auditor brief classify every
+  cross-domain pair and must quote their change-reason answer (neutral-home
+  candidates name the proposed home; one-owner → design note; coincidental →
+  proposed keep). The reuse gate gets the write-time mirror: a candidate from
+  another domain is never "extendable" across the boundary — either the concept
+  is neutral (hoist + both call it) or the verdict is "not applicable:
+  cross-domain", even on a perfect byte match. C1/C9 gotchas point at the rule.
+  Doc-only.
+
 ## 0.31.0
 The status line composes with what you already have — never replaces it.
 

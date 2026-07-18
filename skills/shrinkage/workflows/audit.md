@@ -44,7 +44,9 @@ phases) consuming the plan.
 
 2. **Sweep by signal — run ALL of these, they find different things:**
    - **Dead-symbol sweep:** every `x0` symbol → C6 candidates
-   - **Duplication sweep:** `codemap.py dupes` → C1/C9 candidates
+   - **Duplication sweep:** `codemap.py dupes` → C1/C9 candidates —
+     cross-domain pairs classified per the catalog's home-selection rule
+     (neutral home / adjudicate / coincidental-keep; never domain→domain calls)
    - **Structure sweep:** one-method classes, depth-1 no-override hierarchies,
      single-implementer `i` symbols → C3/C7
    - **Flag sweep:** grep known flag patterns; cross-check rollout state → C4

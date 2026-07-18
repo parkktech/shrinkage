@@ -34,6 +34,16 @@ entry, NEVER propose a `## frozen` path.
    `git status --porcelain -- <file>` — a target carrying uncommitted changes is
    **DIRTY** (the shave skips dirty targets by default; record it so the plan
    can hand it back to the user cleanly).
+   **Duplication pairs spanning domains** (different top-level namespace /
+   domain dir — e.g. a UserProfile method ⇄ a StockType method): apply the
+   catalog's cross-domain home-selection rule and SAY WHICH CASE in the
+   evidence — *neutral concept* (candidate; name the neutral home you propose,
+   e.g. "hoist to Support\MoneyFormat trait — both import it"), *one true
+   owner* (NOT a candidate; T2 design note with the analysis), or
+   *coincidental twins* (NOT a candidate; propose a ledger keep "will
+   diverge"). Never propose one domain calling the other's method — run the
+   change-reason test ("would A's copy ever need to change differently from
+   B's?") and quote your answer.
 3. **Re-verify any carried-over rows first** (re-audit). For each open prior-plan
    row handed to your sweep, re-run its evidence and report the CURRENT state —
    don't assume last audit's verdict still holds. Check the things that go stale

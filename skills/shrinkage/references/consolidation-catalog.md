@@ -23,7 +23,9 @@ same commit.
 **Tier:** T1 internal; T2 if any sibling is public.
 **Gotchas:** siblings that *look* alike but diverge subtly (error handling,
 logging, transactions) — diff them line by line before merging; a
-characterization test per sibling first.
+characterization test per sibling first. Siblings in DIFFERENT domains → the
+cross-domain home-selection rule (below): neutral home or no merge, never one
+domain calling the other's method.
 **Payoff:** estimate and rank like C9 (below) — subtract the merged home's cost
 (shared body + parameterized signature + migrated call sites); the real win is
 one canonical definition and less drift risk, not raw LOC.
@@ -135,7 +137,9 @@ data belongs to. Only when no owner exists does it earn a new function (rung
 justification required). NOT a new `utils` entry by default.
 **Tier:** T1.
 **Gotchas:** two copies that are one character different are two *behaviors* —
-find out which one is the bug before unifying on either.
+find out which one is the bug before unifying on either. Copies in DIFFERENT
+domains → the cross-domain home-selection rule (below) decides neutral-home /
+adjudicate / keep — the "existing home" must respect domain boundaries.
 **Payoff (estimate honestly):** "lines removed" overcounts — the shared home
 costs real LOC: the merged body once (usually ≥ one block, since it absorbs the
 variants), its docblock, and one `use`/call line per site.
@@ -161,6 +165,46 @@ the target is noise, not documentation. When a TODO is real, it becomes a
 tracked issue, then the comment goes.
 
 ---
+
+## Cross-domain merges: the home-selection rule
+
+**Same bytes ≠ same concept.** Before any C1/C9 merge, look at where the twins
+LIVE, not just what they say. Twins inside one domain merge into the owning
+symbol (standard C9). Twins in **different domains** — a `UserProfile` method
+and a byte-identical `StockType` method — are one of exactly three cases, and
+the classification decides everything:
+
+1. **Neutral concept** — the code belongs to *neither* domain (money
+   formatting, ratio math, retry, date rounding). Hoist it to a
+   **domain-neutral home** — an existing Support/Concerns trait or shared
+   module (extension ladder applies: existing neutral module before a new
+   file) — and have BOTH domains depend on it. **Dependency arrows point
+   domain → shared, never domain → domain.** Making `StockType` call
+   `UserProfile::formatMoney()` is not a merge, it's a coupling: unrelated
+   lifecycles chained so the next profile change is a stock-type risk.
+
+2. **One true owner** — the concept genuinely belongs to one domain and the
+   other copied it. Cross-domain "just call the owner" is still wrong; the real
+   question is design-level: either the borrower shouldn't have this behavior
+   at all, or the concept is actually neutral (→ case 1). Route as
+   **T2/adjudication with the analysis attached** — never auto-merge.
+
+3. **Coincidental twins** — identical *today*, but they change for different
+   reasons (profile validation vs stock validation that happen to match).
+   **Do NOT merge — duplication is cheaper than the wrong abstraction.**
+   Record a ledger keep ("coincidental twins — will diverge") so no future
+   audit re-flags the pair.
+
+**The change-reason test** decides between them: *"would a change requested for
+domain A's copy ever need to differ from domain B's?"* — yes or unsure →
+case 3, keep. Only a confident "no, it's one concept" earns cases 1–2.
+
+**The neutral home still pays the full quality bill:** named for the CONCEPT
+(`MoneyFormat`, `RatioMath`), never for a donor (`UserProfileHelper` consumed
+by stock code is the smell wearing a new name); no grab-bag `utils` growth
+(never-list); C9's honest pricing applies (defs collapsed and bug-surface
+removed vs. what the home costs); and the reuse gate governs its creation like
+any new code.
 
 ## Using the catalog
 
