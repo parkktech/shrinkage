@@ -28,9 +28,25 @@ as conscious choices, user ready to work.
      Ask with a straight face.
 3. Write the answers to `.claude/shrinkage.json`; re-run
    `codemap.py refresh` so map location/gitignore reflect the choices.
-4. GSD project detected → point out the auto-integration (map + api-map.json
+4. **Offer the status line** (the always-visible layer — trend + streak at the
+   bottom of Claude Code, plus an `⬆ /srk:update` nudge when a newer plugin
+   release exists). This NEVER appears unless configured — Claude Code only
+   renders a status line when settings define one, and a plugin cannot set it
+   for you, so this question is the only reliable install point. On yes, merge
+   into `.claude/settings.json` (create it if absent, preserve existing keys):
+
+   ```json
+   {"statusLine": {"type": "command", "command":
+     "python3 $(ls -dv ~/.claude/plugins/cache/parkktech/shrinkage/*/ | tail -1)skills/shrinkage/scripts/statusline.py"}}
+   ```
+
+   The `ls -dv | tail -1` picks the newest installed plugin copy, so the
+   setting survives updates. Vendored (non-plugin) installs point at
+   `.claude/skills/shrinkage/scripts/statusline.py` instead. Takes effect on
+   the next session start.
+5. GSD project detected → point out the auto-integration (map + api-map.json
    in `.planning/intel/`, SHRINK-PLAN.md target, SUMMARY.md scoreboard lines).
-5. Print the quickstart: `/srk:gate "<task>"` before coding, `/srk:score`
+6. Print the quickstart: `/srk:gate "<task>"` before coding, `/srk:score`
    after, `/srk:audit` when they want the backlog, `/srk:trend` to watch the
    ratchet move.
 </process>
@@ -38,6 +54,7 @@ as conscious choices, user ready to work.
 <success_criteria>
 - [ ] Map built and location policy applied
 - [ ] All five settings written as explicit choices
+- [ ] Status line offered (and installed on yes) — it never appears otherwise
 - [ ] Quickstart delivered; GSD integration noted when applicable
 </success_criteria>
 
