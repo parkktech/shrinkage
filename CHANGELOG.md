@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.24.1
+- Scoreboard header names the commit count for a range: `Shrinkage · 41 commits
+  · da0b0f15..HEAD` (was just `da0b0f15..HEAD`, which read like a single commit).
+  A range `A..HEAD` is the NET of every commit in it — the whole sweep, not one
+  commit. Working-tree scores now say `working tree (uncommitted) vs HEAD`.
+
 ## 0.24.0
 - Scoreboard + trend rewritten for plain-language clarity — every number on its
   own labeled line. `/srk:score` now reads: code removed / code added / net

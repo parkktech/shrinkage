@@ -159,7 +159,11 @@ def scoreboard(ref, app_ins, app_del, test_ins, test_del, files,
                new_syms, removed_syms, sig_changes, root):
     net_app, net_test = app_ins - app_del, test_ins - test_del
     is_range = ".." in ref
-    label = ref if is_range else f"working tree vs {ref}"
+    if is_range:
+        n = git("rev-list", "--count", ref).strip() or "?"
+        label = f"{n} commit{'' if n == '1' else 's'} · {ref}"
+    else:
+        label = f"working tree (uncommitted) vs {ref}"
     arrow = col(GREEN, "▼") if net_app < 0 else col(YELLOW, "▲") if net_app > 0 else "·"
 
     direction = (col(GREEN, "▼ smaller") if net_app < 0
