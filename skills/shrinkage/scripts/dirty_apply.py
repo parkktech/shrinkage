@@ -6,14 +6,23 @@ Default shave policy is to SKIP dirty targets (safety-model / shave workflow).
 `--allow-dirty-disjoint` uses this two-phase helper so the user's in-flight hunk
 is never entangled with the shave commit and never lost:
 
-  park <file>    save the user's HEAD-relative changes to a patch + full backup,
-                 then reset the file to HEAD so the surgeon edits a clean base.
-  unpark <file>  after the shave is committed (via safe_commit.py), re-apply the
-                 saved user hunk on top. Clean apply → disjoint, done. Conflict →
-                 NOT disjoint: restore the exact backup and exit non-zero (the
-                 surgeon must revert the shave commit — this target stays blocked).
+  park <file>      save the user's HEAD-relative changes to a patch + full backup,
+                   then reset the file to HEAD so the surgeon edits a clean base.
+  precheck <file>  after the surgeon edits but BEFORE the commit: dry-run the
+                   unpark merge on the shaved-but-uncommitted file. Would conflict
+                   → restore the user's file and abort with NO commit made, so a
+                   not-disjoint target never leaves a committed shave to hand-
+                   revert (the failure mode that hit QuantDiscoverService). Clean
+                   → undo the test, leaving the shave-only file ready to commit.
+  unpark <file>    after the shave is committed (via safe_commit.py), re-apply the
+                   saved user hunk on top. Clean apply → disjoint, done. Conflict →
+                   NOT disjoint: restore the exact backup and exit non-zero (the
+                   surgeon must revert the shave commit — this target stays blocked).
 
-Nothing is destructive: a failed unpark restores the byte-exact pre-shave file.
+Verify disjointness against your ACTUAL edit, not the plan's region — `precheck`
+tests the real edit shape (an import-block edit can collide even when the plan's
+target region was disjoint). Nothing is destructive: a failed precheck/unpark
+restores the byte-exact pre-shave file.
 Exit: 0 ok · 2 refused/precondition · 3 not-disjoint (backup restored).
 """
 import hashlib
@@ -64,6 +73,37 @@ def park(path):
           "safe_commit it, then `dirty_apply.py unpark`).")
 
 
+def precheck(path):
+    """Pre-flight the unpark BEFORE any commit exists. Run the exact 3-way merge
+    unpark would run, on the surgeon's shaved-but-uncommitted file; a conflict
+    means the edit is NOT disjoint after all — restore the user's pre-shave file
+    and abort so no committed shave is left behind to hand-revert. On success,
+    undo the test so the pending commit stays shave-only (the real unpark
+    re-applies the hunk after safe_commit)."""
+    patch, bak = slot(path)
+    if not patch.exists() or not bak.exists():
+        die(2, f"no parked state for {path} (run `park` first).")
+    p = Path(path)
+    shaved = p.read_bytes()                     # the surgeon's edit, not yet committed
+    # `git apply --3way` merges against the index and refuses if the working tree
+    # doesn't match it — so stage the shave first, run the merge, then unwind below.
+    git("add", "--", path)
+    r = git("apply", "--3way", "--recount", str(patch))
+    git("reset", "-q", "--", path)              # index back to HEAD, clearing merge residue
+    if r.returncode == 0:
+        p.write_bytes(shaved)                   # undo the test merge — commit stays shave-only
+        print(f"precheck OK: parked hunk merges cleanly on the shave in {path}.")
+        return
+    # Would conflict — and no commit exists yet, so just restore the user's file.
+    p.write_bytes(bak.read_bytes())
+    patch.unlink(missing_ok=True)
+    bak.unlink(missing_ok=True)
+    die(3, f"NOT DISJOINT (pre-flight): the parked hunk conflicts with the shave edit in "
+           f"{path}. Restored your pre-shave file; NO shave commit was made. Skip this target — "
+           "it stays blocked on your uncommitted work. (Disjointness is a property of your "
+           "ACTUAL edit, not the plan's target region.)")
+
+
 def unpark(path):
     patch, bak = slot(path)
     if not patch.exists() or not bak.exists():
@@ -96,9 +136,10 @@ def unpark(path):
 
 
 def main():
-    if len(sys.argv) != 3 or sys.argv[1] not in ("park", "unpark"):
-        die(2, "usage: dirty_apply.py {park|unpark} <file>")
-    (park if sys.argv[1] == "park" else unpark)(sys.argv[2])
+    ops = {"park": park, "precheck": precheck, "unpark": unpark}
+    if len(sys.argv) != 3 or sys.argv[1] not in ops:
+        die(2, "usage: dirty_apply.py {park|precheck|unpark} <file>")
+    ops[sys.argv[1]](sys.argv[2])
 
 
 if __name__ == "__main__":

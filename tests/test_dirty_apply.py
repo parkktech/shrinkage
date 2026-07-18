@@ -74,3 +74,45 @@ def test_overlap_restores_backup_and_signals(repo):
     code, out = run("dirty_apply.py", "unpark", "a.py", cwd=repo)
     assert code == 3, out                               # not disjoint
     assert "L5_USER_EDIT" in _lines(repo), "the exact pre-shave file is restored"
+
+
+def _commits(repo):
+    import subprocess
+    return subprocess.run(["git", "rev-list", "--count", "HEAD"], cwd=repo,
+                          capture_output=True, text=True).stdout.strip()
+
+
+def test_precheck_passes_disjoint_and_leaves_shave_only(repo):
+    # #1: precheck validates the merge BEFORE the commit; on a disjoint edit it
+    # leaves the shave-only file ready to commit (WIP not applied yet), and the
+    # real unpark still round-trips afterward.
+    _write(repo, [f"L{i}" for i in range(1, 11)])
+    commit(repo)
+    ls = _lines(repo); ls[0] = "L1_USER"; _write(repo, ls)             # WIP up top
+    run("dirty_apply.py", "park", "a.py", cwd=repo)
+    _write(repo, [l for l in _lines(repo) if l not in ("L8", "L9")])   # disjoint shave
+    code, out = run("dirty_apply.py", "precheck", "a.py", cwd=repo)
+    assert code == 0, out
+    lines = _lines(repo)
+    assert lines[0] == "L1" and "L8" not in lines, "precheck leaves the shave-only file"
+    assert "L1_USER" not in lines, "precheck must NOT apply the WIP yet"
+    run("safe_commit.py", "-m", "shrink: drop L8/L9", "--", "a.py", cwd=repo)
+    code, out = run("dirty_apply.py", "unpark", "a.py", cwd=repo)
+    assert code == 0, out
+    final = _lines(repo)
+    assert final[0] == "L1_USER" and "L8" not in final, "unpark still re-applies the WIP"
+
+
+def test_precheck_aborts_overlap_before_any_commit(repo):
+    # #1: the failure that hit QuantDiscoverService — precheck must abort with the
+    # user's file restored and NO commit created, not discover it post-commit.
+    _write(repo, [f"L{i}" for i in range(1, 11)])
+    commit(repo)
+    assert _commits(repo) == "1"
+    ls = _lines(repo); ls[4] = "L5_USER"; _write(repo, ls)            # WIP on L5
+    run("dirty_apply.py", "park", "a.py", cwd=repo)
+    _write(repo, [l for l in _lines(repo) if l != "L5"])             # shave touches L5 → overlap
+    code, out = run("dirty_apply.py", "precheck", "a.py", cwd=repo)
+    assert code == 3, out
+    assert "L5_USER" in _lines(repo), "precheck restores the original WIP"
+    assert _commits(repo) == "1", "NO shave commit was created — nothing to hand-revert"

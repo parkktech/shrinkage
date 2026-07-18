@@ -41,11 +41,18 @@ Deleting is part of the feature; this workflow is how deletion earns trust.
    Never shave a file with unrelated dirty changes — that's exactly the
    WIP-sweep incident (§7). Opt-in exception **`--allow-dirty-disjoint`**: only
    when the audit verified the dirty hunk is DISJOINT from the shave region, use
-   the scripted park/unpark so the user's hunk is never entangled or lost —
-   `python3 $SKILL/scripts/dirty_apply.py park <file>` → apply the shave on the
-   clean base → `safe_commit.py -- <file>` → `dirty_apply.py unpark <file>`
-   (re-applies the user hunk; on overlap it aborts and restores the exact
-   pre-shave file, and you revert the shave commit). Never hand-roll hunk
+   the scripted park/precheck/unpark so the user's hunk is never entangled or
+   lost — `python3 $SKILL/scripts/dirty_apply.py park <file>` → apply the shave on
+   the clean base → **`dirty_apply.py precheck <file>`** → `safe_commit.py --
+   <file>` → `dirty_apply.py unpark <file>`. **`precheck` is mandatory and comes
+   BEFORE the commit**: it dry-runs the unpark merge on your actual edit and, if
+   the hunk turns out NOT disjoint, restores the user's file and exits 3 with **no
+   commit made** — so a bad-disjointness call never leaves a committed shave to
+   hand-revert (the QuantDiscoverService failure). On a precheck failure, skip the
+   target (it stays blocked); do NOT commit. Verify disjointness against your
+   ACTUAL edit shape, not the plan's stated region — an import-block edit can
+   collide even when the plan's target lines were disjoint; precheck is what
+   proves it. Never hand-roll hunk
    staging.
 
    ### Interactive vs --auto
