@@ -79,6 +79,21 @@ def test_segment_mode_prints_only_the_srk_part(repo, monkeypatch):
     assert "⬆ /srk:update to v9.9.9" in out, out
 
 
+def test_segment_shows_todo_gate(repo, monkeypatch):
+    # #7 field report: the bar says at a glance whether shaving is unblocked.
+    cache = repo / "update-cache.json"
+    cache.write_text(json.dumps({"checked_at": int(time.time()), "latest": "0.0.1"}))
+    monkeypatch.setenv("SRK_UPDATE_CACHE", str(cache))
+    (repo / "SHRINK-PLAN.md").write_text(
+        "# P\n\n## TODO before shaving\n\n- [ ] fix fees\n\n- [ ] update plugin\n")
+    code, out = run("statusline.py", "--segment", cwd=repo)
+    assert code == 0 and "TODO 2" in out, out
+    (repo / "SHRINK-PLAN.md").write_text(
+        "# P\n\n## TODO before shaving\n\n- [x] fix fees\n\n- [x] update plugin\n")
+    code, out = run("statusline.py", "--segment", cwd=repo)
+    assert "TODO clear" in out, out
+
+
 def test_check_update_reads_tags_from_remote(repo, monkeypatch, tmp_path):
     # A local git repo stands in for the marketplace origin — fully offline.
     remote = tmp_path / "fake-remote"

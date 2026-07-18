@@ -161,6 +161,31 @@ def meter(pct, width=10):
     return "█" * filled + "░" * (width - filled)
 
 
+def todo_gate():
+    """` · TODO n` / ` · TODO clear` — is shaving unblocked? — read from the
+    plan's `## TODO before shaving` checklist. '' when no plan/section exists."""
+    for rel in ("SHRINK-PLAN.md", ".planning/SHRINK-PLAN.md"):
+        p = Path(rel)
+        if not p.exists():
+            continue
+        try:
+            text = p.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            return ""
+        in_todo, n, seen = False, 0, False
+        for line in text.splitlines():
+            if re.match(r"^#+\s", line):
+                in_todo = line.lower().lstrip("#").strip().startswith("todo before shaving")
+                seen = seen or in_todo
+                continue
+            if in_todo and re.match(r"^\s*-\s*\[ \]", line):
+                n += 1
+        if seen:
+            return f" · TODO {n}" if n else " · TODO clear"
+        return ""
+    return ""
+
+
 def srk_segment():
     """Just the Shrinkage part: trend/streak (or the setup nudge) + update hint.
     This is what `--segment` prints, for CHAINING onto an existing status line
@@ -182,7 +207,7 @@ def srk_segment():
         line = "srk: mapped — /srk:gate before code, /srk:score --log after"
     else:
         line = "srk: run /srk:onboard to start shrinkage-optimized coding"
-    return line + update_hint()
+    return line + todo_gate() + update_hint()
 
 
 def main():
