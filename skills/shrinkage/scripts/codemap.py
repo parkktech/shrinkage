@@ -25,6 +25,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import settings  # noqa: E402
+import ledger  # noqa: E402
 from parsers import EXTENSIONS, Symbol, is_ref_only, language_of, parse_file  # noqa: E402
 
 SKIP_DIRS = {
@@ -68,10 +69,14 @@ def map_path(root):
 
 
 def source_files(root):
+    ex = ledger.excluded(root)
     for p in sorted(root.rglob("*")):
         if not p.is_file() or language_of(p.name) is None:
             continue
-        if any(part in SKIP_DIRS for part in p.relative_to(root).parts):
+        rel = p.relative_to(root).as_posix()
+        if any(part in SKIP_DIRS for part in rel.split("/")):
+            continue
+        if ex and ledger.matches(rel, ex):  # ledger `## excluded` (stale clones, vendored trees)
             continue
         try:
             if p.stat().st_size > MAX_FILE_BYTES:
@@ -83,10 +88,14 @@ def source_files(root):
 
 def ref_only_files(root):
     """Templates/config that reference code without defining it (parsers.is_ref_only)."""
+    ex = ledger.excluded(root)
     for p in sorted(root.rglob("*")):
         if not p.is_file() or not is_ref_only(p):
             continue
-        if any(part in SKIP_DIRS for part in p.relative_to(root).parts):
+        rel = p.relative_to(root).as_posix()
+        if any(part in SKIP_DIRS for part in rel.split("/")):
+            continue
+        if ex and ledger.matches(rel, ex):
             continue
         try:
             if p.stat().st_size > MAX_FILE_BYTES:

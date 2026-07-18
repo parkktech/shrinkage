@@ -20,8 +20,12 @@ Usage:
 Exit codes: 0 committed · 1 usage · 2 refused (index / extra path) ·
 3 nothing to commit · 4 post-commit verification failed (extra files landed).
 """
+import os
 import subprocess
 import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import ledger  # noqa: E402
 
 
 def git(*args):
@@ -61,6 +65,11 @@ def main():
         die(1, "refusing: empty commit message")
 
     declared = set(files)
+    frozen_hit = sorted(f for f in files if ledger.matches(f, ledger.frozen(".")))
+    if frozen_hit:
+        die(2, "refusing: these files are FROZEN in the shrinkage ledger and must "
+               "never be edited:\n  " + "\n  ".join(frozen_hit) +
+               "\n(e.g. hash-sealed subsystems). Drop them from your transform.")
     extras_pre = staged_set() - declared
     if extras_pre:
         die(2, "refusing: the index already has staged changes outside your file "

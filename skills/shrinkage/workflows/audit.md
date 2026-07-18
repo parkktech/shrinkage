@@ -22,7 +22,12 @@ phases) consuming the plan.
      platform idioms (rules/<lang>.md) → C5
    - **Noise sweep:** commented-out blocks, stale TODOs → C10
    Subagents parallelize cleanly here: one sweep each, evidence-only briefs
-   (see `agents/shrink-auditor.md`).
+   (see `agents/shrink-auditor.md`). **Inject the ledger** (`scripts/ledger.py`,
+   file `references/ledger.md`) into every brief: `## keeps` (do NOT re-flag;
+   re-verify only if explicitly asked) and `## frozen` (never a candidate). The
+   map already drops `## excluded` globs, so phantom files never reach a sweep.
+   Append new keeps and hidden-dependency discoveries back to the ledger — it
+   outlives the per-audit plan.
 
 3. **Verify before ranking.** Ref counts and name matches are signals — each
    candidate gets a source-level look before it enters the plan (the auditor

@@ -17,7 +17,9 @@ the shrinkage skill directory ($SKILL), and the codemap location.
 Before starting: `$SKILL/references/consolidation-catalog.md` (your findings
 must cite entries), `$SKILL/references/safety-model.md` §§0–3 (tiers and
 evidence), and `$SKILL/rules/<lang>.md` for each language in scope (the
-dynamic-reference checklist tells you what makes a candidate NOT dead).
+dynamic-reference checklist tells you what makes a candidate NOT dead), and the project **ledger** (`references/ledger.md`;
+the spawn prompt passes its `## keeps` + `## frozen`) — NEVER re-flag a `## keeps`
+entry, NEVER propose a `## frozen` path.
 </required_reading>
 
 <process>

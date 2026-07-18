@@ -22,6 +22,14 @@ Field-report-driven hardening from a production Laravel deployment (~2,900 files
   only when the user's hunk is disjoint from the shave region — never entangling
   or losing it; a failed re-apply restores the byte-exact pre-shave file. +2
   tests.
+- **P1.3 — Durable ledger (`.shrinkage/ledger.md`).** New `scripts/ledger.py`
+  reads three sections the tool now owns instead of re-receiving them every
+  session: `## frozen` (paths never edited — `safe_commit.py` hard-refuses a
+  commit touching one, e.g. hash-sealed subsystems), `## excluded` (globs the
+  codemap drops natively, so a stale clone can't inject phantom files or token
+  cost), and `## keeps` (settled decisions the auditor won't re-flag). Audit
+  injects it into every sweep; format documented in `references/ledger.md`. +3
+  tests.
 
 ## 0.24.2
 - Point users to auto-update — the real one-time answer to update friction.
