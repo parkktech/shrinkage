@@ -244,6 +244,18 @@ slot?** (hook's second message): never replace it — offer ONCE to chain the sr
 segment onto it (their bar stays, srk renders on its own line via `--segment`),
 then let it go; one line in one Next menu, not a recurring nag.
 
+**Decision-blocked close — backlog drained, only ⚖ adjudications left.** When
+no command advances the work, the FIRST line says so plainly: "Nothing left to
+run — the next step is a decision, not a command." Then a **Your call** list,
+one decision per item: the question in one line; a **recommended answer with
+its one-line evidence rationale** whenever the evidence supports one
+("recommended: delete — retired in 28d4baa0; the red test asserts the retired
+behavior"), or an honest "no recommendation — genuinely your judgment: <why>";
+and the exact reply syntax ("reply `1 yes` / `2 with-rf` …") so answering costs
+one line. Close with at most ONE clearly-labeled optional line ("optional,
+doesn't advance the backlog: /srk:trend") — never present an optional command
+where it can read as the expected next step.
+
 **Layout — no walls of text.** Any list or report you emit: one fact per line
 (label left, value right — the scoreboard's discipline); a **blank line between
 items** that run past one line; headline first, the action/detail indented on

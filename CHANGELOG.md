@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.32.3
+The decision-blocked close: when only your calls remain, the tool says so.
+
+- **"Nothing left to run — the next step is a decision, not a command."** The
+  last uncovered Next-state: backlog drained, only ⚖ adjudications left, and
+  the close still offered commands (`/srk:trend`) that read like the expected
+  next step. New format (SKILL.md response style + shave workflow): lead with
+  the no-command statement, then a **Your call** list — each decision as a
+  one-line question WITH a recommended answer + one-line evidence rationale
+  whenever the evidence supports one (or an honest "genuinely your judgment"),
+  and the exact reply syntax so answering costs one line. At most one optional
+  line, explicitly labeled "doesn't advance the backlog". Doc-only.
+
 ## 0.32.2
 Compat-watch stops flagging private methods (reported from the fifth field run).
 

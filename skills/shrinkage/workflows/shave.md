@@ -121,6 +121,30 @@ Deleting is part of the feature; this workflow is how deletion earns trust.
    Lead with what got DONE and that it's safe-drained — never a bare "0
    transforms, nothing to do" that reads like a bug.
 
+   ### When ONLY adjudications remain (decision-blocked close)
+   Backlog drained, every leftover a ⚖ call — then no `/srk:` command is the
+   next step, and the close must say so instead of listing commands that read
+   like one. Exact shape:
+
+   ```
+   Nothing left to run — the next step is a decision, not a command.
+
+   Your call (reply with a number + answer; I execute immediately):
+
+     1. <the question, one line>
+        recommended: <answer> — <one-line evidence rationale>
+
+     2. <the question>
+        no recommendation — genuinely your judgment: <what only the user knows>
+
+   optional (doesn't advance the backlog): /srk:trend
+   ```
+
+   Recommend whenever the evidence supports an answer — a question with a
+   recommendation costs the user one word; a bare question costs them a
+   research session. Exactly one optional line, labeled as optional; never
+   close with an unlabeled command menu after "everything is drained".
+
    **After `--full-send` specifically:** it already went THROUGH T2/public
    surface, so anything still open is something autonomy must NOT do on its own —
    a target dirty with the user's uncommitted work, a red/absent baseline, or a
