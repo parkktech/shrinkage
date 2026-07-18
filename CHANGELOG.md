@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.35.1
+Onboard is unmissable in the command picker — within what a plugin controls.
+
+- **`/srk:onboard` description now leads with `▶ START HERE`.** The picker's
+  ordering is host-controlled and undocumented (observed: usage-based, so a
+  veteran's picker correctly demotes onboard; a plugin has no priority/pin
+  field — pinning is filed upstream as anthropics/claude-code#58593). The one
+  plugin-owned pixel in that list is the description text, so the entry point
+  now reads as the entry point wherever it sorts. The rest of the funnel
+  already routes new users there without the picker: the session-start nudge,
+  `/srk:help`'s opening banner, the Next-menu rule, and the status line.
+
 ## 0.35.0
 Language-matrix parity: the PHP-era improvements now cover every supported
 language, template family, and test ecosystem.

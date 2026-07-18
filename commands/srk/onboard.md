@@ -1,6 +1,6 @@
 ---
 name: srk:onboard
-description: "One-shot Shrinkage setup: build the map, capture every preference (gate, map policy, PR scoreboard, comedy), print the quickstart"
+description: "▶ START HERE — one-shot setup: status line, codemap, every preference (gate, map policy, PR scoreboard, comedy), quickstart"
 argument-hint: ""
 allowed-tools: [Bash, Read, Write]
 ---
