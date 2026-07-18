@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.34.0
+Field-report item #3, as its own focused release: scripted C1/C9 surgery.
+
+- **`scripts/extract_method.py`** — the extract → check → remove → wire loop
+  that was hand-scripted twice in production (aggregateGuardResults, credential
+  accessors), including one mid-flight abort from an indentation-slicing bug —
+  now a tool the cheap surgeon model can run safely:
+  `find <file> <method>` (span: attributes + docblock + brace-matched body) ·
+  `check <method> <hostA> <hostB> […]` (identity verdict: identical /
+  indent-shifted / comment-only / **DIVERGENT exits 3** — two copies that differ
+  are two behaviors) · `extract … --to HOME` (byte-exact copy; scaffolds a
+  namespaced trait when the home is new; `--namespace` required across
+  directories — no PSR-4 guessing) · `remove` · `wire --use '\FQ\Trait'`
+  (idempotent). Safety properties are the point: brace matching runs on a real
+  tokenizer (strings, escapes, comments, `{$interpolation}` can't fool the
+  span), heredocs and ambiguous names are refused loudly, and every mutation is
+  built whole + balance-checked before a single byte is written — a failed
+  check writes nothing. The shave workflow, surgeon brief, and catalog C9 now
+  mandate it for PHP method merges: never hand-sliced again. +6 tests, fixtures
+  shaped like the production cases (braces in strings/comments/docblocks).
+
 ## 0.33.0
 Field-report wave 4 (sixth production day): gates that are actually run, a plan
 CLI that touches everything, and churn-proof paths. Items #1/#2/#4/#5/#6/#7 of

@@ -134,7 +134,9 @@ this before").
 **Transform:** the block moves to the *existing* symbol that owns the concept
 (ladder rungs 2–5) — a parameter, an extended method, a method on the type the
 data belongs to. Only when no owner exists does it earn a new function (rung
-justification required). NOT a new `utils` entry by default.
+justification required). NOT a new `utils` entry by default. PHP method-level
+merges execute through `scripts/extract_method.py` (check → extract → remove →
+wire), never hand-sliced.
 **Tier:** T1.
 **Gotchas:** two copies that are one character different are two *behaviors* —
 find out which one is the bug before unifying on either. Copies in DIFFERENT

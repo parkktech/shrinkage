@@ -224,7 +224,15 @@ Deleting is part of the feature; this workflow is how deletion earns trust.
    route to the normal gate/plan flow.
 
 5. **Execute, one transform per commit,** per the transformation protocol
-   (§6). First **activate the staging guard** for the run:
+   (§6). **C1/C9 merges (PHP) run through `scripts/extract_method.py` — never
+   hand-sliced:** `check <method> <hostA> <hostB>` (byte/comment-normalized
+   identity verdict; DIVERGENT → stop, two behaviors) → `extract <host>
+   <method> --to <home> [--namespace NS]` → `remove` from each host → `wire
+   --use '\FQ\Trait'` each host. Tokenizer-guided brace matching (strings,
+   comments, `{$interpolation}` can't fool it), atomic writes with a balance
+   sanity check, loud refusals on heredoc/ambiguity — the failure modes of
+   hand-rolled extraction scripts are its test suite. First **activate the
+   staging guard** for the run:
    `mkdir -p .claude && touch .claude/srk-shave-active` — a PreToolUse hook then
    rejects broad `git add -A` / `git commit -a` until you clear it. Then per
    candidate: apply one catalog entry → gates green → **commit through the
