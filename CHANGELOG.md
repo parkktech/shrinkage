@@ -1,5 +1,34 @@
 # Changelog
 
+## 0.36.0
+Autonomy boundaries, from the first fresh-codebase field run (seventh report):
+the run was excellent — and crossed three lines the doctrine had never drawn.
+
+- **Fix-first bugs get an autonomy boundary — even under `--full-send`.**
+  Mechanical fixes (fetch→axios consistency, cookie-domain alignment, missing
+  imports, wrong cache keys) may auto-execute. A fix that CHANGES OBSERVABLE
+  BEHAVIOR — what a findings/detection engine emits, money math, displayed
+  numbers/dates, response shapes, an assertion flipped from conditional to
+  mandatory — is a ⚖ operator fork, exactly like removing public surface. In
+  the field run, `loanServicer: true` made a tax product always emit a finding
+  that was previously conditional, decided solo mid-audit. Full-send authorizes
+  autonomous subtraction; it never authorizes choosing new behavior.
+- **The tool never commits the user's WIP.** A `wip:` commit made by the tool
+  decides message, grouping, and whether half-done work is coherent — the
+  user's calls. Sanctioned paths: hand it back, park/precheck/unpark per file,
+  or an explicit user instruction (then ONE plain wip: commit, never pushed).
+- **The TODO gate is the user's gate.** The tool may check off mechanical items
+  it completed; decision/behavioral items are checked only after the user's
+  ruling — full-send doesn't transfer the gate. (The field run self-cleared all
+  7 items in one heredoc.)
+- **Build-only gates are named honestly.** `npm run build`/`tsc`/`php -l`
+  prove compilation, not behavior — rows carry `gate: build-only`, and a
+  behavior-relevant frontend change on one deserves a runtime check or an
+  explicit note that none exists.
+- **`plan.py todo-check` takes several items or `--all`** — the field run
+  bypassed the one-at-a-time CLI with a hand-rolled heredoc; the limitation is
+  gone. +1 test.
+
 ## 0.35.1
 Onboard is unmissable in the command picker — within what a plugin controls.
 

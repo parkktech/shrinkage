@@ -152,6 +152,12 @@ def test_todo_check_and_adjudicate(repo):
     code, out = run("plan.py", "todo-check", "plugin", cwd=repo)
     assert code == 0 and "CLEAR" in out, out
     assert (repo / "SHRINK-PLAN.md").read_text().count("- [x]") == 2
+    # multi-item + --all forms (the heredoc-bypass fix)
+    text = (repo / "SHRINK-PLAN.md").read_text().replace("- [x]", "- [ ]")
+    (repo / "SHRINK-PLAN.md").write_text(text)
+    code, out = run("plan.py", "todo-check", "--all", cwd=repo)
+    assert code == 0 and "CLEAR" in out, out
+    assert (repo / "SHRINK-PLAN.md").read_text().count("- [x]") == 2
     code, out = run("plan.py", "adjudicate", "D-32", "with-rf, note the change", cwd=repo)
     assert code == 0, out
     assert "⚖ ruled" in (repo / "SHRINK-PLAN.md").read_text()

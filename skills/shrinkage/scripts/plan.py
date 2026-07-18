@@ -15,8 +15,8 @@ source of truth — the CLI only edits it reliably.
   plan.py verify-gates [--runner CMD]  run every open row's named gate suite in its
                                    OWN process; stamp green / RED / 0-ASSERT /
                                    SKIPPED into the row (exit 1 on RED/0-ASSERT)
-  plan.py todo-check <n|text>      tick the nth (or matching) `- [ ]` item under
-                                   `## TODO before shaving`
+  plan.py todo-check <n|text> [...]|--all   tick TODO-gate items (one, several,
+                                   or all) under `## TODO before shaving`
   plan.py adjudicate <D-id> "<ruling>"  record the operator's ruling on a ⚖ row
 """
 import os
@@ -168,9 +168,11 @@ def _done_deferred(root, ident, ref, actual=None):
           + (f", actual {actual_val:+d}" if actual_val is not None else "") + ")")
 
 
-def cmd_todo_check(root, which):
-    """Tick one `- [ ]` under `## TODO before shaving` (by 1-based number or
-    substring match); prints how many remain — the shave's TODO gate reads this."""
+def cmd_todo_check(root, whiches):
+    """Tick `- [ ]` items under `## TODO before shaving` — by 1-based number,
+    substring match, several at once, or `--all`. Prints how many remain (the
+    shave's TODO gate reads this). Numbers refer to the ORIGINAL unchecked
+    order, so `todo-check 1 3` means the 1st and 3rd open items."""
     plan = find_plan(root)
     lines = plan.read_text(encoding="utf-8").splitlines()
     in_todo, boxes = False, []
@@ -182,19 +184,24 @@ def cmd_todo_check(root, which):
             boxes.append(idx)
     if not boxes:
         sys.exit("no unchecked TODO items (gate already clear, or no TODO section)")
-    hit = None
-    if str(which).isdigit():
-        n = int(which)
-        if 1 <= n <= len(boxes):
-            hit = boxes[n - 1]
+    if "--all" in whiches:
+        hits = list(boxes)
     else:
-        hit = next((i for i in boxes if str(which).lower() in lines[i].lower()), None)
-    if hit is None:
-        sys.exit(f"no unchecked TODO item matching '{which}' ({len(boxes)} open)")
-    lines[hit] = re.sub(r"-\s*\[ \]", "- [x]", lines[hit], count=1)
+        hits = []
+        for which in whiches:
+            if str(which).isdigit() and 1 <= int(which) <= len(boxes):
+                hits.append(boxes[int(which) - 1])
+            else:
+                m = next((i for i in boxes if str(which).lower() in lines[i].lower()), None)
+                if m is None:
+                    sys.exit(f"no unchecked TODO item matching '{which}' "
+                             f"({len(boxes)} open — nothing was checked)")
+                hits.append(m)
+    for hit in dict.fromkeys(hits):
+        lines[hit] = re.sub(r"-\s*\[ \]", "- [x]", lines[hit], count=1)
+        print(f"checked: {lines[hit].strip()[:70]}")
     plan.write_text("\n".join(lines) + "\n", encoding="utf-8")
-    left = len(boxes) - 1
-    print(f"checked: {lines[hit].strip()[:70]}")
+    left = len(boxes) - len(dict.fromkeys(hits))
     print(f"TODO gate: {left} item(s) remaining" if left else "TODO gate: CLEAR — shave unblocked")
 
 
@@ -478,8 +485,8 @@ def main():
         cmd_verify_gates(root, runner)
     elif cmd == "todo-check":
         if not rest:
-            sys.exit("usage: plan.py todo-check <n | text-match>")
-        cmd_todo_check(root, rest[0])
+            sys.exit("usage: plan.py todo-check <n | text-match> [more…] | --all")
+        cmd_todo_check(root, rest)
     elif cmd == "adjudicate":
         if len(rest) < 2:
             sys.exit('usage: plan.py adjudicate <D-id> "<ruling>"')

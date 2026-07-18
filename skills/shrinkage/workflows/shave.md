@@ -27,8 +27,13 @@ Deleting is part of the feature; this workflow is how deletion earns trust.
    gets baked into consolidated code, an open hazard outlives the batch, stale
    tooling runs the shave without its newest safety rails. Proceed only when
    the list is clear, or when the user explicitly waives it ("shave anyway") —
-   record the waiver in the report. Check items off (`- [x]`) as they complete
-   so the gate clears itself for the next run.
+   record the waiver in the report. Check items off (`- [x]`, via `plan.py
+   todo-check`) as they complete so the gate clears itself for the next run.
+   **Who clears an item:** the tool may check off items IT completed that are
+   mechanical (tooling updates, gitignore lines, consistency fixes); an item
+   tagged as a decision or carrying behavioral consequence is checked off only
+   AFTER the user's ruling — under `--full-send` too. The gate is the user's
+   gate; full-send doesn't transfer it.
 
    **Scope.** The target argument is one of:
    - **a SHRINK-PLAN.md item number** (`1`, `3`, or `#3`) — execute exactly
@@ -48,6 +53,12 @@ Deleting is part of the feature; this workflow is how deletion earns trust.
    `git status --porcelain -- <target file(s)>`. Non-empty → the file carries
    the user's uncommitted work: SKIP the item and list it in the completion
    report as "blocked on your uncommitted work — commit/stash, then re-audit."
+   **Never commit the user's WIP yourself** — a `wip:` commit made by the tool
+   decides message, grouping, and whether half-done work is coherent enough to
+   land, and those are the user's calls. The sanctioned paths are: hand it
+   back, `dirty_apply.py` park/precheck/unpark per file, or an EXPLICIT user
+   instruction ("commit my WIP first") — which you then do as ONE plain `wip:`
+   commit on their current branch, never pushed.
    Never shave a file with unrelated dirty changes — that's exactly the
    WIP-sweep incident (§7). Opt-in exception **`--allow-dirty-disjoint`**: only
    when the audit verified the dirty hunk is DISJOINT from the shave region, use

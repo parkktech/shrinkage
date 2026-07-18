@@ -101,7 +101,12 @@ phases) consuming the plan.
    observe a regression in that target — put it in the **coverage** column as
    `gate: <suite>` (e.g. `gate: tests/Feature/InvoiceTest.php`). A row with no
    nameable observing suite stays T2. Naming "the tests" doesn't qualify — name
-   the file/group that actually exercises the target.
+   the file/group that actually exercises the target. **A compile/build-only
+   gate (`npm run build`, `tsc`, `php -l`) is a WEAKER gate — it proves the
+   change compiles, not that behavior held.** Mark such rows `gate: build-only`
+   honestly; a behavior-relevant frontend change (rendering, formatting, user
+   flows) on a build-only gate deserves either a runtime check (a component
+   test, a characterization render) or a note that none exists.
    **Dirty check:** run `git status --porcelain -- <file>` per candidate. A
    target with uncommitted changes is marked **DIRTY** in its evidence column —
    the shave skips dirty targets by default (they're blocked on the user's
@@ -204,7 +209,16 @@ phases) consuming the plan.
    its own section; a padded TODO trains the operator to skip the list.
 
    Also include a **`## Bugs found (not shaves — fix-first, separate labeled
-   commits)`** section. Audits routinely surface REAL defects that are explicitly
+   commits)`** section. **Autonomy boundary — even under `--full-send`:** a bug
+   fix is auto-executable only when it's *mechanical* — consistency refactors
+   (fetch→axios, cookie-domain alignment), missing imports, wrong cache keys,
+   gitignore gaps — where the correct end state is not in question. A fix that
+   **changes observable behavior** — what a findings/detection engine emits,
+   money math, displayed numbers or dates, API response shapes, an assertion
+   flipped from conditional to mandatory — is a **⚖ fork the operator decides**,
+   exactly like a deletion of public surface: present the fix, the evidence,
+   and the behavioral consequence, then wait. Full-send authorizes autonomous
+   *subtraction* through T2; it never authorizes choosing new behavior. Audits routinely surface REAL defects that are explicitly
    *not* subtractions — a missing filter double-counting on a user-facing page, a
    null-guard divergence, a config key-name mismatch, a narrow-catch bug copied
    across N twins. These must never be folded into a `shrink:` commit (§7
