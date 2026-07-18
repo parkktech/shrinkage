@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.26.0
+Continuing the field-report hardening (P1.4–P2.12).
+
+- **P1.4 — Estimate calibration.** `/srk:score --log --cat C9 --est -140` now
+  records the catalog + estimate alongside the actual net LOC; `/srk:trend`
+  prints a per-catalog realization factor (actual ÷ estimate). Audit tells
+  auditors to scale C1/C9 estimates by the observed factor — byte-identical
+  output constraints make dedupe merges realize well under the naive line count
+  (the deployment saw ~40% twice). +2 tests.
+
 ## 0.25.0
 Field-report-driven hardening from a production Laravel deployment (~2,900 files
 / ~17,800 symbols, ~−5,500 app LOC banked in one day, one near-miss incident).

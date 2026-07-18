@@ -45,7 +45,12 @@ phases) consuming the plan.
 
 4. **Tier and estimate.** Per candidate: catalog entry, risk tier, estimated
    net LOC, effort (S/M/L), confidence (evidence completeness), and blast
-   radius (callers, compat surface?).
+   radius (callers, compat surface?). **Calibrate to history:** when `/srk:trend`
+   shows a realization factor for a catalog, scale that catalog's estimates by
+   it — C1/C9 dedupe merges routinely realize well under the naive line count
+   (byte-identical-output constraints keep genuine divergences child-side; one
+   deployment saw ~40% twice). `/srk:score --log --cat C<n> --est <n>` at shave
+   time feeds this loop.
 
 5. **Rank** by (payoff × confidence) / effort — with T0s first regardless
    (they're free wins that build trust in the process) and T2s last, each

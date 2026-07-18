@@ -135,3 +135,22 @@ def test_total_sums_all_shave_commits(repo):
     assert re.search(r"shave commits\s+2", out), out
     assert re.search(r"net change\s+-9 lines", out), out        # summed across BOTH, not just last
     assert re.search(r"1 dead-code", out) and re.search(r"1 duplicate", out), out
+
+
+def test_log_stores_cat_and_est(repo):
+    (repo / "app.py").write_text("a = 1\nb = 2\n")
+    commit(repo)
+    (repo / "app.py").write_text("a = 1\n")
+    stage(repo)
+    run("diffstat.py", "HEAD", "--log", "--cat", "C6", "--est", "-1", cwd=repo)
+    entry = json.loads((repo / ".claude" / "shrinkage-log.jsonl").read_text().splitlines()[-1])
+    assert entry["cat"] == "C6" and entry["est"] == -1 and entry["ref"] == "HEAD", entry
+
+
+def test_trend_shows_realization_factor(repo):
+    base(repo)
+    (repo / ".claude").mkdir(exist_ok=True)
+    (repo / ".claude" / "shrinkage-log.jsonl").write_text(
+        json.dumps({"ts": "t", "net_app": -40, "cat": "C9", "est": -100}) + "\n")
+    code, out = run("diffstat.py", "--trend", cwd=repo)
+    assert "C9" in out and "40%" in out, out          # actual 40 / est 100

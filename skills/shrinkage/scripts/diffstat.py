@@ -281,9 +281,53 @@ def print_total(t=None):
     print(f"  test code         {net_test:>+8,} lines")
 
 
+def _optval(argv, name):
+    return (argv[argv.index(name) + 1]
+            if name in argv and argv.index(name) + 1 < len(argv) else None)
+
+
+def _positionals(argv, valued):
+    skip = set()
+    for name in valued:
+        if name in argv:
+            i = argv.index(name)
+            skip.update({i, i + 1})
+    return [a for j, a in enumerate(argv) if not a.startswith("--") and j not in skip]
+
+
+def log_path(root="."):
+    return Path(root) / ".claude" / "shrinkage-log.jsonl"
+
+
+def read_log(root="."):
+    p = log_path(root)
+    if not p.exists():
+        return []
+    return [json.loads(l) for l in p.read_text(encoding="utf-8").splitlines() if l.strip()]
+
+
+def realization(entries):
+    """Per-catalog est-vs-actual: {cat: (est_sum, actual_sum, factor, n)}. Only
+    entries carrying a `cat` + non-zero `est` (recorded at shave time) count."""
+    agg = {}
+    for e in entries:
+        cat, est = e.get("cat"), e.get("est")
+        if not cat or not est:
+            continue
+        es, ac, n = agg.get(cat, (0, 0, 0))
+        agg[cat] = (es + abs(est), ac + abs(e.get("net_app", 0)), n + 1)
+    return {c: (es, ac, (ac / es if es else 0.0), n) for c, (es, ac, n) in agg.items()}
+
+
 def show_trend():
     total = history_total()
     print_total(total)
+    real = realization(read_log())
+    if real:
+        print("  " + col(CYAN, "estimate realization") + col(DIM, " (actual ÷ estimate):"))
+        for c in sorted(real):
+            es, ac, f, n = real[c]
+            print(col(DIM, f"    {c}: {round(f * 100)}%  ({ac} actual / {es} est, {n} shaves)"))
     dep = Path("DEPRECATIONS.md")
     if dep.exists():
         pending = sum(1 for l in dep.read_text(encoding="utf-8").splitlines()
@@ -304,7 +348,7 @@ def main():
     if "--total" in argv:
         print_total()
         return
-    pos = [a for a in argv if not a.startswith("--")]
+    pos = _positionals(argv, {"--cat", "--est"})
     ref = pos[0] if pos else "HEAD"
     root = Path(".")
     (app_ins, app_del, test_ins, test_del, files,
@@ -323,15 +367,22 @@ def main():
               f"| {len(files)} | {len(removed_syms)} |")
 
     if "--log" in argv:
-        logp = Path(".claude/shrinkage-log.jsonl")
+        entry = {"ts": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+                 "ref": ref, "net_app": net_app, "net_test": net_test,
+                 "files": len(files), "new": new_syms, "removed": removed_syms}
+        cat, est = _optval(argv, "--cat"), _optval(argv, "--est")
+        if cat:
+            entry["cat"] = cat
+        if est is not None:
+            try:
+                entry["est"] = int(est)
+            except ValueError:
+                pass
+        logp = log_path()
         logp.parent.mkdir(parents=True, exist_ok=True)
         with logp.open("a", encoding="utf-8") as fh:
-            fh.write(json.dumps({
-                "ts": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-                "ref": ref, "net_app": net_app, "net_test": net_test,
-                "files": len(files), "new": new_syms, "removed": removed_syms,
-            }) + "\n")
-        print(f"logged to {logp}")
+            fh.write(json.dumps(entry) + "\n")
+        print(f"logged to {logp}" + (f" (cat {cat}, est {est})" if cat else ""))
 
 
 if __name__ == "__main__":
