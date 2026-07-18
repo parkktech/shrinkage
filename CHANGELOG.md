@@ -1,5 +1,49 @@
 # Changelog
 
+## 0.27.0
+Field-report wave 3 (second production day, edge-trades): the four highest-impact
+gaps, each hit as a real incident, plus a pre-release review pass that corrected
+its own math.
+
+- **#1 — Pre-flight disjointness (`dirty_apply.py precheck`).** Not-disjoint
+  edits were discovered only at unpark time — AFTER the shave commit existed,
+  leaving a committed shave to hand-revert (the QuantDiscoverService incident).
+  New mandatory step between the surgeon's edit and the commit: `precheck` stages
+  the shave, dry-runs the exact 3-way merge unpark would perform, and on conflict
+  restores the user's pre-shave file and exits 3 with NO commit made; on success
+  it unwinds so the pending commit stays shave-only. Disjointness is proven
+  against the ACTUAL edit shape, not the plan's stated region (an import-block
+  edit can collide even when the plan's target lines were disjoint). Sequence is
+  now park → edit → precheck → safe_commit → unpark. +3 test scenarios.
+- **#3 — CLI characterization output-diff, a named gate.** A missing class-body
+  `use` passed `php -l` and would have thrown at runtime; an ad-hoc `--dry-run`
+  output diff caught it pre-commit. Now first-class: for a command target
+  exposing a read-only/`--dry-run` mode, capture its output before and after and
+  require it byte-identical. Laravel gate recipes auto-prescribe it when
+  `$signature` contains `--dry-run`; generalized in safety-model §4; surgeon
+  brief instructs it. Doc-only.
+- **#4 — Honest C1/C9 estimates; rank dedups by value, not LOC.** Row 5
+  estimated −70 and netted +1 because the documented shared home costs what the
+  naked duplicates saved. Catalog + audit now price the new home —
+  `N × block − (merged body + docblock + N call-lines)` — and rank C1/C9 by
+  duplicate definitions collapsed and bug-surface removed, so a near-zero
+  realization factor doesn't bury genuinely valuable merges. Doc-only.
+- **#5 — `plan.py done` derives actuals from git.** `done 5 HEAD` stored the
+  literal string "HEAD" and no actual unless the operator remembered the number
+  — the calibration loop silently starved. `done <id> <ref>` now resolves the ref
+  to a real sha and derives the actual net app LOC via diffstat's single-commit
+  scorer, feeding calibration automatically (pass an explicit actual only to
+  override); recording at done-time also makes the datapoint amend-proof. +1 test.
+- **Review pass before release:** corrected the C1/C9 formula (the first draft
+  double-subtracted the merged body — over-pessimistic by one full block), fixed
+  `park`'s printed guidance to include the mandatory precheck step, and hardened
+  the abort path (a follow-on unpark after a precheck abort refuses cleanly).
+
+Queued from the same report: #2 identical-failure-set gate, #6 structured bugs
+table, #7 staging-guard TTL, #9 pre-push growth gate, #10 coverage bootstrap.
+(#8 is solved today by adding `.agent/**`, `.codex/**`, `.gemini/**` etc. to the
+ledger's `## excluded`.)
+
 ## 0.26.3
 Response-style fix: every command ends with a clear directive, not a command menu
 you have to decode.
