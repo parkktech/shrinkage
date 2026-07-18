@@ -14,8 +14,13 @@ maintain). Default view is terse; detail is opt-in.
 <execution_context>
 No heavy logic. Read the argument and respond:
 
-- **bare** (no args): print <reference> verbatim, inside a fenced code block so
-  the columns stay aligned. Nothing else — no preamble, no per-command essay.
+- **bare** (no args): FIRST check the status line — if neither
+  `.claude/settings.json`, `.claude/settings.local.json`, nor
+  `~/.claude/settings.json` contains `statusLine` (the session-start context
+  also says so), print this ONE line above the block:
+  `⬆ Status line off — live shrink trend + update alerts. Say "set up the status line" or run /srk:onboard.`
+  Then print <reference> verbatim, inside a fenced code block so the columns
+  stay aligned. Nothing else — no preamble, no per-command essay.
 - **<command>** (e.g. `shave`, `/srk:shave`): print that one command's line
   plus its "when to use" note from <details>. Unknown name → fall back to the
   full list.
@@ -30,7 +35,7 @@ screen, not open-mic night).
 Shrinkage — write less, delete safely, keep it working.
 
 Setup
-  /srk:onboard    one-time setup: build the map, set your preferences
+  /srk:onboard    one-time setup: status line, map, and your preferences
 
 Understand
   /srk:map        build or refresh the token-lean codemap
@@ -73,6 +78,7 @@ Per-command "when to use" (for --full or a single-command lookup):
 
 <next>
 Next:
+• status line off → set it up first (say "set up the status line" or /srk:onboard)
 • /srk:onboard        — if this repo isn't set up yet
 • /srk:gate "<task>"  — before you write the next feature
 </next>

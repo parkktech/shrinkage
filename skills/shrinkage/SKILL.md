@@ -215,6 +215,14 @@ and when the honest next move is a human step, say it, don't pad the slot with a
 decision (a T2 escalation, a red gate) genuinely needs it. One light joke max,
 information first; `humor: false` → play it straight.
 
+**Status line not configured?** (The session-start hook says so when
+`statusLine` is absent from the project's and user's settings.) Until it's set
+up, every Next menu carries — as the first suggestion after the primary action —
+"turn on the Shrinkage status line (live trend + update alerts): /srk:onboard,
+or say 'set up the status line'". It's the layer that tells the user when the
+plugin is behind; a user without it goes releases-blind. Drop the nudge the
+moment it's configured.
+
 **Layout — no walls of text.** Any list or report you emit: one fact per line
 (label left, value right — the scoreboard's discipline); a **blank line between
 items** that run past one line; headline first, the action/detail indented on

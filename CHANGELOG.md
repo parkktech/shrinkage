@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.30.1
+The status line becomes unmissable until it's on.
+
+- **Onboard asks it FIRST.** The status-line offer moves ahead of every other
+  preference — it's the always-visible layer (trend, streak, `⬆ /srk:update`
+  alerts), and a user without it goes releases-blind.
+- **Every Next menu nudges while unconfigured.** The SessionStart hook now
+  checks the project + user settings for `statusLine` and, when absent, tells
+  the session so — every command's Next menu then carries "turn on the
+  Shrinkage status line" as the first suggestion after the primary action
+  (SKILL.md response-style rule). The nudge disappears the moment it's
+  configured.
+- **`/srk:help` leads with it.** When unconfigured, the help screen opens with
+  one line — `⬆ Status line off — say "set up the status line" or run
+  /srk:onboard` — above the command list, and onboard's help entry now names
+  the status line. Doc/config-only.
+
 ## 0.30.0
 Visibility release: the status line finally shows up, tells you when you're
 behind, and the audit stops re-sweeping unchanged trees without asking.
