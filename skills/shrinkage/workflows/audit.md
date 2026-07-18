@@ -140,14 +140,21 @@ phases) consuming the plan.
    ```
    ## TODO before shaving
 
-   - [ ] **[bug]** Alpaca/IBKR `estimateFees()` reads wrong config keys — paper
-         PnL is silently gross, not net. → Fix: wire the real keys; one labeled
-         `fix:` commit covering both engines.
+   - [ ] **[bug]** Alpaca/IBKR `estimateFees()` reads wrong config keys —
+         paper PnL is silently gross, not net.
+         → Wire the real keys; one labeled `fix:` commit covering both engines.
+
    - [ ] **[security]** `.env.backup-2026…` sits un-gitignored in the webroot,
-         one `git add -A` from history. → Move it outside public_html or delete.
-   - [ ] **[tooling]** Plugin cache shows 0.26.2; releases at 0.28.0. →
-         `cd ~/.claude/plugins/marketplaces/<mp> && git pull`, reinstall, restart.
+         one `git add -A` from history.
+         → Move it outside public_html or delete it.
+
+   - [ ] **[tooling]** Plugin cache shows 0.26.2; releases at 0.29.0.
+         → `cd ~/.claude/plugins/marketplaces/<mp> && git pull`, reinstall, restart.
    ```
+
+   **Blank line between items; two short lines per item** — a headline line
+   (tag + what), then the `→ action` on its own line. Never run what + why +
+   action together into one packed line.
 
    Only genuine blockers belong here — bugs, security, tooling, prerequisites
    of planned rows. A deferred ⚖ decision that gates nothing executable stays in
@@ -176,24 +183,38 @@ phases) consuming the plan.
 
    ```
    Results:
-     <n> candidates: T0×a T1×b executable now (≈ −X LOC) · T2×c deferred (≈ −Y behind your decisions)
-     top 3 by payoff: ① <candidate, est, one-line why> ② … ③ …
-     <one line each, only if present: bugs found ×n · ledger updates ×n>
-     full plan: SHRINK-PLAN.md
 
-   TODO before advancing — do these BEFORE any shave (paste an item to the AI, or do it by hand):
-     1. [bug] <what + why it matters> → <exact action / fix as its own labeled commit>
-     2. [security] <what> → <exact action>
-     3. [tooling] <what> → <exact commands>
-   ⚠ Do NOT start /srk:shave until this list is clear — shaving over an unfixed
-   bug bakes it into consolidated code, and an open hazard outlives the batch.
-   Say "shave anyway" to waive explicitly.
+     candidates     <n> — T0×a T1×b executable now (≈ −X LOC)
+     deferred       <c> T2 (≈ −Y more behind your decisions)
+     top 3 payoff   ① <candidate> <est> — <three-word why>
+                    ② <candidate> <est> — <why>
+                    ③ <candidate> <est> — <why>
+     bugs found     <n> (details in the TODO)
+     ledger         <n> updates
+     full plan      SHRINK-PLAN.md
+
+   TODO before advancing — do these BEFORE any shave.
+   Paste an item to the AI, or do it by hand:
+
+     1. [bug] <headline: what + why it matters>
+        → <exact action / fix as its own labeled commit>
+
+     2. [security] <headline>
+        → <exact action>
+
+     3. [tooling] <headline>
+        → <exact commands>
+
+   ⚠ Do NOT start /srk:shave until this list is clear. Say "shave anyway" to waive.
    ```
 
-   The TODO section mirrors the plan's `## TODO before shaving` checklist, one
-   numbered line per item, every line an imperative the operator can paste
-   verbatim to an AI session. Empty checklist → say "no blockers — shave when
-   ready" and lead the Next block with `/srk:shave 1` instead.
+   **Layout rules (the whole point):** Results is label-left, value-right, ONE
+   fact per line — same one-metric-per-line discipline as the scoreboard; the
+   top 3 get a line each, never chained with ①②③ on one line. TODO items get a
+   **blank line between them** and two short lines each (headline, then
+   `→ action`) — the action an imperative the operator can paste verbatim to an
+   AI session. Omit Results lines that are zero/absent. Empty checklist → say
+   "no blockers — shave when ready" and lead the Next block with `/srk:shave 1`.
 </process>
 
 End with a terse result line + a **Next** block that LEADS with the one concrete action to take now, as a plain imperative — including a non-`srk` step (commit or stash in-flight work, land the branch, adjudicate a ⚖ item) when that's the real next move — then ≤2 alternatives (command file's <next> block + SKILL.md "Response style"). Never a bare command menu or a buried "becomes executable after…". No wall of prose.

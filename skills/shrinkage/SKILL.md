@@ -215,6 +215,12 @@ and when the honest next move is a human step, say it, don't pad the slot with a
 decision (a T2 escalation, a red gate) genuinely needs it. One light joke max,
 information first; `humor: false` → play it straight.
 
+**Layout — no walls of text.** Any list or report you emit: one fact per line
+(label left, value right — the scoreboard's discipline); a **blank line between
+items** that run past one line; headline first, the action/detail indented on
+its own line beneath. A packed multi-clause line (`a — b · c → d; also e`) is a
+wall of text in miniature — split it. Short lines beat clever separators.
+
 ## Output discipline (anti context-rot)
 
 Verbose output is what rots a long session — every reprinted diff and pasted

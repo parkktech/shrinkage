@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.29.1
+Readable reports: spacing and short lines, no walls of text.
+
+- **Audit report template reformatted.** `Results:` is now label-left/value-
+  right, one fact per line (the scoreboard's one-metric-per-line discipline),
+  with the top 3 on a line each instead of chained ①②③ clauses. TODO items get
+  a blank line between them and two short lines each — headline (tag + what),
+  then the `→ action` on its own line. The plan's `## TODO before shaving`
+  checklist uses the same two-line-per-item shape.
+- **General layout rule in SKILL.md response style**, applying to every
+  command's output: one fact per line, blank line between multi-line list
+  items, headline-then-indented-action, and never a packed multi-clause line
+  (`a — b · c → d; also e`) where a split would read cleaner. Doc-only.
+
 ## 0.29.0
 The audit report becomes a handoff, not a findings dump — and the shave enforces
 it.
