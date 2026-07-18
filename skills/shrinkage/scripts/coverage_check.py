@@ -3,6 +3,11 @@
 
 Usage: coverage_check.py <file> [file...]        report coverage per file
        coverage_check.py --find                  just locate the coverage report
+       coverage_check.py bootstrap [--run]       detect (and optionally run) this
+                                                 repo's coverage command — the
+                                                 one-command upgrade from
+                                                 suite-gated to coverage-aware
+                                                 tiering (field gap #10)
 
 Reads the first coverage report found (or $SHRINKAGE_COVERAGE): lcov
 (lcov.info), Cobertura XML (coverage.xml — pytest-cov, PHPUnit's cobertura),
@@ -88,7 +93,73 @@ def lookup(cov, target):
     return None
 
 
+def detect_bootstrap(root="."):
+    """(command, artifact, note) for generating this repo's first coverage
+    report — the one-command upgrade from suite-gated to coverage-aware tiering.
+    note carries driver caveats; (None, None, reason) when undetectable."""
+    r = Path(root)
+    if (r / "vendor" / "bin" / "pest").exists() or (r / "vendor" / "bin" / "phpunit").exists():
+        runner = "vendor/bin/pest" if (r / "vendor" / "bin" / "pest").exists() else "vendor/bin/phpunit"
+        note = ""
+        try:
+            import subprocess
+            mods = subprocess.run(["php", "-m"], capture_output=True, text=True,
+                                  timeout=20).stdout.lower()
+            if "pcov" not in mods and "xdebug" not in mods:
+                note = ("no coverage driver loaded — install pcov (fast: "
+                        "`pecl install pcov`) or enable xdebug first, or the run "
+                        "reports 0% everywhere.")
+        except Exception:
+            note = "couldn't verify a PHP coverage driver (php -m unavailable) — pcov or xdebug must be loaded."
+        return f"{runner} --coverage-clover clover.xml", "clover.xml", note
+    if (r / "pytest.ini").exists() or (r / "pyproject.toml").exists() or (r / "tests").is_dir():
+        return (f"{sys.executable} -m pytest --cov --cov-report=xml",
+                "coverage.xml", "needs pytest-cov (`pip install pytest-cov`).")
+    pkg = r / "package.json"
+    if pkg.exists():
+        text = pkg.read_text(encoding="utf-8", errors="replace")
+        if "vitest" in text:
+            return "npx vitest run --coverage", "coverage/lcov.info", "needs @vitest/coverage-v8."
+        if "jest" in text:
+            return "npx jest --coverage", "coverage/lcov.info", ""
+    if (r / "go.mod").exists():
+        return ("go test ./... -coverprofile=coverage.out", "coverage.out",
+                "Go's profile format isn't parsed directly — convert with "
+                "gcov2lcov (`gcov2lcov -infile coverage.out -outfile lcov.info`).")
+    if (r / "Cargo.toml").exists():
+        return ("cargo tarpaulin --out Xml", "cobertura.xml",
+                "needs cargo-tarpaulin (`cargo install cargo-tarpaulin`).")
+    return None, None, "no recognized test ecosystem (pest/phpunit, pytest, vitest/jest, go, cargo)."
+
+
+def cmd_bootstrap(run=False):
+    cmd, artifact, note = detect_bootstrap(".")
+    if not cmd:
+        sys.exit(f"cannot bootstrap: {note}")
+    print(f"coverage bootstrap for this repo:\n  command:  {cmd}\n  artifact: {artifact}"
+          + (f"\n  ⚠ note:   {note}" if note else ""))
+    if not run:
+        print("\nDry by default — run it with:  coverage_check.py bootstrap --run\n"
+              "After the artifact exists, /srk:audit upgrades every row from "
+              "suite-gated to coverage-aware tiering (safety-model §4).")
+        return
+    import shlex
+    import subprocess
+    print("\nrunning (this executes your whole test suite)…")
+    r = subprocess.run(shlex.split(cmd), timeout=3600)
+    found = find_report()
+    if found:
+        print(f"\ndone — coverage artifact at {found}. Re-run /srk:audit: rows "
+              "upgrade from suite-gated to coverage-aware tiering.")
+    else:
+        sys.exit(f"suite ran (exit {r.returncode}) but no artifact found where "
+                 "coverage_check looks — check the note above, or set $SHRINKAGE_COVERAGE.")
+
+
 def main():
+    if len(sys.argv) > 1 and sys.argv[1] == "bootstrap":
+        cmd_bootstrap(run="--run" in sys.argv)
+        return
     report = find_report()
     if "--find" in sys.argv:
         print(report or "no coverage report found "

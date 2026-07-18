@@ -55,6 +55,7 @@ Watch the scale
   /srk:trend      the repo's weight over time; your shrink streak
 
 Housekeeping
+  /srk:coverage   generate the coverage artifact -> unlock coverage-aware tiers
   /srk:config     view or change any setting
   /srk:update     update the plugin to the latest version
   /srk:help       this screen — add a command for detail, --full for more
@@ -75,6 +76,7 @@ Per-command "when to use" (for --full or a single-command lookup):
 - score — after a change, see net app/test LOC and drop a PR scoreboard badge.
 - trend — the long view: cumulative LOC delta and your shrink streak over time.
 - config — flip any setting (gate hardness, map commit policy, humor, budget…).
+- coverage — one command upgrades every audit from suite-gated to coverage-aware tiering; run once per repo.
 - update — check installed vs latest and clear Claude Code's pinned plugin cache so the next install is clean.
 </details>
 
