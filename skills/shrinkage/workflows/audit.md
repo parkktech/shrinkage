@@ -71,8 +71,15 @@ phases) consuming the plan.
    shows a realization factor for a catalog, scale that catalog's estimates by
    it — C1/C9 dedupe merges routinely realize well under the naive line count
    (byte-identical-output constraints keep genuine divergences child-side; one
-   deployment saw ~40% twice). `/srk:score --log --cat C<n> --est <n>` at shave
-   time feeds this loop.
+   deployment saw ~40% twice, another netted −70 est → +1 actual). `plan.py done`
+   feeds this loop automatically (derives the actual from git).
+   **C1/C9 specifically — price the NEW HOME, don't just count removed lines.**
+   Net ≈ `block_LOC × (N−1) − (shared body + docblock + N call-lines)`; a
+   documented shared home often nets ~0. So **rank C1/C9 by duplicate definitions
+   collapsed and bug-surface removed** (the shared fix touches one place, not N),
+   NOT by net LOC — otherwise a realization factor near 0 silently buries
+   genuinely valuable merges. Put the collapse count (e.g. "9 defs → 4") in the
+   row's evidence so payoff is legible without trusting the LOC number.
 
 5. **Rank** by (payoff × confidence) / effort — with T0s first regardless
    (they're free wins that build trust in the process) and T2s last, each

@@ -24,6 +24,9 @@ same commit.
 **Gotchas:** siblings that *look* alike but diverge subtly (error handling,
 logging, transactions) — diff them line by line before merging; a
 characterization test per sibling first.
+**Payoff:** estimate and rank like C9 (below) — subtract the merged home's cost
+(shared body + parameterized signature + migrated call sites); the real win is
+one canonical definition and less drift risk, not raw LOC.
 
 ## C2 — Collapse pass-through wrappers
 
@@ -133,6 +136,15 @@ justification required). NOT a new `utils` entry by default.
 **Tier:** T1.
 **Gotchas:** two copies that are one character different are two *behaviors* —
 find out which one is the bug before unifying on either.
+**Payoff (estimate honestly):** "lines removed" overcounts — the shared home
+costs real LOC: the moved body once + its docblock + one `use`/call line per
+site. Net ≈ `block_LOC × (N−1) − (shared body + docblock + N call-lines)`, and a
+*documented* shared home routinely nets ~0 or even positive (a deployment
+measured −70 estimated → **+1 actual**). So the real, rankable win is NOT net
+LOC — it's **duplicate definitions collapsed** (N → 1 canonical) and **bug-
+surface removed**: a fix to the shared concept now touches one place, not N.
+Record the collapse count; feed `plan.py done` so the realization loop learns
+this repo's C9 factor.
 
 ## C10 — Delete comment noise and zombie code
 
