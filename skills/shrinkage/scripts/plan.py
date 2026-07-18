@@ -7,7 +7,8 @@ new plan. This CLI does them safely; the human-readable markdown stays the
 source of truth — the CLI only edits it reliably.
 
   plan.py open                     list OPEN candidate rows (#id · tier · est · candidate)
-  plan.py done <id> <sha> [actual] strike the row, annotate sha/actual, feed calibration
+  plan.py done <id> <ref> [actual] strike; resolve <ref>→sha + derive actual net
+                                   LOC from git (override with [actual]); calibrate
   plan.py restamp                  refresh map-fp + recompute est-savings from open rows
   plan.py carry <old-plan>         print a new plan skeleton: open rows + a ledger pointer
 """
@@ -102,7 +103,27 @@ def cmd_open(root):
               f"est {g('est. net loc', g('est', '?')):>6}  {g('candidate')}")
 
 
-def cmd_done(root, ident, sha, actual=None):
+def _resolve_actual(ref):
+    """(short_sha, net_app_LOC) for a commit-ish ref, or (None, None) if it doesn't
+    resolve. Net LOC is derived exactly how diffstat scores one shave commit, so
+    the calibration loop never depends on the operator passing a number by hand."""
+    import subprocess
+    r = subprocess.run(["git", "rev-parse", "--verify", f"{ref}^{{commit}}"],
+                       capture_output=True, text=True)
+    if r.returncode != 0:
+        return None, None
+    sha = r.stdout.strip()
+    net = None
+    try:
+        import diffstat
+        ai, ad, _t, _u = diffstat._commit_loc(sha)
+        net = ai - ad
+    except Exception:
+        net = None
+    return sha[:9], net
+
+
+def cmd_done(root, ident, ref, actual=None):
     plan = find_plan(root)
     lines = plan.read_text(encoding="utf-8").splitlines()
     cm = _colmap(lines)
@@ -116,24 +137,35 @@ def cmd_done(root, ident, sha, actual=None):
     if not hit:
         sys.exit(f"no open item #{ident} in {plan}")
     idx, cells = hit
+    # Resolve the ref to a real sha and derive the actual net LOC from git — so a
+    # literal "HEAD" never freezes into the plan and calibration doesn't hinge on
+    # the operator remembering the number. Deriving it now also means an amend
+    # afterward can't orphan the datapoint: it's already recorded.
+    sha, measured = _resolve_actual(ref)
+    if sha is None:
+        sha = ref
+        sys.stderr.write(f"warning: '{ref}' didn't resolve to a commit — recorded as-is, "
+                         "no actual derived from git.\n")
+    actual_val = _int(str(actual)) if actual is not None else measured
     cells[ci] = f"~~{ident}~~"
-    note = f"done {sha}" + (f", actual {actual}" if actual else "")
+    note = f"done {sha}" + (f", actual {actual_val:+d}" if actual_val is not None else "")
     if ev is not None and ev < len(cells):
         cells[ev] = (cells[ev] + " · " + note).strip(" ·")
     else:
         cells.append(note)
     lines[idx] = "| " + " | ".join(cells) + " |"
     plan.write_text("\n".join(lines) + "\n", encoding="utf-8")
-    # feed the estimate-calibration loop (P1.4) when we know the catalog + est
+    # feed the estimate-calibration loop (P1.4) when we know the catalog + an actual
     catcell = cells[cm["catalog"]] if "catalog" in cm and cm["catalog"] < len(cells) else ""
     m = re.search(r"C\d+", catcell)
     cat = m.group() if m else None
     est = (_int(cells[cm["est. net loc"]])
            if "est. net loc" in cm and cm["est. net loc"] < len(cells) else 0)
-    if cat and actual is not None:
-        _log_calibration(root, cat, est, actual, sha)
+    if cat and actual_val is not None:
+        _log_calibration(root, cat, est, actual_val, sha)
     print(f"marked #{ident} done ({sha}"
-          + (f", actual {actual}" if actual else "") + ")")
+          + (f", actual {actual_val:+d}" if actual_val is not None else "") + ")"
+          + (" — derived from git" if actual is None and measured is not None else ""))
 
 
 def _log_calibration(root, cat, est, actual, sha):
@@ -232,7 +264,7 @@ def main():
         cmd_open(root)
     elif cmd == "done":
         if len(rest) < 2:
-            sys.exit("usage: plan.py done <id> <sha> [actual-loc]")
+            sys.exit("usage: plan.py done <id> <ref> [actual-loc]")
         cmd_done(root, rest[0], rest[1], rest[2] if len(rest) > 2 else None)
     elif cmd == "restamp":
         cmd_restamp(root)

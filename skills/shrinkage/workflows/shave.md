@@ -212,9 +212,12 @@ Deleting is part of the feature; this workflow is how deletion earns trust.
    a GSD project, put it in the plan SUMMARY.md.
 
 8. **Update SHRINK-PLAN.md** with the plan CLI, not sed: mark each executed
-   item done via `python3 $SKILL/scripts/plan.py done <id> <sha> [actual-loc]`
-   (strikes the `| N |` row, annotates the sha/actual, and feeds the
-   estimate-calibration loop, P1.4). Append reverted attempts to `## Hidden
+   item done via `python3 $SKILL/scripts/plan.py done <id> HEAD` — pass the ref
+   (usually `HEAD`, the commit you just made); it resolves the sha and DERIVES the
+   actual net LOC from git itself, so you never hand-count it and a literal "HEAD"
+   never freezes into the plan. It strikes the `| N |` row, annotates sha+actual,
+   and feeds the estimate-calibration loop (P1.4) automatically. Only pass an
+   explicit `[actual-loc]` to override the derived number. Append reverted attempts to `## Hidden
    dependencies discovered`, then `plan.py restamp` to refresh `map-fp` +
    `est-savings` from the remaining open rows so the plan doesn't read as stale
    from your own changes.
