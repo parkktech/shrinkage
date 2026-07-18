@@ -1,5 +1,29 @@
 # Changelog
 
+## 0.29.0
+The audit report becomes a handoff, not a findings dump — and the shave enforces
+it.
+
+- **Two-section audit report: `Results:` / `TODO before advancing:`.** Results
+  stays lean (counts, tier mix, top 3 by payoff, plan pointer). The TODO section
+  lists the genuine blockers — fix-first bugs, security hazards (a secrets file
+  in the webroot), tooling/environment issues (a stale plugin, a red baseline a
+  planned gate needs) — each written as a paste-able imperative with the exact
+  action, ending with the rule: **do NOT start `/srk:shave` until the list is
+  clear** (explicit "shave anyway" waives it). Empty list → "no blockers — shave
+  when ready".
+- **The plan carries the gate: `## TODO before shaving`.** The audit writes the
+  same items into SHRINK-PLAN.md as a checkbox list, so the gate is durable
+  state, not chat prose. Only genuine blockers qualify — deferred ⚖ decisions
+  that gate nothing executable stay in their own section, so the list stays
+  short enough to respect.
+- **The shave checks it.** New step 0 of the shave workflow (and the command +
+  Copilot prompt): any unchecked `- [ ]` under `## TODO before shaving` → stop,
+  report the open items verbatim, execute nothing, unless the user explicitly
+  waives. Items get checked off (`- [x]`) as they complete so the gate clears
+  itself. Rationale is stated where it gates: shaving over an unfixed bug bakes
+  it into consolidated code; an open hazard outlives the batch. Doc-only.
+
 ## 0.28.0
 First-class GitHub Copilot support via the Agent Skills standard.
 

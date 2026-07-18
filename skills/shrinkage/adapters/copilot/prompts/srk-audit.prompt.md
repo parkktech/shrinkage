@@ -14,6 +14,10 @@ open`, `plan.py carry`). Verify every candidate in source, run `git status
 --porcelain` per target (dirty → mark DIRTY), tier + estimate (price C1/C9's new
 home; rank dedups by definitions collapsed, not LOC) + rank, include the
 `## Bugs found` section for real defects (fix-first, separate commits), write
-SHRINK-PLAN.md and stamp it with `plan.py restamp`, offer execution via
-/srk-shave. No coverage artifact → declare suite-gated mode once in the plan
-header. The audit finds and ranks; it does not cut.
+SHRINK-PLAN.md and stamp it with `plan.py restamp`. Close the plan with the
+`## TODO before shaving` checklist (bugs fix-first, security hazards, tooling
+blockers — each a paste-able imperative) and report in TWO sections: `Results:`
+(counts, tier mix, top 3, plan pointer) then `TODO before advancing:` — with
+the rule that NO shave starts until the list is clear or explicitly waived. No
+coverage artifact → declare suite-gated mode once in the plan header. The
+audit finds and ranks; it does not cut.

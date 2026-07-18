@@ -27,8 +27,11 @@ brief in `$SKILL/agents/shrink-auditor.md`. Required reading:
 </success_criteria>
 
 <next>
-Lead with the concrete action:
-• top items clean → /srk:shave 1 (execute the plan's #1 safely)
+The report itself ends with the TODO-before-advancing section (see the
+workflow's two-section report format) — the Next block follows from it:
+• TODO list has open items → lead with item 1's action verbatim; do NOT suggest
+  /srk:shave while the list is open
+• TODO list empty, top items clean → /srk:shave 1 (execute the plan's #1 safely)
 • top items blocked on your dirty tree → say it plainly: "Commit or stash your
   in-flight work, then /srk:shave 1" — don't just list the command
 • /srk:trend — track the ratchet over time

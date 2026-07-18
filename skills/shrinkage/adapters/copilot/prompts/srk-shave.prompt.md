@@ -6,7 +6,10 @@ agent: agent
 ---
 
 REQUIRED READING FIRST: `.claude/skills/shrinkage/references/safety-model.md` and
-`.claude/skills/shrinkage/references/consolidation-catalog.md`. Then follow
+`.claude/skills/shrinkage/references/consolidation-catalog.md`. TODO GATE: if
+SHRINK-PLAN.md has unchecked `- [ ]` items under `## TODO before shaving`, stop
+and report them — no shave until the list is clear or the user says "shave
+anyway". Then follow
 `.claude/skills/shrinkage/workflows/shave.md` on ${input} (a SHRINK-PLAN item
 number, a path, or the current diff's files): green baseline (no coverage
 report → suite-gated mode, safety-model §4), hunt (map x0 refs, `codemap.py

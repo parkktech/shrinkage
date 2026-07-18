@@ -20,6 +20,11 @@ Locate the shrinkage skill dir ($SKILL: `${CLAUDE_PLUGIN_ROOT}/skills/shrinkage`
 </execution_context>
 
 <execution_context_extra>
+FIRST: the TODO gate. If SHRINK-PLAN.md carries unchecked `- [ ]` items under
+`## TODO before shaving`, stop and report them instead of executing — the
+audit marked them as prerequisites (bugs to fix first, security hazards, stale
+tooling). Only an explicit user "shave anyway" overrides; record the waiver.
+
 Targets: a plan item number (default one-at-a-time), `--auto`/`all` (work the
 whole backlog until a stop condition), a dir/file path, or nothing (current
 diff). After a single item, ALWAYS prompt for the next one (name it + its

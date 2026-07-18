@@ -129,6 +129,30 @@ phases) consuming the plan.
    `## Deferred (T2)` section where each entry carries its deprecation-cycle
    proposal. This file is the audit's product and the shave's input.
 
+   Close the plan with a **`## TODO before shaving`** checklist — the
+   operator's gate for the whole shave cycle. Source items from: every entry in
+   `## Bugs found` (fix-first), security/hygiene hazards the sweeps surfaced
+   (secrets files in the tree, gitignore gaps), tooling/environment blockers (a
+   stale plugin version, a red baseline that a planned row's gate needs green),
+   and any ⚖ decision that gates a top-3 row. Each item is a checkbox written
+   as a **paste-able imperative** — what, why it matters, and the exact action:
+
+   ```
+   ## TODO before shaving
+
+   - [ ] **[bug]** Alpaca/IBKR `estimateFees()` reads wrong config keys — paper
+         PnL is silently gross, not net. → Fix: wire the real keys; one labeled
+         `fix:` commit covering both engines.
+   - [ ] **[security]** `.env.backup-2026…` sits un-gitignored in the webroot,
+         one `git add -A` from history. → Move it outside public_html or delete.
+   - [ ] **[tooling]** Plugin cache shows 0.26.2; releases at 0.28.0. →
+         `cd ~/.claude/plugins/marketplaces/<mp> && git pull`, reinstall, restart.
+   ```
+
+   Only genuine blockers belong here — bugs, security, tooling, prerequisites
+   of planned rows. A deferred ⚖ decision that gates nothing executable stays in
+   its own section; a padded TODO trains the operator to skip the list.
+
    Also include a **`## Bugs found (not shaves — fix-first, separate labeled
    commits)`** section. Audits routinely surface REAL defects that are explicitly
    *not* subtractions — a missing filter double-counting on a user-facing page, a
@@ -146,12 +170,30 @@ phases) consuming the plan.
    or, in a GSD project, as planned phases so executors run them with fresh
    contexts and the verify step checks the scoreboard.
 
-8. **Report lean (anti context-rot).** The plan is the deliverable and it's on
-   disk — do NOT paste the full ranked table into the reply. Report only:
-   total candidates, tier mix (T0×N T1×N…), total est. LOC to reclaim, the top
-   3 by payoff, **the count of any bugs found (they need attention regardless of
-   the shave)**, and "full plan: SHRINK-PLAN.md". Raw sweep output stays in the
-   subagents; only the ranked, verified plan is written to disk.
+8. **Report in TWO sections — findings, then the gate.** The plan is the
+   deliverable and it's on disk — do NOT paste the full ranked table. Keep it
+   lean (raw sweep output stays in the subagents) and use exactly this shape:
+
+   ```
+   Results:
+     <n> candidates: T0×a T1×b executable now (≈ −X LOC) · T2×c deferred (≈ −Y behind your decisions)
+     top 3 by payoff: ① <candidate, est, one-line why> ② … ③ …
+     <one line each, only if present: bugs found ×n · ledger updates ×n>
+     full plan: SHRINK-PLAN.md
+
+   TODO before advancing — do these BEFORE any shave (paste an item to the AI, or do it by hand):
+     1. [bug] <what + why it matters> → <exact action / fix as its own labeled commit>
+     2. [security] <what> → <exact action>
+     3. [tooling] <what> → <exact commands>
+   ⚠ Do NOT start /srk:shave until this list is clear — shaving over an unfixed
+   bug bakes it into consolidated code, and an open hazard outlives the batch.
+   Say "shave anyway" to waive explicitly.
+   ```
+
+   The TODO section mirrors the plan's `## TODO before shaving` checklist, one
+   numbered line per item, every line an imperative the operator can paste
+   verbatim to an AI session. Empty checklist → say "no blockers — shave when
+   ready" and lead the Next block with `/srk:shave 1` instead.
 </process>
 
 End with a terse result line + a **Next** block that LEADS with the one concrete action to take now, as a plain imperative — including a non-`srk` step (commit or stash in-flight work, land the branch, adjudicate a ⚖ item) when that's the real next move — then ≤2 alternatives (command file's <next> block + SKILL.md "Response style"). Never a bare command menu or a buried "becomes executable after…". No wall of prose.

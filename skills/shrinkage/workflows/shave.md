@@ -20,7 +20,17 @@ Deleting is part of the feature; this workflow is how deletion earns trust.
    modified, no commit made. This is the review artifact before letting the
    surgeon loose.
 
-1. **Scope.** The target argument is one of:
+1. **TODO gate — before anything else.** If SHRINK-PLAN.md has a `## TODO
+   before shaving` checklist with any unchecked `- [ ]` item, STOP: report the
+   open items verbatim with their actions and execute NO rows. The audit put
+   them there because shaving past them degrades the result — an unfixed bug
+   gets baked into consolidated code, an open hazard outlives the batch, stale
+   tooling runs the shave without its newest safety rails. Proceed only when
+   the list is clear, or when the user explicitly waives it ("shave anyway") —
+   record the waiver in the report. Check items off (`- [x]`) as they complete
+   so the gate clears itself for the next run.
+
+   **Scope.** The target argument is one of:
    - **a SHRINK-PLAN.md item number** (`1`, `3`, or `#3`) — execute exactly
      that plan entry: its file(s) are the scope, its catalog entry and
      evidence come pre-loaded from the plan (re-verify per §3 anyway);
