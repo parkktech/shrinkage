@@ -38,6 +38,11 @@ Continuing the field-report hardening (P1.4–P2.12).
   runner (Pest vs raw phpunit) and a `config:cache`/`clear` check for config
   edits. The surgeon brief now picks gates from the rules file per file type
   instead of improvising. Doc-only.
+- **P2.9 — `codemap.py scope` artifact placement.** `scope <dir>` wrote
+  `.codemap-scope.txt` *inside* the scanned subtree, polluting the tree and
+  leaving auditors to clean up a stray file. It now writes to the main map's
+  intel dir (`.planning/intel/` or `.claude/`) as `codemap-scope-<subtree>.txt`,
+  named per subtree so scopes don't collide, and gitignored. +1 test.
 
 ## 0.25.0
 Field-report-driven hardening from a production Laravel deployment (~2,900 files

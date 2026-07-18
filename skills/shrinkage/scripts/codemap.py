@@ -518,7 +518,14 @@ def main():
         if not a.arg:
             sys.exit("usage: codemap.py scope <dir> [--budget N]")
         sub = (root / a.arg).resolve()
-        cmd_build(sub, sub / ".codemap-scope.txt", a.budget, False)
+        # The scope artifact goes in the MAIN map's intel dir (.planning/intel/ or
+        # .claude/), never inside the scanned subtree — writing it into the tree
+        # pollutes it, risks getting re-scanned, and left auditors cleaning up a
+        # stray .codemap-scope.txt. Name it by the subtree so scopes don't collide.
+        slug = re.sub(r"[^\w.-]+", "-", a.arg.strip("/")).strip("-") or "sub"
+        out = map_path(root).parent / f"codemap-scope-{slug}.txt"
+        cmd_build(sub, out, a.budget, False)
+        ensure_ignored(root, out)
 
 
 if __name__ == "__main__":

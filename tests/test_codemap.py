@@ -55,3 +55,19 @@ def test_budget_collapse(repo):
     seed(repo)
     code, out = run("codemap.py", "build", "--budget", "10", "--out", str(repo / "m.txt"), cwd=repo)
     assert "collapsed" in (repo / "m.txt").read_text().splitlines()[0]
+
+
+def test_scope_writes_to_intel_dir_not_the_scanned_tree(repo):
+    # P2.9: the scope artifact must land in the main map's intel dir, never
+    # inside the scanned subtree (where it pollutes the tree and gets left behind).
+    sub = repo / "pkg"
+    sub.mkdir()
+    (sub / "mod.py").write_text("def alpha():\n    return 1\n")
+    code, out = run("codemap.py", "scope", "pkg", cwd=repo)
+    assert code == 0, out
+    assert not (sub / ".codemap-scope.txt").exists(), "must not write into the scanned subtree"
+    scope_map = repo / ".claude" / "codemap-scope-pkg.txt"
+    assert scope_map.exists(), out
+    assert "alpha" in scope_map.read_text()
+    # and it's kept out of git so auditors never have to clean it up
+    assert "codemap-scope-pkg.txt" in (repo / ".gitignore").read_text()
