@@ -398,6 +398,53 @@ def shave_only_board(ref, prefixes, root):
         print(col(DIM, "  all commits in the range matched — no non-shave entanglement"))
 
 
+def ci_gate(ref, strict):
+    """--ci-gate: the growth gate for a pushed range (field gap #9). Diff-sized
+    versions of the checks that otherwise wait for the next big audit: net
+    growth, public signature changes, unjustified new symbols (gatelog), and
+    dupe-shaped new symbols (a name that already lives elsewhere in the map —
+    C1/C9 being born). Warnings exit 1 under --strict (CI/pre-push blocking)."""
+    (app_ins, app_del, _ti, _td, files,
+     new_syms, removed_syms, sig_changes) = collect(ref)
+    net = app_ins - app_del
+    warns = []
+    if sig_changes:
+        names = ", ".join(s.split(" [")[0] for s in sig_changes[:5])
+        warns.append(f"{len(sig_changes)} public signature change(s): {names}")
+    unjust = gate_ledger_check(new_syms)
+    if unjust:
+        warns.append(f"{len(unjust)} new symbol(s) with no reuse-gate record: "
+                     + ", ".join(unjust[:6]))
+    map_text = ""
+    try:
+        import codemap
+        mp = codemap.map_path(Path("."))
+        if mp.exists():
+            map_text = mp.read_text(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+    if map_text:
+        dupe = sorted({s for s in new_syms if sum(
+            1 for L in map_text.splitlines()
+            if re.search(r"\b" + re.escape(s.split(".")[-1]) + r"\b", L)) >= 2})
+        if dupe:
+            warns.append("dupe-shaped new symbol(s) — the name already lives "
+                         "elsewhere in the map (C1/C9 born in this range? "
+                         "best-effort check): " + ", ".join(dupe[:6]))
+    print(col(BOLD, f"Shrinkage growth gate · {ref}"))
+    print(f"  net app change     {net:+,} lines   (+{app_ins:,} / -{app_del:,})")
+    print(f"  symbols            +{len(new_syms)} / -{len(removed_syms)}   files {len(files)}")
+    if warns:
+        print(col(YELLOW, f"  ⚠ {len(warns)} growth warning(s):"))
+        for w in warns:
+            print(col(YELLOW, "    · ") + w)
+        print(col(DIM, "  (each wants a gate record, a shim, or a stated justification "
+                       "— growth is allowed; unjustified growth is just swelling)"))
+    else:
+        print(col(GREEN, "  clean — no unjustified-growth signals in this range"))
+    sys.exit(1 if warns and strict else 0)
+
+
 def _optval(argv, name):
     return (argv[argv.index(name) + 1]
             if name in argv and argv.index(name) + 1 < len(argv) else None)
@@ -498,6 +545,9 @@ def main():
         prefixes = [p.strip() for p in (_optval(argv, "--prefix") or "shrink:,fix:").split(",")
                     if p.strip()]
         shave_only_board(ref, prefixes, root)
+        return
+    if "--ci-gate" in argv:
+        ci_gate(ref, "--strict" in argv)
         return
     (app_ins, app_del, test_ins, test_del, files,
      new_syms, removed_syms, sig_changes) = collect(ref)

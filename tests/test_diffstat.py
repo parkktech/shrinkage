@@ -272,3 +272,18 @@ def test_log_migrates_from_old_working_tree_location(repo):
     assert new.exists(), "log should have migrated into .git/info/"
     assert not (repo / ".claude" / "shrinkage-log.jsonl").exists(), "old log should be removed"
     assert "net_app" in new.read_text() and "-7" in new.read_text()
+
+
+def test_ci_gate_flags_dupe_shaped_and_strict_exit(repo):
+    # #9: growth gate on a range — a new symbol whose name already lives
+    # elsewhere in the map is C1/C9 being born.
+    (repo / "a.py").write_text("def alpha():\n    return 1\n")
+    commit(repo)
+    (repo / "b.py").write_text("def alpha():\n    return 1\n")
+    commit(repo, "feat: parallel alpha")
+    run("codemap.py", "build", cwd=repo)                            # fresh map: alpha ×2
+    code, out = run("diffstat.py", "HEAD~1..HEAD", "--ci-gate", "--no-color", cwd=repo)
+    assert code == 0, out                                           # warn-only by default
+    assert "growth gate" in out and "dupe-shaped" in out and "alpha" in out, out
+    code, out = run("diffstat.py", "HEAD~1..HEAD", "--ci-gate", "--strict", "--no-color", cwd=repo)
+    assert code == 1, out

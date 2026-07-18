@@ -1,0 +1,20 @@
+# Shrinkage growth gate — dead code caught the week it's born, at diff-sized cost.
+# Copy into .github/workflows/ (kept here because the release PAT lacks the
+# Workflows scope). Runs the growth checks on every PR's range: net growth,
+# public signature changes, unjustified new symbols (gatelog), dupe-shaped new
+# symbols. Warn-only by default; flip --strict to block merges on warnings.
+name: shrinkage-growth-gate
+on: [pull_request]
+jobs:
+  growth-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
+      - name: growth gate on the PR range
+        run: |
+          SKILL=$(ls -dv ~/.claude/plugins/cache/*/shrinkage/*/skills/shrinkage 2>/dev/null | tail -1)
+          [ -n "$SKILL" ] || SKILL=.claude/skills/shrinkage   # vendored fallback
+          python3 "$SKILL/scripts/codemap.py" refresh
+          python3 "$SKILL/scripts/diffstat.py" "origin/${{ github.base_ref }}..HEAD" --ci-gate --no-color
+          # add --strict to make warnings fail the check

@@ -194,3 +194,24 @@ Show shrinkage state under the input box: point Claude Code's status line at
 `statusLine.command` in settings). It shows `srk: run /srk:onboard ...` before
 first use, the mapped-tip once the codemap exists, and `srk ▼-123 LOC ·
 streak N` once you're scoring with `--log`.
+
+## The growth gate (pre-push / CI) — dead code caught the week it's born
+
+The audit catches accumulated weight; the growth gate stops NEW weight at the
+seam where it actually arrives — the push. `diffstat.py <range> --ci-gate`
+runs the diff-sized checks: net app growth, public signature changes
+(compat-watch), unjustified new symbols (gatelog cross-check), and dupe-shaped
+new symbols (a name that already lives elsewhere in the map — C1/C9 being
+born). Warn-only by default; `--strict` exits 1 on warnings for blocking CI.
+
+Pre-push hook (`.git/hooks/pre-push`, chmod +x):
+
+```sh
+#!/bin/sh
+SKILL=$(ls -dv ~/.claude/plugins/cache/*/shrinkage/*/skills/shrinkage 2>/dev/null | tail -1)
+[ -n "$SKILL" ] || exit 0
+python3 "$SKILL/scripts/diffstat.py" "origin/$(git rev-parse --abbrev-ref HEAD)..HEAD" --ci-gate
+# add --strict to block the push on warnings
+```
+
+GitHub Actions: copy `ci/growth-gate.yml` into `.github/workflows/`.
