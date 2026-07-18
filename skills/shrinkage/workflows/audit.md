@@ -246,7 +246,18 @@ phases) consuming the plan.
    twice: safety now, shaveability next audit.
 
    Also include a **`## Bugs found (not shaves — fix-first, separate labeled
-   commits)`** section. **Autonomy boundary — even under `--full-send`:** a bug
+   commits)`** section — as a TABLE, not prose, so `plan.py bug-done` can
+   strike rows mechanically and the fix-first pipeline is as auditable as the
+   shave pipeline:
+
+   ```
+   | id | severity | bug | file:line | blast radius | fix |
+   |----|----------|-----|-----------|--------------|-----|
+   | B-1 | high | dashboard cache invalidation is a silent no-op | X.php:26 | stale money numbers, 24 call sites | |
+   ```
+
+   When a fix lands: `plan.py bug-done B-1 HEAD` (strikes the row, records the
+   sha + derived LOC). Behavior-changing fixes stay ⚖ per the autonomy boundary. **Autonomy boundary — even under `--full-send`:** a bug
    fix is auto-executable only when it's *mechanical* — consistency refactors
    (fetch→axios, cookie-domain alignment), missing imports, wrong cache keys,
    gitignore gaps — where the correct end state is not in question. A fix that

@@ -129,6 +129,17 @@ evidence can't be written down in four lines isn't ready.
   --coverage`, etc.), prefer bootstrapping real coverage over suite-gating.
 - **Green-before**: the full relevant suite passes before the first transform.
   If it's already red, stop — you cannot detect breakage against a red baseline.
+- **Identical-failure-set mode (permanently-red corners).** Real repos have
+  suites that are red for known, pre-existing reasons (ledger
+  `## red-baselines`). Hard-stopping forever makes those corners unshavable;
+  the sanctioned substitute: **record the exact failing-test names before,
+  require the EXACT same set after** — `plan.py failset record -- <suite cmd>`
+  → transform → `failset compare -- <suite cmd>` (exit 1 lists NEW failures =
+  your break, and VANISHED ones = verify whether fixed or no-longer-running).
+  Hard conditions: a shave whose target is the SUBJECT of the failing tests is
+  still blocked (you'd be editing what the red tests test — repair first), and
+  the corner carries a repair-first TODO regardless; this mode makes the corner
+  workable, not acceptable.
 - **Characterization first**: if the code being consolidated has no meaningful
   coverage, write golden-master tests for CURRENT behavior before changing it
   — including current quirks. You're preserving behavior, not fixing it; fixes

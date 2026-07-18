@@ -161,3 +161,52 @@ def test_todo_check_and_adjudicate(repo):
     code, out = run("plan.py", "adjudicate", "D-32", "with-rf, note the change", cwd=repo)
     assert code == 0, out
     assert "⚖ ruled" in (repo / "SHRINK-PLAN.md").read_text()
+
+
+def test_bug_done_strikes_bugs_table_rows(repo):
+    (repo / "SHRINK-PLAN.md").write_text(
+        SAMPLE + "\n## Bugs found\n\n"
+        "| id | severity | bug | file:line | fix |\n|---|---|---|---|---|\n"
+        "| B-1 | high | cache invalidation no-op | X.php:26 | |\n"
+        "| B-2 | med | prior-day dates | fmt.ts:9 | |\n")
+    (repo / "app.py").write_text("x = 1\n")
+    commit(repo, "fix: cache keys")
+    code, out = run("plan.py", "bug-done", "B-1", "HEAD", cwd=repo)
+    assert code == 0, out
+    text = (repo / "SHRINK-PLAN.md").read_text()
+    assert "~~B-1~~" in text and "| B-2 |" in text, text
+
+
+def test_failset_record_and_compare(repo):
+    import sys as _sys
+    fake = repo / "fake_suite.py"
+    fake.write_text(
+        "import sys\n"
+        "mode = open('mode.txt').read().strip()\n"
+        "print('1) Tests\\\\Unit\\\\FooTest::test_alpha')\n"
+        "print('1) Tests\\\\Unit\\\\FooTest::test_beta')\n"
+        "if mode == 'worse':\n"
+        "    print('1) Tests\\\\Unit\\\\FooTest::test_gamma')\n"
+        "sys.exit(1)\n")
+    (repo / "SHRINK-PLAN.md").write_text(SAMPLE)
+    (repo / "mode.txt").write_text("base")
+    code, out = run("plan.py", "failset", "record", "--", _sys.executable, "fake_suite.py", cwd=repo)
+    assert code == 0 and "2 known-red" in out, out
+    code, out = run("plan.py", "failset", "compare", "--", _sys.executable, "fake_suite.py", cwd=repo)
+    assert code == 0 and "IDENTICAL failure set" in out, out
+    (repo / "mode.txt").write_text("worse")
+    code, out = run("plan.py", "failset", "compare", "--", _sys.executable, "fake_suite.py", cwd=repo)
+    assert code == 1 and "NEW failures" in out and "test_gamma" in out, out
+
+
+def test_external_modification_notice(repo):
+    (repo / "SHRINK-PLAN.md").write_text(SAMPLE)
+    (repo / "app.py").write_text("x = 1\n")
+    commit(repo, "c")
+    code, out = run("plan.py", "done", "1", "HEAD", cwd=repo)      # stamps
+    assert code == 0 and "⚠" not in out, out
+    # a co-installed tool rewrites the plan behind plan.py's back
+    text = (repo / "SHRINK-PLAN.md").read_text().replace("dupBlk", "dupBlk-REVERTED")
+    (repo / "SHRINK-PLAN.md").write_text(text)
+    code, out = run("plan.py", "open", cwd=repo)
+    assert code == 0 and "modified OUTSIDE plan.py" in out, out

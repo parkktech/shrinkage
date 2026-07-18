@@ -18,7 +18,12 @@ source of truth — the CLI only edits it reliably.
   plan.py todo-check <n|text> [...]|--all   tick TODO-gate items (one, several,
                                    or all) under `## TODO before shaving`
   plan.py adjudicate <D-id> "<ruling>"  record the operator's ruling on a ⚖ row
+  plan.py bug-done <B-id> <ref>    strike a `## Bugs found` table row (fix landed)
+  plan.py failset record|compare -- <suite cmd…>   identical-failure-set gate for
+                                   permanently-red corners: record the exact
+                                   failing names, later require the same set
 """
+import json
 import os
 import re
 import sys
@@ -99,7 +104,9 @@ def open_rows(lines):
 
 def cmd_open(root):
     plan = find_plan(root)
-    lines = plan.read_text(encoding="utf-8").splitlines()
+    _text0 = plan.read_text(encoding="utf-8")
+    _ext_check(root, plan, _text0)
+    lines = _text0.splitlines()
     rows = open_rows(lines)
     if not rows:
         print("no open items — plan drained (/srk:audit to rescan).")
@@ -130,21 +137,30 @@ def _resolve_actual(ref):
     return sha[:9], net
 
 
-def _find_deferred(lines, ident):
-    """Line index of a deferred-table row `| D-30 | …` (struck or not)."""
-    num = re.sub(r"(?i)^d-?", "", str(ident))
-    pat = re.compile(r"^\|\s*(?:~~\s*)?[Dd]-?" + re.escape(num) + r"(?:\s*~~)?\s*\|")
+def _find_labeled(lines, ident):
+    """Line index of a labeled table row (`| D-30 |`, `| B-2 |`…), struck or not."""
+    m = re.fullmatch(r"(?i)([a-z])-?(\d+)", str(ident))
+    if not m:
+        return None
+    letter, num = m.group(1), m.group(2)
+    pat = re.compile(r"^\|\s*(?:~~\s*)?[" + letter.upper() + letter.lower() +
+                     r"]-?" + num + r"(?:\s*~~)?\s*\|")
     for idx, line in enumerate(lines):
         if pat.match(line.strip()):
             return idx
     return None
 
 
+_find_deferred = _find_labeled  # deferred rows are the original labeled case
+
+
 def _done_deferred(root, ident, ref, actual=None):
     """Strike + annotate a deferred (`D-##`) row — they live in their own table
     (id | candidate | est | why), which the main-table colmap can't see."""
     plan = find_plan(root)
-    lines = plan.read_text(encoding="utf-8").splitlines()
+    _text0 = plan.read_text(encoding="utf-8")
+    _ext_check(root, plan, _text0)
+    lines = _text0.splitlines()
     idx = _find_deferred(lines, ident)
     if idx is None:
         sys.exit(f"no deferred row {ident} in {plan}")
@@ -159,7 +175,9 @@ def _done_deferred(root, ident, ref, actual=None):
     note = f"done {sha}" + (f", actual {actual_val:+d}" if actual_val is not None else "")
     cells[-1] = (cells[-1] + " · " + note).strip(" ·")
     lines[idx] = "| " + " | ".join(cells) + " |"
-    plan.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    _new = "\n".join(lines) + "\n"
+    plan.write_text(_new, encoding="utf-8")
+    _stamp(root, _new)
     m = re.search(r"C\d+", lines[idx])
     est = _int(cells[2]) if len(cells) > 2 else 0
     if m and actual_val is not None:
@@ -174,7 +192,9 @@ def cmd_todo_check(root, whiches):
     shave's TODO gate reads this). Numbers refer to the ORIGINAL unchecked
     order, so `todo-check 1 3` means the 1st and 3rd open items."""
     plan = find_plan(root)
-    lines = plan.read_text(encoding="utf-8").splitlines()
+    _text0 = plan.read_text(encoding="utf-8")
+    _ext_check(root, plan, _text0)
+    lines = _text0.splitlines()
     in_todo, boxes = False, []
     for idx, line in enumerate(lines):
         if re.match(r"^#+\s", line):
@@ -200,7 +220,9 @@ def cmd_todo_check(root, whiches):
     for hit in dict.fromkeys(hits):
         lines[hit] = re.sub(r"-\s*\[ \]", "- [x]", lines[hit], count=1)
         print(f"checked: {lines[hit].strip()[:70]}")
-    plan.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    _new = "\n".join(lines) + "\n"
+    plan.write_text(_new, encoding="utf-8")
+    _stamp(root, _new)
     left = len(boxes) - len(dict.fromkeys(hits))
     print(f"TODO gate: {left} item(s) remaining" if left else "TODO gate: CLEAR — shave unblocked")
 
@@ -208,7 +230,9 @@ def cmd_todo_check(root, whiches):
 def cmd_adjudicate(root, ident, ruling):
     """Record the operator's ruling on a deferred ⚖ row, durably, in the row."""
     plan = find_plan(root)
-    lines = plan.read_text(encoding="utf-8").splitlines()
+    _text0 = plan.read_text(encoding="utf-8")
+    _ext_check(root, plan, _text0)
+    lines = _text0.splitlines()
     idx = _find_deferred(lines, ident)
     if idx is None:
         sys.exit(f"no deferred row {ident} in {plan}")
@@ -216,7 +240,9 @@ def cmd_adjudicate(root, ident, ruling):
     day = datetime.now(timezone.utc).date().isoformat()
     cells[-1] = (cells[-1] + f" · ⚖ ruled {day}: {ruling}").strip(" ·")
     lines[idx] = "| " + " | ".join(cells) + " |"
-    plan.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    _new = "\n".join(lines) + "\n"
+    plan.write_text(_new, encoding="utf-8")
+    _stamp(root, _new)
     print(f"recorded ruling on {cells[0]}: {ruling}")
 
 
@@ -277,6 +303,66 @@ def _classify_run(rc, out):
     return "RED" if rc != 0 else "SKIPPED"
 
 
+_FAIL_RES = [
+    re.compile(r"^\d+\)\s+([\w\\]+::\w+)", re.M),       # phpunit/pest: "1) Class::test"
+    re.compile(r"^FAILED\s+(\S+)", re.M),                # pytest: "FAILED tests/x.py::t"
+    re.compile(r"--- FAIL:\s+(\S+)", re.M),              # go test
+]
+
+
+def cmd_failset(root, mode, cmdline):
+    """Identical-failure-set gate for PERMANENTLY-RED corners (safety-model §4):
+    `record` captures the exact failing-test names of a known-red suite;
+    `compare` re-runs and requires the EXACT same set — new failures mean your
+    transform broke something even though the suite was already red."""
+    import hashlib
+    import shlex
+    import subprocess
+    if not cmdline:
+        sys.exit("usage: plan.py failset record|compare -- <suite command…>")
+    if isinstance(cmdline, str):
+        cmdline = shlex.split(cmdline)
+    try:
+        r = subprocess.run(cmdline, capture_output=True, text=True, cwd=root, timeout=1800)
+    except (OSError, subprocess.SubprocessError) as e:
+        sys.exit(f"suite command failed to run: {e}")
+    out = r.stdout + r.stderr
+    names = sorted({m for rx in _FAIL_RES for m in rx.findall(out)})
+    key = hashlib.sha1(" ".join(cmdline).encode()).hexdigest()[:12]
+    fp = _plan_stamp_path(root).parent / "srk-failset.json"
+    data = {}
+    try:
+        data = json.loads(fp.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        pass
+    if mode == "record":
+        data[key] = {"cmd": " ".join(cmdline), "failing": names}
+        fp.parent.mkdir(parents=True, exist_ok=True)
+        fp.write_text(json.dumps(data, indent=1), encoding="utf-8")
+        print(f"recorded failure set: {len(names)} known-red test(s) for `{' '.join(cmdline)}`")
+        for n in names:
+            print(f"  ✗ {n}")
+        return
+    base = data.get(key)
+    if base is None:
+        sys.exit("no recorded baseline for this exact command — `failset record` first.")
+    old, new = set(base["failing"]), set(names)
+    added, gone = sorted(new - old), sorted(old - new)
+    if not added and not gone:
+        print(f"IDENTICAL failure set ({len(new)} known-red) — the permanently-red "
+              "corner is unchanged; your transform introduced nothing new.")
+        return
+    if added:
+        print("NEW failures (your transform likely broke these):")
+        for n in added:
+            print(f"  + {n}")
+    if gone:
+        print("VANISHED failures (fixed — or no longer running; verify WHICH):")
+        for n in gone:
+            print(f"  - {n}")
+    sys.exit(1)
+
+
 def cmd_verify_gates(root, runner=None):
     """Run every OPEN row's named gate suite(s), each in its OWN process (three
     suites green individually can error together — process pollution), and stamp
@@ -285,7 +371,9 @@ def cmd_verify_gates(root, runner=None):
     import shlex
     import subprocess
     plan = find_plan(root)
-    lines = plan.read_text(encoding="utf-8").splitlines()
+    _text0 = plan.read_text(encoding="utf-8")
+    _ext_check(root, plan, _text0)
+    lines = _text0.splitlines()
     cm = _colmap(lines)
     cov = cm.get("coverage")
     if cov is None:
@@ -322,18 +410,58 @@ def cmd_verify_gates(root, runner=None):
         cells[cov] = re.sub(r"\s*·\s*verified:[^|]*$", "", cells[cov]).strip()
         cells[cov] += f" · verified: {agg} {day}"
         lines[idx] = "| " + " | ".join(cells) + " |"
-    plan.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    _new = "\n".join(lines) + "\n"
+    plan.write_text(_new, encoding="utf-8")
+    _stamp(root, _new)
     print("gate verification stamped into the plan"
           + (" — ⚠ RED/0-ASSERT gates found: repair-first, do not shave those rows"
              if worst_bad else " — all named gates green"))
     sys.exit(1 if worst_bad else 0)
 
 
+def _plan_stamp_path(root):
+    import subprocess
+    r = subprocess.run(["git", "-C", str(root), "rev-parse", "--git-dir"],
+                       capture_output=True, text=True)
+    gd = Path(r.stdout.strip()) if r.returncode == 0 else Path(root) / ".claude"
+    if not gd.is_absolute():
+        gd = Path(root) / gd
+    return gd / "info" / "srk-plan-stamp"
+
+
+def _ext_check(root, plan, text):
+    """Warn (never block) when the plan changed outside plan.py since our last
+    write — the co-installed-tooling collision class (a GSD hook once silently
+    reverted a plan's progress mid-run)."""
+    import hashlib
+    sp = _plan_stamp_path(root)
+    try:
+        stamp = sp.read_text(encoding="utf-8").strip()
+    except OSError:
+        return
+    if stamp and stamp != hashlib.sha1(text.encode()).hexdigest():
+        print(f"⚠ {plan.name} was modified OUTSIDE plan.py since the last srk "
+              "write (co-installed tooling? an editor?). If progress looks "
+              "reverted, diff the plan before trusting it.")
+
+
+def _stamp(root, new_text):
+    import hashlib
+    sp = _plan_stamp_path(root)
+    try:
+        sp.parent.mkdir(parents=True, exist_ok=True)
+        sp.write_text(hashlib.sha1(new_text.encode()).hexdigest(), encoding="utf-8")
+    except OSError:
+        pass
+
+
 def cmd_done(root, ident, ref, actual=None):
-    if re.fullmatch(r"(?i)d-?\d+", str(ident)):
+    if re.fullmatch(r"(?i)[a-z]-?\d+", str(ident)):
         return _done_deferred(root, ident, ref, actual)
     plan = find_plan(root)
-    lines = plan.read_text(encoding="utf-8").splitlines()
+    _text0 = plan.read_text(encoding="utf-8")
+    _ext_check(root, plan, _text0)
+    lines = _text0.splitlines()
     cm = _colmap(lines)
     ci = cm.get("#", 0)
     ev = cm.get("evidence")
@@ -362,7 +490,9 @@ def cmd_done(root, ident, ref, actual=None):
     else:
         cells.append(note)
     lines[idx] = "| " + " | ".join(cells) + " |"
-    plan.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    _new = "\n".join(lines) + "\n"
+    plan.write_text(_new, encoding="utf-8")
+    _stamp(root, _new)
     # feed the estimate-calibration loop (P1.4) when we know the catalog + an actual
     catcell = cells[cm["catalog"]] if "catalog" in cm and cm["catalog"] < len(cells) else ""
     m = re.search(r"C\d+", catcell)
@@ -421,7 +551,9 @@ def _set_comment(lines, key, value):
 
 def cmd_restamp(root):
     plan = find_plan(root)
-    lines = plan.read_text(encoding="utf-8").splitlines()
+    _text0 = plan.read_text(encoding="utf-8")
+    _ext_check(root, plan, _text0)
+    lines = _text0.splitlines()
     cm = _colmap(lines)
     total = 0
     if "est. net loc" in cm:
@@ -431,7 +563,9 @@ def cmd_restamp(root):
     fp = _map_fp(root)
     if fp:
         lines = _set_comment(lines, "map-fp", fp)
-    plan.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    _new = "\n".join(lines) + "\n"
+    plan.write_text(_new, encoding="utf-8")
+    _stamp(root, _new)
     print(f"restamped: est-savings {total}"
           + (f", map-fp {fp}" if fp else " (map-fp unchanged — no map found)"))
 
@@ -491,6 +625,14 @@ def main():
         if len(rest) < 2:
             sys.exit('usage: plan.py adjudicate <D-id> "<ruling>"')
         cmd_adjudicate(root, rest[0], " ".join(rest[1:]))
+    elif cmd == "bug-done":
+        if len(rest) < 2 or not re.fullmatch(r"(?i)b-?\d+", rest[0]):
+            sys.exit("usage: plan.py bug-done <B-id> <ref> [actual-loc]")
+        cmd_done(root, rest[0], rest[1], rest[2] if len(rest) > 2 else None)
+    elif cmd == "failset":
+        if len(rest) < 3 or rest[0] not in ("record", "compare") or "--" not in rest:
+            sys.exit("usage: plan.py failset record|compare -- <suite command…>")
+        cmd_failset(root, rest[0], rest[rest.index("--") + 1:])
     else:
         sys.exit(f"unknown command: {cmd}")
 
