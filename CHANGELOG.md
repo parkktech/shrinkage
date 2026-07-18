@@ -1,7 +1,13 @@
 # Changelog
 
 ## 0.26.0
-Continuing the field-report hardening (P1.4–P2.12).
+Second wave of the production field-report hardening (items P1.4–P2.12; P0.1–P1.3
+shipped in 0.25.0). Institutional memory the tool owns rather than the session —
+estimate calibration and a plan-file CLI — plus a batch of tooling-correctness
+fixes: the trend log moves out of the working tree, coverage-absent repos get a
+real tiering mode, framework gate recipes and a bugs-found plan section become
+first-class, `codemap scope` stops littering the tree, and the scoreboard can
+isolate the shave commits in an entangled range.
 
 - **P1.4 — Estimate calibration.** `/srk:score --log --cat C9 --est -140` now
   records the catalog + estimate alongside the actual net LOC; `/srk:trend`
