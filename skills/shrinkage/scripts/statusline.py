@@ -8,7 +8,9 @@ getting-started nudge when the repo hasn't scored anything yet.
 import json
 from pathlib import Path
 
-log = Path(".claude/shrinkage-log.jsonl")
+log = Path(".git/info/shrinkage-log.jsonl")
+if not log.exists():
+    log = Path(".claude/shrinkage-log.jsonl")
 if log.exists():
     entries = [json.loads(l) for l in log.read_text(encoding="utf-8").splitlines() if l.strip()]
     app = sum(e.get("net_app", 0) for e in entries)

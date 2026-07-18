@@ -143,7 +143,7 @@ def test_log_stores_cat_and_est(repo):
     (repo / "app.py").write_text("a = 1\n")
     stage(repo)
     run("diffstat.py", "HEAD", "--log", "--cat", "C6", "--est", "-1", cwd=repo)
-    entry = json.loads((repo / ".claude" / "shrinkage-log.jsonl").read_text().splitlines()[-1])
+    entry = json.loads((repo / ".git" / "info" / "shrinkage-log.jsonl").read_text().splitlines()[-1])
     assert entry["cat"] == "C6" and entry["est"] == -1 and entry["ref"] == "HEAD", entry
 
 
@@ -154,3 +154,29 @@ def test_trend_shows_realization_factor(repo):
         json.dumps({"ts": "t", "net_app": -40, "cat": "C9", "est": -100}) + "\n")
     code, out = run("diffstat.py", "--trend", cwd=repo)
     assert "C9" in out and "40%" in out, out          # actual 40 / est 100
+
+
+def test_log_lives_in_git_dir_not_working_tree(repo):
+    # P2.6: the log must land in .git/info/ so it can't block a checkout during
+    # recovery or get swept into a commit — never in the working tree.
+    (repo / "app.py").write_text("a = 1\nb = 2\n")
+    commit(repo)
+    (repo / "app.py").write_text("a = 1\n")
+    stage(repo)
+    run("diffstat.py", "HEAD", "--log", cwd=repo)
+    assert (repo / ".git" / "info" / "shrinkage-log.jsonl").exists()
+    assert not (repo / ".claude" / "shrinkage-log.jsonl").exists()
+
+
+def test_log_migrates_from_old_working_tree_location(repo):
+    # A log left at the old .claude/ path is moved into .git/info/ on first read,
+    # preserving its entries — no history lost across the relocation.
+    base(repo)
+    (repo / ".claude").mkdir(exist_ok=True)
+    (repo / ".claude" / "shrinkage-log.jsonl").write_text(
+        json.dumps({"ts": "t", "net_app": -7, "cat": "C6", "est": -10}) + "\n")
+    run("diffstat.py", "--trend", cwd=repo)
+    new = repo / ".git" / "info" / "shrinkage-log.jsonl"
+    assert new.exists(), "log should have migrated into .git/info/"
+    assert not (repo / ".claude" / "shrinkage-log.jsonl").exists(), "old log should be removed"
+    assert "net_app" in new.read_text() and "-7" in new.read_text()

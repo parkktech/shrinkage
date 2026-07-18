@@ -15,6 +15,13 @@ Continuing the field-report hardening (P1.4–P2.12).
   loop, `restamp` refreshes map-fp + recomputes est-savings from the open rows,
   `carry <old-plan>` emits a new plan skeleton of the still-open rows. The
   markdown stays the source of truth. Audit + shave workflows call it. +3 tests.
+- **P2.6 — Trend log out of the working tree.** The log now lives at
+  `.git/info/shrinkage-log.jsonl` (the git common dir), not `.claude/` inside the
+  tree — so it can never block a `git checkout` during a revert, get swept into a
+  commit, or show up as a dirty file. Transparent one-time migration moves any
+  existing `.claude/shrinkage-log.jsonl` on first read; the status line reads the
+  new location first, falling back to the old. Off-git repos still use `.claude/`.
+  +2 tests.
 
 ## 0.25.0
 Field-report-driven hardening from a production Laravel deployment (~2,900 files

@@ -295,11 +295,37 @@ def _positionals(argv, valued):
     return [a for j, a in enumerate(argv) if not a.startswith("--") and j not in skip]
 
 
+def _git_dir(root="."):
+    try:
+        r = subprocess.run(["git", "-C", str(root), "rev-parse", "--git-dir"],
+                           capture_output=True, text=True)
+    except (OSError, subprocess.SubprocessError):
+        return None
+    if r.returncode != 0:
+        return None
+    d = r.stdout.strip()
+    return Path(d) if os.path.isabs(d) else Path(root) / d
+
+
 def log_path(root="."):
-    return Path(root) / ".claude" / "shrinkage-log.jsonl"
+    """Kept in the git common dir — NOT in the working tree, so it can't block a
+    `git checkout` during recovery or get swept into a commit. Off-git: .claude/."""
+    gd = _git_dir(root)
+    return (gd / "info" / "shrinkage-log.jsonl") if gd else Path(root) / ".claude" / "shrinkage-log.jsonl"
+
+
+def _migrate_log(root="."):
+    new = log_path(root)
+    old = Path(root) / ".claude" / "shrinkage-log.jsonl"
+    if old.exists() and old.resolve() != new.resolve():
+        new.parent.mkdir(parents=True, exist_ok=True)
+        with new.open("a", encoding="utf-8") as fh:
+            fh.write(old.read_text(encoding="utf-8"))
+        old.unlink()
 
 
 def read_log(root="."):
+    _migrate_log(root)
     p = log_path(root)
     if not p.exists():
         return []
@@ -378,6 +404,7 @@ def main():
                 entry["est"] = int(est)
             except ValueError:
                 pass
+        _migrate_log()
         logp = log_path()
         logp.parent.mkdir(parents=True, exist_ok=True)
         with logp.open("a", encoding="utf-8") as fh:

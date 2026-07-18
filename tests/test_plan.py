@@ -34,7 +34,7 @@ def test_done_strikes_annotates_and_calibrates(repo):
     assert code == 0, out
     text = (repo / "SHRINK-PLAN.md").read_text()
     assert "~~1~~" in text and "deadbeef" in text, text          # struck + annotated
-    entry = json.loads((repo / ".claude" / "shrinkage-log.jsonl").read_text().splitlines()[-1])
+    entry = json.loads((repo / ".git" / "info" / "shrinkage-log.jsonl").read_text().splitlines()[-1])
     assert entry["cat"] == "C6" and entry["est"] == -50 and entry["net_app"] == -48, entry
     _, out2 = run("plan.py", "open", cwd=repo)
     assert "#1" not in out2 and "#2" in out2, out2               # #1 no longer open
