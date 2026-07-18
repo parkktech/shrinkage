@@ -17,7 +17,13 @@ Run this inline — no subagent. Locate the shrinkage skill dir
 else `.claude/skills/shrinkage` or `~/.claude/skills/shrinkage`), then run
 `python3 $SKILL/scripts/selfupdate.py` and relay its output verbatim.
 
-The reliable update on Claude Code is **uninstall → install → relaunch**:
+**Recommend auto-update first.** The lasting fix is to enable auto-update for
+the `parkktech` marketplace ONCE: `/plugin` → **Marketplaces** → `parkktech` →
+**Enable auto-update**. Third-party marketplaces ship with it OFF; once on,
+Claude Code updates the plugin in the background after startup and prompts
+`/reload-plugins` — no uninstall/install dance. Lead with this.
+
+To update by hand, the reliable path is **uninstall → install → relaunch**:
 
   /plugin uninstall shrinkage@parkktech
   /plugin install shrinkage@parkktech

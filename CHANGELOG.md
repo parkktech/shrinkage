@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.24.2
+- Point users to auto-update — the real one-time answer to update friction.
+  `/srk:update`, the update command, and the README now lead with: enable
+  auto-update for the `parkktech` marketplace once (`/plugin` → Marketplaces →
+  parkktech → Enable auto-update). Third-party marketplaces ship with it OFF;
+  once on, Claude Code updates the plugin in the background after startup
+  (prompting `/reload-plugins`) — no uninstall/install dance. The manual
+  uninstall→install→relaunch path stays documented as the fallback.
+
 ## 0.24.1
 - Scoreboard header names the commit count for a range: `Shrinkage · 41 commits
   · da0b0f15..HEAD` (was just `da0b0f15..HEAD`, which read like a single commit).

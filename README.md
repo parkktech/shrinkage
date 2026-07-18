@@ -82,7 +82,13 @@ Nothing to configure, nothing to run per-repo.
 ```
 
 Checks your installed version against the latest and prints the update steps.
-On Claude Code the reliable path is **uninstall → install → relaunch**:
+
+**Best: turn on auto-update once.** `/plugin` → **Marketplaces** → `parkktech` →
+**Enable auto-update** (third-party marketplaces ship with it off). Claude Code
+then updates the plugin in the background after startup and prompts
+`/reload-plugins` — no manual dance, new releases just arrive.
+
+To update by hand, the reliable path is **uninstall → install → relaunch**:
 
 ```
 /plugin uninstall shrinkage@parkktech

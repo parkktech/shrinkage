@@ -89,17 +89,23 @@ def main():
     if latest:
         print(f"update available: {inst or '?'} -> {latest}")
 
-    # The path that actually works on Claude Code. uninstall clears the cached
-    # FILES and the REGISTRATION together — do NOT just delete the cache folder,
-    # that strands the registration and yields 'already installed' + 'cache-miss'.
-    print("\nto update, run these in Claude Code, then quit and relaunch:")
+    # BEST fix: auto-update, which is OFF by default for third-party
+    # marketplaces. Turned on, Claude Code updates the plugin in the background
+    # after startup — no manual dance ever again.
+    print(f"\nBEST — turn on auto-update ONCE, then future releases update themselves:")
+    print(f"  /plugin  ->  Marketplaces  ->  {MARKETPLACE}  ->  Enable auto-update")
+    print("  (third-party marketplaces ship with it OFF; once on, Claude Code updates the")
+    print("   plugin in the background after startup and prompts /reload-plugins.)")
+    # The manual path: uninstall clears the cached FILES and the REGISTRATION
+    # together — NOT a bare cache delete, which strands the registration and
+    # yields 'already installed' + 'cache-miss'.
+    print("\nOr update by hand right now, then relaunch:")
     print(f"  /plugin uninstall {PLUGIN}@{MARKETPLACE}")
     print(f"  /plugin install {PLUGIN}@{MARKETPLACE}")
-    print("(uninstall FIRST — a bare /plugin install no-ops on an already-registered plugin.)")
+    print("  (uninstall FIRST — a bare /plugin install no-ops on an already-registered plugin.)")
     print("\nonly if the marketplace clone is corrupted, with Claude Code CLOSED:")
     print(f"  rm -rf ~/.claude/plugins/marketplaces/{MARKETPLACE} ~/.claude/plugins/cache/{MARKETPLACE}")
-    print(f"  then reopen and run: /plugin uninstall {PLUGIN}@{MARKETPLACE} ; "
-          f"/plugin marketplace add {MARKETPLACE}/{PLUGIN} ; /plugin install {PLUGIN}@{MARKETPLACE}")
+    print(f"  then reopen: /plugin marketplace add {MARKETPLACE}/{PLUGIN} ; /plugin install {PLUGIN}@{MARKETPLACE}")
 
 
 if __name__ == "__main__":
