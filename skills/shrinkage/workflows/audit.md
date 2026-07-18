@@ -106,6 +106,19 @@ phases) consuming the plan.
    `## Deferred (T2)` section where each entry carries its deprecation-cycle
    proposal. This file is the audit's product and the shave's input.
 
+   Also include a **`## Bugs found (not shaves — fix-first, separate labeled
+   commits)`** section. Audits routinely surface REAL defects that are explicitly
+   *not* subtractions — a missing filter double-counting on a user-facing page, a
+   null-guard divergence, a config key-name mismatch, a narrow-catch bug copied
+   across N twins. These must never be folded into a `shrink:` commit (§7
+   "never fix while shrinking"): they go here so the fix ships as its own labeled
+   commit and downstream planners (GSD etc.) have a stable place to harvest fix
+   work from. Each entry: `file:line`, one-line symptom, blast radius (user-facing?
+   silent data error?). **Blocking-prerequisite rule:** when a dedupe/merge row
+   touches code that has a bug listed here, the plan row names that bug as a
+   blocking prerequisite — you fix the bug (separate commit) *before* merging the
+   twins, or the merge bakes the bug into the surviving copy.
+
 7. **Offer execution:** top T0/T1 items via `/srk:shave <target>` —
    or, in a GSD project, as planned phases so executors run them with fresh
    contexts and the verify step checks the scoreboard.
@@ -113,7 +126,8 @@ phases) consuming the plan.
 8. **Report lean (anti context-rot).** The plan is the deliverable and it's on
    disk — do NOT paste the full ranked table into the reply. Report only:
    total candidates, tier mix (T0×N T1×N…), total est. LOC to reclaim, the top
-   3 by payoff, and "full plan: SHRINK-PLAN.md". Raw sweep output stays in the
+   3 by payoff, **the count of any bugs found (they need attention regardless of
+   the shave)**, and "full plan: SHRINK-PLAN.md". Raw sweep output stays in the
    subagents; only the ranked, verified plan is written to disk.
 </process>
 

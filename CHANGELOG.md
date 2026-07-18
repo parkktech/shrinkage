@@ -43,6 +43,14 @@ Continuing the field-report hardening (P1.4–P2.12).
   leaving auditors to clean up a stray file. It now writes to the main map's
   intel dir (`.planning/intel/` or `.claude/`) as `codemap-scope-<subtree>.txt`,
   named per subtree so scopes don't collide, and gitignored. +1 test.
+- **P2.10 — "Bugs found" plan section.** Audits routinely surface real defects
+  that are explicitly *not* subtractions (a missing filter double-counting, a
+  config key mismatch, a bug copied across N twins). The audit template now has a
+  standard `## Bugs found (not shaves — fix-first, separate labeled commits)`
+  section so a fix never gets folded into a `shrink:` commit and downstream
+  planners have a stable place to harvest fix work. A dedupe row touching buggy
+  twin code must name that bug as a blocking prerequisite (fix first, then merge).
+  The lean report now surfaces the bug count. Doc-only.
 
 ## 0.25.0
 Field-report-driven hardening from a production Laravel deployment (~2,900 files
