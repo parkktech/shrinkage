@@ -213,18 +213,59 @@ def cmd_adjudicate(root, ident, ruling):
     print(f"recorded ruling on {cells[0]}: {ruling}")
 
 
-_SUITE_TOKEN = re.compile(r"[\w./-]*tests?/[\w./-]+\.(?:php|py)|[\w./-]+Test\.php")
+_SUITE_TOKEN = re.compile(
+    r"[\w./-]*tests?/[\w./-]+\.(?:php|py)"          # tests/**.php|py
+    r"|[\w./-]+Tests?\.(?:php|java|kt|cs)"          # FooTest.java / FooTests.cs …
+    r"|[\w./-]+_test\.go"                           # foo_test.go
+    r"|[\w./-]+\.(?:test|spec)\.[cm]?[jt]sx?"       # foo.test.ts / foo.spec.js
+)
+
+
+def _detect_runner(root):
+    """One runner per repo, by build-system marker — --runner overrides."""
+    r = Path(root)
+    for cand in ("vendor/bin/phpunit", "vendor/bin/pest"):
+        if (r / cand).exists():
+            return cand
+    if (r / "gradlew").exists():
+        return "./gradlew test --tests"
+    if (r / "go.mod").exists():
+        return "go test"
+    if (r / "Cargo.toml").exists():
+        return "cargo test"
+    if list(r.glob("*.sln")) or list(r.glob("*.csproj")):
+        return "dotnet test --filter"
+    if (r / "package.json").exists():
+        return "npm test --"
+    return f"{sys.executable} -m pytest"
+
+
+def _suite_arg(runner, token):
+    """Adapt a suite token to the runner's addressing scheme."""
+    if "gradlew" in runner or "--filter" in runner:
+        return Path(token).stem                     # class name / filter term
+    if runner.startswith("go test"):
+        d = str(Path(token).parent)
+        return "./" + d if d not in (".", "") else "./..."
+    if runner.startswith("cargo test"):
+        return Path(token).stem
+    return token
 
 
 def _classify_run(rc, out):
-    """Map a test-runner's output to green / RED / 0-ASSERT / SKIPPED."""
-    if re.search(r"ERRORS!|FAILURES!|Errors:\s*[1-9]|Failures:\s*[1-9]|\d+ (?:failed|errors?)\b", out):
+    """Map a test-runner's output to green / RED / 0-ASSERT / SKIPPED —
+    phpunit/pest, pytest, jest/vitest, go test, cargo, gradle, dotnet."""
+    if re.search(r"ERRORS!|FAILURES!|Errors:\s*[1-9]|Failures:\s*[1-9]"
+                 r"|[1-9]\d* (?:failed|errors?)\b|--- FAIL|^FAIL\b|BUILD FAILED"
+                 r"|test result: FAILED|Failed!", out, re.M):
         return "RED"
     if re.search(r"Assertions:\s*0\b|\b0 assertions\b", out):
         return "0-ASSERT"
-    if re.search(r"No tests executed|no tests ran|OK, but some tests were skipped", out, re.I):
+    if re.search(r"No tests executed|no tests ran|no test files|no tests found"
+                 r"|OK, but some tests were skipped", out, re.I):
         return "SKIPPED"
-    if rc == 0 and re.search(r"\bOK \(|\d+ passed", out):
+    if rc == 0 and re.search(r"\bOK \(|\d+ passed|\d+ passing|^ok\b"
+                             r"|test result: ok|BUILD SUCCESSFUL|Passed!", out, re.M):
         return "green"
     return "RED" if rc != 0 else "SKIPPED"
 
@@ -243,12 +284,7 @@ def cmd_verify_gates(root, runner=None):
     if cov is None:
         sys.exit("plan has no coverage column — nothing to verify")
     if not runner:
-        for cand in ("vendor/bin/phpunit", "vendor/bin/pest"):
-            if (Path(root) / cand).exists():
-                runner = cand
-                break
-        else:
-            runner = f"{sys.executable} -m pytest"
+        runner = _detect_runner(root)
     day = datetime.now(timezone.utc).date().isoformat()
     worst_bad = False
     results = {}
@@ -264,8 +300,8 @@ def cmd_verify_gates(root, runner=None):
                 statuses.append(results[s][0])
                 continue
             try:
-                r = subprocess.run([*shlex.split(runner), s], capture_output=True,
-                                   text=True, cwd=root, timeout=600)
+                r = subprocess.run([*shlex.split(runner), _suite_arg(runner, s)],
+                                   capture_output=True, text=True, cwd=root, timeout=600)
                 status = _classify_run(r.returncode, r.stdout + r.stderr)
             except (OSError, subprocess.SubprocessError):
                 status = "RED"

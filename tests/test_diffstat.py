@@ -192,6 +192,24 @@ def test_compat_watch_still_flags_public_signature_changes(repo):
     assert "signature(s) changed" in out and "total" in out, out
 
 
+def test_compat_watch_knows_go_and_rust_visibility(repo):
+    # Go: lowercase = unexported → no warning; exported Upper → warning stays.
+    (repo / "fmt.go").write_text("package x\n\nfunc money(v float64) string { return \"\" }\n"
+                                 "func Total(v float64) string { return money(v) }\n")
+    commit(repo)
+    (repo / "fmt.go").write_text("package x\n\nfunc money(v float64, sym string) string { return sym }\n"
+                                 "func Total(v float64) string { return money(v, \"$\") }\n")
+    stage(repo)
+    code, out = run("diffstat.py", "HEAD", "--no-color", cwd=repo)
+    assert code == 0 and "signature" not in out, out
+    commit(repo, "c2")
+    (repo / "fmt.go").write_text("package x\n\nfunc money(v float64, sym string) string { return sym }\n"
+                                 "func Total(v float64, net bool) string { return money(v, \"$\") }\n")
+    stage(repo)
+    code, out = run("diffstat.py", "HEAD", "--no-color", cwd=repo)
+    assert "signature(s) changed" in out and "Total" in out, out
+
+
 def test_shave_only_isolates_matched_commits_in_a_mixed_range(repo):
     # P2.11: a range holding a shave (-4) AND unrelated feature work (+20) scores
     # +16 as a whole (misleading) — --shave-only isolates the shave and flags the rest.

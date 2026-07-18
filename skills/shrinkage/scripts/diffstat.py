@@ -68,14 +68,23 @@ def _endpoints(ref):
     return (m.group(1), m.group(2)) if m else (ref, None)
 
 
-def _nonpublic(name, *texts):
-    """True when EVERY text declares `name` with an explicit private/protected
-    modifier and no public declaration of the same name exists — its signature
-    change is internal refactoring, not a compatibility concern (the
-    `estimateFees` false positive: compat-watch flagged a private method).
-    Conservative on purpose: public, ambiguous (same name declared both ways in
-    one file), or convention-only visibility (Python underscores) → False, the
-    warning stays."""
+def _nonpublic(name, path, *texts):
+    """True when the symbol is non-public in EVERY text — its signature change
+    is internal refactoring, not a compatibility concern (the `estimateFees`
+    false positive). Per language family:
+    - keyword languages (PHP/Java/C#/Kotlin/TS): explicit private/protected on
+      the declaration, with no same-name public declaration in the file;
+    - Go: unexported = lowercase (or _) initial;
+    - Rust: `fn` with no `pub` on any declaration of the name.
+    Conservative on purpose: public, ambiguous, or convention-only visibility
+    (Python underscores) → False, the warning stays."""
+    ext = Path(path).suffix.lower()
+    if ext == ".go":
+        return bool(name) and (name[0].islower() or name[0] == "_")
+    if ext == ".rs":
+        anyfn = re.compile(r"^[^\n]*\bfn\s+" + re.escape(name) + r"\s*[<(]", re.M)
+        pubfn = re.compile(r"^[^\n]*\bpub\b[^\n]*\bfn\s+" + re.escape(name) + r"\s*[<(]", re.M)
+        return all(t and anyfn.search(t) and not pubfn.search(t) for t in texts)
     priv = re.compile(r"\b(?:private|protected)\b[^;{}\n]*?\b" + re.escape(name) + r"\s*\(")
     pub = re.compile(r"\bpublic\b[^;{}\n]*?\b" + re.escape(name) + r"\s*\(")
     return all(t and priv.search(t) and not pub.search(t) for t in texts)
@@ -121,7 +130,7 @@ def collect(ref):
         # explicitly private/protected on both sides (internal, not compat).
         sig_changes += [f"{label(k)} [{old[k]} -> {new[k]}]"
                         for k in old.keys() & new.keys()
-                        if old[k] != new[k] and not _nonpublic(k[2], old_txt, new_txt)]
+                        if old[k] != new[k] and not _nonpublic(k[2], path, old_txt, new_txt)]
     return (app_ins, app_del, test_ins, test_del, files,
             sorted(new_syms), sorted(removed_syms), sorted(sig_changes))
 
@@ -352,7 +361,7 @@ def collect_commits(shas):
             removed_syms += [label(k) for k in old.keys() - new.keys()]
             sig_changes += [f"{label(k)} [{old[k]} -> {new[k]}]"
                             for k in old.keys() & new.keys()
-                            if old[k] != new[k] and not _nonpublic(k[2], old_txt, new_txt)]
+                            if old[k] != new[k] and not _nonpublic(k[2], path, old_txt, new_txt)]
     return (app_ins, app_del, test_ins, test_del, sorted(files),
             sorted(new_syms), sorted(removed_syms), sorted(sig_changes))
 

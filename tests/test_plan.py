@@ -102,6 +102,30 @@ def test_verify_gates_runs_and_stamps_actual_colors(repo):
     assert "repair-first" in out, out
 
 
+def test_suite_tokens_and_classification_cover_the_language_matrix():
+    import plan
+    cell = ("gate: tests/Feature/InvoiceTest.php + src/test/java/AccTest.java + "
+            "PricerTests.cs + FmtTest.kt + pkg/fmt_test.go + ui/chart.spec.ts + "
+            "tests/test_plan.py")
+    toks = set(plan._SUITE_TOKEN.findall(cell))
+    for expect in ("tests/Feature/InvoiceTest.php", "src/test/java/AccTest.java",
+                   "PricerTests.cs", "FmtTest.kt", "pkg/fmt_test.go",
+                   "ui/chart.spec.ts", "tests/test_plan.py"):
+        assert expect in toks, (expect, toks)
+    assert plan._classify_run(0, "ok  \tpkg/fmt\t0.01s") == "green"        # go
+    assert plan._classify_run(1, "--- FAIL: TestX\nFAIL") == "RED"          # go
+    assert plan._classify_run(0, "test result: ok. 4 passed; 0 failed") == "green"  # cargo
+    assert plan._classify_run(0, "BUILD SUCCESSFUL in 12s") == "green"      # gradle
+    assert plan._classify_run(1, "BUILD FAILED in 3s") == "RED"             # gradle
+    assert plan._classify_run(0, "Tests: 3 passed, 3 total") == "green"     # jest
+    assert plan._classify_run(1, "Tests: 1 failed, 3 total") == "RED"       # jest
+    assert plan._classify_run(0, "Passed!  - Failed: 0, Passed: 8") == "green"  # dotnet
+    assert plan._classify_run(0, "no test files") == "SKIPPED"              # go
+    assert plan._suite_arg("./gradlew test --tests", "src/test/AccTest.java") == "AccTest"
+    assert plan._suite_arg("go test", "pkg/fmt_test.go") == "./pkg"
+    assert plan._suite_arg("vendor/bin/phpunit", "tests/FooTest.php") == "tests/FooTest.php"
+
+
 def test_done_handles_deferred_rows(repo):
     (repo / "SHRINK-PLAN.md").write_text(
         SAMPLE + "\n## Deferred\n\n"
