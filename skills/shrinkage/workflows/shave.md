@@ -90,6 +90,16 @@ Deleting is part of the feature; this workflow is how deletion earns trust.
    Lead with what got DONE and that it's safe-drained — never a bare "0
    transforms, nothing to do" that reads like a bug.
 
+   **After `--full-send` specifically:** it already went THROUGH T2/public
+   surface, so anything still open is something autonomy must NOT do on its own —
+   a target dirty with the user's uncommitted work, a red/absent baseline, or a
+   behavior-divergence adjudication. Frame it as COMPLETION: "full-send done —
+   everything I can safely execute is committed." List each leftover with the
+   reason it needs the USER (commit/stash in-flight work → re-audit unblocks
+   dirty targets; decide which behavior is correct for adjudications). Do NOT end
+   with a bare `/srk:shave <n>` as if more autonomous shaving is pending — it
+   isn't; the leftovers are blocked on a human decision or a prerequisite.
+
    ### --dangerous ("full send") — explicit escape hatch
    `/srk:shave --auto --dangerous` (alias `--full-send`) proceeds through T2 and
    public-surface items without stopping for confirmation. What it KEEPS (the

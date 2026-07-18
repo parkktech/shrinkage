@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.24.0
+- Scoreboard + trend rewritten for plain-language clarity — every number on its
+  own labeled line. `/srk:score` now reads: code removed / code added / net
+  change (▼ smaller) / files changed / definitions removed (functions, methods,
+  classes) / definitions added / the plan breakdown as "N dead-code removals · N
+  duplicate merges · N cleanups" / test code. No more cryptic "files 65 ·
+  symbols 123 removed, 50 added · plan 17 removed" with no nouns. The ⚠ flags are
+  plain English: "N public method signatures changed — make sure everything that
+  calls them still works: <names>" and "test code shrank N lines — deleting tests
+  can quietly drop coverage."
+- `/srk:trend` matches the same style: net change, code removed, shave commits +
+  since-date, and the by-type breakdown, one per line.
+- Full-send completion no longer suggests another shave. When `--full-send`
+  finishes, everything still open is by definition something autonomy must NOT
+  do (targets dirty with your in-flight work, a red baseline, or a human
+  adjudication). The report now frames that as completion and points to the real
+  unblockers (commit/stash in-flight work → re-audit; decide the divergences)
+  instead of a bare `/srk:shave <n>` that reads like it didn't finish.
+
 ## 0.23.0
 - Surgeons commit by explicit file path. The shave protocol now requires
   `git commit -- <target files>` (path-limited) and forbids `git add -A` /

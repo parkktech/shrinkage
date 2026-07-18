@@ -162,36 +162,51 @@ def scoreboard(ref, app_ins, app_del, test_ins, test_del, files,
     label = ref if is_range else f"working tree vs {ref}"
     arrow = col(GREEN, "▼") if net_app < 0 else col(YELLOW, "▲") if net_app > 0 else "·"
 
-    print(col(BOLD, f"Shrinkage · {label}"))
-    print(f"  {col(GREEN, 'removed')}  {col(GREEN, str(app_del))} lines"
-          f"   {col(DIM, f'added {app_ins}')}")
+    direction = (col(GREEN, "▼ smaller") if net_app < 0
+                 else col(YELLOW, "▲ larger") if net_app > 0 else col(DIM, "no change"))
     netcode = GREEN if net_app < 0 else YELLOW if net_app > 0 else DIM
-    test_note = (col(GREEN, "test +0") + col(DIM, " (untouched)") if net_test == 0
-                 else col(YELLOW, f"test {signed(net_test)}") + col(DIM, " (down — justify)")
-                 if net_test < 0 else f"test {signed(net_test)}")
-    print(f"  {arrow} net    {col(netcode, 'app ' + signed(net_app))}  ·  {test_note}")
-    print(col(DIM, f"  files {len(files)}  ·  symbols "
-                   f"{len(removed_syms)} removed, {len(new_syms)} added"))
+
+    print(col(BOLD, f"Shrinkage · {label}"))
+    print("  code removed        " + col(GREEN, f"{app_del:>6,} lines"))
+    print("  code added          " + col(DIM, f"{app_ins:>6,} lines"))
+    print("  net change          " + col(netcode, f"{net_app:>+6,} lines") + "   " + direction)
+    print(f"  files changed       {len(files):>6,}")
+    print("  definitions removed " + col(GREEN, f"{len(removed_syms):>6,}")
+          + col(DIM, "   (functions, methods, classes)"))
+    print(f"  definitions added   {len(new_syms):>6,}")
     if not is_range and len(files) > 15:
-        print(col(DIM, f"  ({len(files)} files dirty — to score only a committed "
-                       f"shave, use  <base>..HEAD)"))
+        print(col(DIM, f"  (scoring the whole working tree — {len(files)} files dirty; to score "
+                       f"just one committed shave use  <base>..HEAD)"))
 
     tally = plan_tally(root)
     if tally:
-        print("  " + col(CYAN, "plan") + "   " + " · ".join(
-            col(GREEN, f"{tally[b]} {b}") for b in ("removed", "merged", "cleaned")))
+        print("  " + col(CYAN, "cleared from your SHRINK-PLAN:"))
+        for key, text in (("removed", "dead-code removals"), ("merged", "duplicate merges"),
+                          ("cleaned", "cleanups")):
+            if tally[key]:
+                print("    " + col(GREEN, f"{tally[key]:>3}") + f" {text}")
 
-    # Judgment flags — only when they fire.
+    print("  test code           " + col(YELLOW if net_test < 0 else DIM, f"{net_test:>+6,} lines")
+          + (col(YELLOW, "   ⚠ shrank — see below") if net_test < 0 else ""))
+
+    # Plain-language things to check before shipping — only when they fire.
+    warns = []
     if sig_changes:
-        print(col(YELLOW, f"  ⚠ compat-watch: {len(sig_changes)} signature change(s) — "
-                          f"verify additive-only (Zeroth Law): ") + "; ".join(sig_changes[:5]))
+        names = ", ".join(s.split(" [")[0] for s in sig_changes[:6])
+        more = f" (+{len(sig_changes) - 6} more)" if len(sig_changes) > 6 else ""
+        warns.append(f"{len(sig_changes)} public method signature(s) changed — make sure "
+                     f"everything that calls them still works: {names}{more}")
     unjustified = gate_ledger_check(new_syms)
     if unjustified:
-        print(col(YELLOW, "  ⚠ unjustified new symbols (no gate record): ")
-              + ", ".join(unjustified[:8]) + " — run the gate or record via gatelog.py")
+        warns.append(f"new code with no reuse-gate record: {', '.join(unjustified[:8])} — "
+                     f"run the gate to confirm it couldn't extend something that already exists")
     if net_test < 0:
-        print(col(YELLOW, "  ⚠ test LOC went DOWN") + " — confirm justified "
-              "(safety-model §7: test deletions are never a shrink win).")
+        warns.append(f"test code shrank {abs(net_test)} lines — confirm that was intentional "
+                     f"(deleting tests can quietly drop coverage)")
+    if warns:
+        print(col(YELLOW, "  ⚠ check before you ship:"))
+        for w in warns:
+            print(col(YELLOW, "    · ") + w)
 
     kind = ("shrunk" if net_app < 0 else "grew" if net_app > 25
             else "flat" if (net_app == 0 and files) else None)
@@ -250,13 +265,16 @@ def print_total(t=None):
     net_test = t["test_ins"] - t["test_del"]
     b = t["buckets"]
     since = git("show", "-s", "--format=%ad", "--date=short", t["first"]).strip()
-    arrow = col(GREEN, "▼") if net_app < 0 else col(YELLOW, "▲") if net_app > 0 else "·"
-    head = col(GREEN if net_app <= 0 else YELLOW, f"app {net_app:+,} LOC")
-    print(col(BOLD, "Shrinkage lifetime") + col(DIM, f" · {t['n']} shave commits · since {since}"))
-    print(f"  {arrow} {head}   " + col(DIM, f"{t['app_del']:,} removed / {t['app_ins']:,} added"))
-    print("  " + col(CYAN, "by type") + "  "
-          + " · ".join(col(GREEN, f"{b[k]} {k}") for k in ("removed", "merged", "cleaned"))
-          + col(DIM, f"   · tests {net_test:+,}"))
+    print(col(BOLD, "Shrinkage — lifetime cleanup"))
+    print("  net change        " + col(GREEN if net_app <= 0 else YELLOW, f"{net_app:>+8,} lines")
+          + (col(GREEN, "   ▼ smaller") if net_app < 0 else ""))
+    print("  code removed      " + col(GREEN, f"{t['app_del']:>8,} lines"))
+    print(f"  shave commits     {t['n']:>8,}" + col(DIM, f"   since {since}"))
+    print("  " + col(CYAN, "by type:"))
+    for key, text in (("removed", "dead-code removals"), ("merged", "duplicate merges"),
+                      ("cleaned", "cleanups")):
+        print("    " + col(GREEN, f"{b[key]:>3}") + f" {text}")
+    print(f"  test code         {net_test:>+8,} lines")
 
 
 def show_trend():

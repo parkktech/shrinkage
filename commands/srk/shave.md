@@ -29,6 +29,15 @@ proceeds THROUGH T2/public-surface too (direct removal, no deprecation cycle) �
 still atomic + tests-green-or-revert per item, still hard-stops on a red/absent
 suite; refused if allow_dangerous:false. When --auto halts safely, report what
 got done + why it stopped + the two continue options (never a bare '0 done').
+
+When `--full-send` FINISHES, anything still open is something autonomy must NOT
+do on its own — a target dirty with the user's uncommitted work, a red/absent
+baseline, or a behavior-divergence adjudication that needs a human decision.
+That is COMPLETION, not a shortfall: say so ("full-send done — everything I can
+safely execute is committed"), then list each leftover with WHY it needs the
+USER (commit or stash in-flight work → re-audit unblocks dirty targets; make the
+divergence calls). Do NOT end with a bare `/srk:shave <n>` as if more autonomous
+shaving remains — it doesn't; the leftovers are blocked on a person, not a run.
 </execution_context_extra>
 
 <success_criteria>
@@ -40,9 +49,10 @@ got done + why it stopped + the two continue options (never a bare '0 done').
 </success_criteria>
 
 <next>
-Next:
-• /srk:shave <next #>  — the item just named (one more reviewable step)
-• /srk:shave --auto    — run the rest of the backlog until it needs you
-• /srk:shave --auto --dangerous — full send: execute T2/public items too (risky)
-• /srk:score           — confirm the shave came out net-negative
+Next (pick by mode — don't dump all four):
+• single item done → /srk:shave <next #> (the item just named)
+• --auto halted at a T2 → /srk:shave <n> to confirm it, or /srk:shave --full-send
+• --full-send done → /srk:score <base>..HEAD  and  /srk:trend; then commit or
+  stash your in-flight work and /srk:audit to unblock dirty-target items.
+  Do NOT suggest re-shaving items full-send already handed back to you.
 </next>
