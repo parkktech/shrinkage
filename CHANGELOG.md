@@ -1,5 +1,35 @@
 # Changelog
 
+## 0.37.0
+The meta-gaps: what two deployments' worth of transcripts show the audit still
+doesn't ask for.
+
+- **`## Rails (make recurrence impossible)`** — new standard plan section. Every
+  violation CLASS found or fixed (local copies of a canonical util, raw `fetch`
+  beside an axios convention, hand-rolled cookie/cache-key formats) gets the
+  mechanical enforcement that ends the class — an ESLint
+  no-restricted-syntax/globals rule, a phpstan rule, a wrapper-as-only-import —
+  not just fixed instances. Fixed is good; impossible is better. A field
+  instance produced exactly this table by judgment; now it's doctrine.
+- **`## Coverage gaps (what blocks future shaves)`** — the untested-but-critical
+  surfaces (money paths, webhooks, unattended jobs first), each with what its
+  test UNLOCKS (the T2 rows that become T1). The audit's answer to "why is half
+  the backlog deferred?", promoted from prose to schema.
+- **Suite-health flags SELF-NEUTRALIZING tests** — assertions wrapped in a
+  conditional on the thing under test (`if ($finding) { expect(...) }`) pass
+  vacuously when fixtures drift; a field run found one already hollow and 7
+  siblings primed. Grep named suites for conditional-assertion shapes; each is
+  a bugs-found entry (assert existence FIRST).
+- **Doc-truth check** — agent-facing docs (CLAUDE.md/AGENTS.md) are audit
+  inputs; verify their cheap claims (test counts, named suites, commands)
+  before trusting them. A stale AGENTS.md ("131 tests" vs a real 1,433) misled
+  two audit agents in the field; stale agent docs are a bugs-found entry.
+- **Self-instrumenting field reports** — every --auto/--full-send run writes
+  `.planning/srk-field-report-<date>.md`: incidents, WORKAROUNDS (each one a
+  missing feature wearing a disguise), refusals hit and whether they were
+  right, gaps improvised, versions. Seven hand-pasted field reports built the
+  last twenty releases; the loop now feeds itself. Doc-only.
+
 ## 0.36.2
 Close-out lessons from the fresh-codebase run's final stretch.
 

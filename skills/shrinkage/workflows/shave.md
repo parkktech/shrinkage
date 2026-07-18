@@ -298,6 +298,26 @@ Deleting is part of the feature; this workflow is how deletion earns trust.
 9. **Report:** transforms executed (catalog # + tier + net LOC each), T2
    candidates escalated with evidence, reverted attempts and what they
    revealed, suite status, and remaining open plan items.
+
+10. **Write the field report — the run instruments its own friction.** At the
+   end of any `--auto`/`--full-send` run (and any run with an incident), write
+   `.planning/srk-field-report-<date>.md` — terse, honest, for the plugin's
+   maintainer, not marketing:
+
+   - **Incidents:** anything caught-and-repaired (a revert, a symlink
+     conversion, a guard firing) — what happened, what caught it, root cause.
+   - **Workarounds:** every time you did BY HAND something a plugin script
+     should have done — a heredoc instead of a CLI, reading a plugin script's
+     source to understand behavior, a loop around a one-at-a-time tool. Each
+     workaround is a missing feature wearing a disguise.
+   - **Refusals hit:** which guards refused you and whether the refusal was
+     right (usually) or friction (say so).
+   - **Gaps noticed:** anything the doctrine didn't cover and you improvised.
+   - **Versions:** plugin version + notable environment facts.
+
+   Seven hand-written field reports built this plugin's last twenty releases;
+   this makes the loop self-feeding instead of depending on someone pasting
+   transcripts. Mention the file in the completion report's Results block.
 </process>
 
 End with a terse result line + a **Next** block that LEADS with the one concrete action to take now, as a plain imperative — including a non-`srk` step (commit or stash in-flight work, land the branch, adjudicate a ⚖ item) when that's the real next move — then ≤2 alternatives (command file's <next> block + SKILL.md "Response style"). Never a bare command menu or a buried "becomes executable after…". No wall of prose.

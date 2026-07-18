@@ -41,6 +41,13 @@ phases) consuming the plan.
 1. **Fresh map, full scope.** `codemap.py build` (or `scope <dir>`); note
    files collapsed by budget — for an audit, prefer raising the budget or
    auditing per-subtree so nothing hides in a collapsed file.
+   **Doc-truth check:** agent-facing docs (CLAUDE.md / AGENTS.md / README dev
+   sections) are AUDIT INPUTS — your sweeps read them as ground truth. Verify
+   their cheap verifiable claims before trusting them: stated test/assertion
+   counts vs the real suite, claimed suites/commands that exist, described
+   architecture vs the map. A stale claim (a field run's AGENTS.md said "131
+   tests" against a real 1,433 and misled two auditors) is a `## Bugs found`
+   entry — stale agent docs poison every future session, human or AI.
 
 2. **Sweep by signal — run ALL of these, they find different things:**
    - **Dead-symbol sweep:** every `x0` symbol → C6 candidates
@@ -63,7 +70,14 @@ phases) consuming the plan.
      applied-then-reverted purely because its gate was recorded green without
      being run). Red gate → the row is repair-first: a TODO item + a ledger
      `## red-baselines` entry. 0-assertion suite on live code → also a
-     `## Bugs found` entry — the suite itself is the defect. **Also flag suites
+     `## Bugs found` entry — the suite itself is the defect. **Also flag
+     SELF-NEUTRALIZING tests** — assertions wrapped in a conditional on the
+     thing under test (`if ($finding) { expect(...) }`, `if result:
+    assert …`): they pass vacuously the moment the fixture drifts, observing
+     nothing while staying green (a field run found one already hollow and 7
+     siblings primed to follow). Grep the named suites for
+     conditional-assertion shapes; each hit is a bugs-found entry with the fix
+     (assert existence FIRST, then properties). **Also flag suites
      that call LIVE EXTERNAL APIs** (real provider keys, network I/O to a
      third party): each is an owner TODO with the recommendation — fake or
      record/replay the provider — because a live-API suite is cost-per-run,
@@ -211,6 +225,25 @@ phases) consuming the plan.
    Only genuine blockers belong here — bugs, security, tooling, prerequisites
    of planned rows. A deferred ⚖ decision that gates nothing executable stays in
    its own section; a padded TODO trains the operator to skip the list.
+
+   Also include a **`## Rails (make recurrence impossible)`** section: for
+   every violation CLASS found or fixed this audit — local copies of a
+   canonical util, raw `fetch` beside an axios convention, hand-rolled cookie
+   or cache-key formats, inline validation beside a FormRequest convention —
+   propose the mechanical enforcement that ends the class, not just the
+   instances: an ESLint `no-restricted-syntax`/`no-restricted-globals` rule, a
+   phpstan/psalm rule, a pint/linter config line, a wrapper that becomes the
+   only import. One row each: class → violations found → the rail → effort.
+   **Fixed is good; impossible is better** — a convention that isn't enforced
+   is a regression on a timer, and proposing the rail costs one line while
+   fixing next quarter's recurrence costs another audit.
+
+   And a **`## Coverage gaps (what blocks future shaves)`** section: the
+   untested-but-critical surfaces the sweeps hit, ranked by blast radius
+   (money paths, webhooks, unattended jobs first) — with, per entry, what
+   writing its test UNLOCKS (the T2 rows that become T1). This is the audit's
+   answer to "why is half the backlog deferred?" and the work order that pays
+   twice: safety now, shaveability next audit.
 
    Also include a **`## Bugs found (not shaves — fix-first, separate labeled
    commits)`** section. **Autonomy boundary — even under `--full-send`:** a bug
