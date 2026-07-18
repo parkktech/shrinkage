@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.32.2
+Compat-watch stops flagging private methods (reported from the fifth field run).
+
+- **Visibility-aware signature warnings.** The scoreboard's Zeroth-Law watch
+  flagged ANY changed signature — including a private method (`estimateFees`),
+  which is internal refactoring, not a compatibility concern. diffstat now
+  checks the declaration site in both file versions and suppresses the warning
+  only when the symbol is explicitly `private`/`protected` on BOTH sides with no
+  same-name public declaration; public, ambiguous, or convention-only visibility
+  (Python underscores) keeps the warning. Works on both parser paths (regex and
+  tree-sitter) since it reads the source text, not parser metadata; applied to
+  working-tree/range scoring and `--shave-only` alike. +2 tests.
+
 ## 0.32.1
 The mission, stated where the AI reads it.
 

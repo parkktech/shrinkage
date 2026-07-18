@@ -28,7 +28,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import settings  # noqa: E402
-from parsers import language_of, parse_file, parse_text  # noqa: E402
+from parsers import language_of, parse_text  # noqa: E402
 
 TEST_PATH = re.compile(r"(^|/)(tests?|specs?|__tests__)(/|$)|(^|[./_])(test|spec)s?[._]", re.I)
 # Docs/config/lockfiles are not code — excluded so "app LOC" means code.
@@ -68,6 +68,19 @@ def _endpoints(ref):
     return (m.group(1), m.group(2)) if m else (ref, None)
 
 
+def _nonpublic(name, *texts):
+    """True when EVERY text declares `name` with an explicit private/protected
+    modifier and no public declaration of the same name exists — its signature
+    change is internal refactoring, not a compatibility concern (the
+    `estimateFees` false positive: compat-watch flagged a private method).
+    Conservative on purpose: public, ambiguous (same name declared both ways in
+    one file), or convention-only visibility (Python underscores) → False, the
+    warning stays."""
+    priv = re.compile(r"\b(?:private|protected)\b[^;{}\n]*?\b" + re.escape(name) + r"\s*\(")
+    pub = re.compile(r"\bpublic\b[^;{}\n]*?\b" + re.escape(name) + r"\s*\(")
+    return all(t and priv.search(t) and not pub.search(t) for t in texts)
+
+
 def collect(ref):
     base, head = _endpoints(ref)
     app_ins = app_del = test_ins = test_del = 0
@@ -88,13 +101,15 @@ def collect(ref):
     for path in files:
         if not language_of(path):
             continue
-        old = {s.key(): s.signature for s in parse_text(path, git("show", f"{base}:{path}"))}
+        old_txt = git("show", f"{base}:{path}")
+        old = {s.key(): s.signature for s in parse_text(path, old_txt)}
         if head is None:
-            new_src = parse_file(Path(path)) if Path(path).exists() else []
+            p = Path(path)
+            new_txt = p.read_text(encoding="utf-8", errors="replace") if p.exists() else ""
         else:
-            txt = git("show", f"{head}:{path}")
-            new_src = parse_text(path, txt) if txt else []
-        new = {s.key(): s.signature for s in new_src}
+            new_txt = git("show", f"{head}:{path}")
+        new = {s.key(): s.signature
+               for s in (parse_text(path, new_txt) if new_txt else [])}
 
         def label(k):
             _, p, n = k
@@ -102,9 +117,11 @@ def collect(ref):
         new_syms += [label(k) for k in new.keys() - old.keys()]
         removed_syms += [label(k) for k in old.keys() - new.keys()]
         # Zeroth Law watch: an existing symbol whose signature changed is a
-        # potential compatibility break — surface it every time.
+        # potential compatibility break — surface it, UNLESS the symbol is
+        # explicitly private/protected on both sides (internal, not compat).
         sig_changes += [f"{label(k)} [{old[k]} -> {new[k]}]"
-                        for k in old.keys() & new.keys() if old[k] != new[k]]
+                        for k in old.keys() & new.keys()
+                        if old[k] != new[k] and not _nonpublic(k[2], old_txt, new_txt)]
     return (app_ins, app_del, test_ins, test_del, files,
             sorted(new_syms), sorted(removed_syms), sorted(sig_changes))
 
@@ -327,12 +344,15 @@ def collect_commits(shas):
                     app_ins += a; app_del += r
             if not language_of(path):
                 continue
-            old = {s.key(): s.signature for s in parse_text(path, git("show", f"{sha}^:{path}"))}
-            new = {s.key(): s.signature for s in parse_text(path, git("show", f"{sha}:{path}"))}
+            old_txt = git("show", f"{sha}^:{path}")
+            new_txt = git("show", f"{sha}:{path}")
+            old = {s.key(): s.signature for s in parse_text(path, old_txt)}
+            new = {s.key(): s.signature for s in parse_text(path, new_txt)}
             new_syms += [label(k) for k in new.keys() - old.keys()]
             removed_syms += [label(k) for k in old.keys() - new.keys()]
             sig_changes += [f"{label(k)} [{old[k]} -> {new[k]}]"
-                            for k in old.keys() & new.keys() if old[k] != new[k]]
+                            for k in old.keys() & new.keys()
+                            if old[k] != new[k] and not _nonpublic(k[2], old_txt, new_txt)]
     return (app_ins, app_del, test_ins, test_del, sorted(files),
             sorted(new_syms), sorted(removed_syms), sorted(sig_changes))
 

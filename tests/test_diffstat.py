@@ -156,6 +156,42 @@ def test_trend_shows_realization_factor(repo):
     assert "C9" in out and "40%" in out, out          # actual 40 / est 100
 
 
+def test_compat_watch_ignores_private_signature_changes(repo):
+    # The estimateFees false positive: a PRIVATE method's signature change is
+    # internal refactoring, not a compatibility concern — no warning.
+    (repo / "Svc.php").write_text(
+        "<?php\nclass Svc {\n"
+        "  private function estimateFees(float $a): float {\n    return $a;\n  }\n"
+        "  public function total(float $a): float {\n    return $this->estimateFees($a);\n  }\n"
+        "}\n")
+    commit(repo)
+    (repo / "Svc.php").write_text(
+        "<?php\nclass Svc {\n"
+        "  private function estimateFees(float $a, string $cls): float {\n    return $a;\n  }\n"
+        "  public function total(float $a): float {\n    return $this->estimateFees($a, 'eq');\n  }\n"
+        "}\n")
+    stage(repo)
+    code, out = run("diffstat.py", "HEAD", "--no-color", cwd=repo)
+    assert code == 0, out
+    assert "signature" not in out, out
+
+
+def test_compat_watch_still_flags_public_signature_changes(repo):
+    (repo / "Svc.php").write_text(
+        "<?php\nclass Svc {\n"
+        "  public function total(float $a): float {\n    return $a;\n  }\n"
+        "}\n")
+    commit(repo)
+    (repo / "Svc.php").write_text(
+        "<?php\nclass Svc {\n"
+        "  public function total(float $a, bool $net): float {\n    return $a;\n  }\n"
+        "}\n")
+    stage(repo)
+    code, out = run("diffstat.py", "HEAD", "--no-color", cwd=repo)
+    assert code == 0, out
+    assert "signature(s) changed" in out and "total" in out, out
+
+
 def test_shave_only_isolates_matched_commits_in_a_mixed_range(repo):
     # P2.11: a range holding a shave (-4) AND unrelated feature work (+20) scores
     # +16 as a whole (misleading) — --shave-only isolates the shave and flags the rest.
