@@ -13,12 +13,18 @@ these paths" mechanical:
   4. commit path-limited (`git commit -- <files>`);
   5. verify the resulting commit touched ONLY the declared paths.
 
-Usage:
-  safe_commit.py -m "<message>" -- <file> [<file>...]
-  safe_commit.py -F <message-file> -- <file> [<file>...]
+Also refuses TYPECHANGES (symlink ↔ regular file) among the declared paths:
+editing through a symlink silently replaces the link itself — a field run
+converted a tracked CLAUDE.md → AGENTS.md symlink into a plain file this way.
+Edit the link's TARGET (readlink <path>), keep the link. When the type change
+IS the intended fix (restoring a link), pass --allow-typechange.
 
-Exit codes: 0 committed · 1 usage · 2 refused (index / extra path) ·
-3 nothing to commit · 4 post-commit verification failed (extra files landed).
+Usage:
+  safe_commit.py [--allow-typechange] -m "<message>" -- <file> [<file>...]
+  safe_commit.py [--allow-typechange] -F <message-file> -- <file> [<file>...]
+
+Exit codes: 0 committed · 1 usage · 2 refused (index / extra path / frozen /
+typechange) · 3 nothing to commit · 4 post-commit verification failed.
 """
 import os
 import subprocess
@@ -84,6 +90,18 @@ def main():
         die(2, "refusing: staging your files also pulled in:\n  " +
                "\n  ".join(sorted(unexpected)) +
                "\n(unstaged them). Declare every path you intend to commit.")
+    tc = sorted(l.split("\t", 1)[1] for l in
+                git("diff", "--cached", "--name-status").splitlines()
+                if l.startswith("T"))
+    if tc and "--allow-typechange" not in opts:
+        git("reset", "-q", "--", *tc)
+        die(2, "refusing: these paths CHANGED TYPE (symlink ↔ regular file):\n  "
+               + "\n  ".join(tc) +
+               "\n(unstaged them). Editing through a symlink replaces the link "
+               "itself — edit the link's TARGET (`readlink <path>`) and keep the "
+               "link; a shave never converts file types. If the type change IS "
+               "the intended fix (e.g. restoring a link), re-run with "
+               "--allow-typechange.")
     if not staged_set():
         die(3, "nothing to commit for the declared files (no changes staged).")
 

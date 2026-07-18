@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.36.1
+The symlink guard — from the CLAUDE.md → AGENTS.md incident.
+
+- **`safe_commit.py` refuses type changes.** A surgeon edited `CLAUDE.md` and
+  silently converted it from a tracked symlink (→ AGENTS.md) into a regular
+  file — editing *through* a link replaces the link itself. safe_commit now
+  detects symlink ↔ regular-file typechanges among the declared paths, unstages
+  them, and refuses with the fix (`readlink <path>`, edit the TARGET, keep the
+  link); the deliberate-restore path stays available via `--allow-typechange`.
+  The surgeon brief gains the pre-edit rule: `test -L` before editing any file
+  — a link means you edit its target, never through it. The field run caught
+  and repaired the decoupling itself; now the guard refuses it at commit time
+  instead. +1 test.
+
 ## 0.36.0
 Autonomy boundaries, from the first fresh-codebase field run (seventh report):
 the run was excellent — and crossed three lines the doctrine had never drawn.

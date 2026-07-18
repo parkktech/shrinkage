@@ -98,3 +98,22 @@ def test_hook_ignores_non_bash(repo):
     code, out = run_hook({"tool_name": "Edit", "tool_input": {"command": "git add -A"}},
                          cwd=repo, extra_env={"CLAUDE_PROJECT_DIR": str(repo)})
     assert code == 0, out
+
+
+def test_refuses_typechange_symlink_to_regular_file(repo):
+    # The CLAUDE.md → AGENTS.md incident: editing through a symlink converts the
+    # link into a regular file; safe_commit must refuse the type change.
+    (repo / "AGENTS.md").write_text("# agents\n")
+    os.symlink("AGENTS.md", repo / "CLAUDE.md")
+    commit(repo)
+    (repo / "CLAUDE.md").unlink()
+    (repo / "CLAUDE.md").write_text("# now a regular file, decoupled\n")
+    code, out = run("safe_commit.py", "-m", "shrink: docs", "--", "CLAUDE.md", cwd=repo)
+    assert code == 2 and "CHANGED TYPE" in out and "symlink" in out, out
+    staged = subprocess.run(["git", "diff", "--cached", "--name-only"],
+                            cwd=repo, capture_output=True, text=True).stdout
+    assert "CLAUDE.md" not in staged, "refusal must unstage the typechange"
+    # the intended-restore path stays available, explicitly
+    code, out = run("safe_commit.py", "--allow-typechange", "-m",
+                    "fix: restore symlink arrangement", "--", "CLAUDE.md", cwd=repo)
+    assert code == 0, out

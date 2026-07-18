@@ -39,7 +39,13 @@ gotchas. `$SKILL/rules/<lang>.md` for the target's language.
    mode, the cheapest characterization is an **output diff** — capture its dry-run
    stdout before and after your edit and require it byte-identical (catches the
    runtime method-resolution breaks `php -l` sails past).
-4. **Apply the ONE transform** exactly as the catalog entry describes. Zeroth
+4. **Symlink check before editing ANY file:** `test -L <path>` — a symlink
+   means you edit its TARGET (`readlink <path>`), never through the link; file
+   tools silently convert links into regular files (a field run decoupled a
+   tracked CLAUDE.md → AGENTS.md symlink exactly this way). `safe_commit.py`
+   refuses type changes, so a converted link fails at commit time — fix the
+   edit, don't reach for --allow-typechange.
+5. **Apply the ONE transform** exactly as the catalog entry describes. Zeroth
    Law: anything on the compatibility surface keeps its old entry points
    working (deprecation shims, marked and scheduled). No drive-by fixes, no
    renaming for taste, no "while I'm here." **C1/C9 method merges: use
@@ -49,7 +55,7 @@ gotchas. `$SKILL/rules/<lang>.md` for the target's language.
    obstacles: `check` DIVERGENT (exit 3) = two behaviors; an un-sliceable
    literal or a JS class method = handle manually with tests; a template =
    partial/component extraction, not method surgery.
-5. **Gate:** tests + lint/types + build. Green → commit through the staging
+6. **Gate:** tests + lint/types + build. Green → commit through the staging
    guard, which stages + commits ONLY your declared files and verifies nothing
    else landed:
    `python3 $SKILL/scripts/safe_commit.py -F <msg-file> -- <your files>`
@@ -58,7 +64,7 @@ gotchas. `$SKILL/rules/<lang>.md` for the target's language.
    tree may hold the user's unrelated in-flight work and broad staging sweeps it
    into your commit. Red → revert COMPLETELY, return `reverted: <what broke>` —
    the hidden dependency you found is valuable intelligence.
-6. **Score:** run `diffstat.py`, include the line in your return.
+7. **Score:** run `diffstat.py`, include the line in your return.
 </process>
 
 <output>
