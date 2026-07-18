@@ -183,24 +183,37 @@ CI/hook integration (pre-commit scoreboard, PR comment action):
 ## Response style
 
 Keep it tight, GSD-style. Every command ends with a short result line and a
-**Next** menu of 1–3 suggested `/srk:` commands — never a wall of prose. The
-result is a fact or two; the reasoning stays in the workflow files, not the
-reply. Default shape:
+**Next** block — never a wall of prose. The result is a fact or two; the
+reasoning stays in the workflow files, not the reply.
+
+**Lead the Next block with the ONE clearest thing to do now, as a plain
+imperative the user can act on without decoding it — and that action is often
+NOT a `/srk:` command.** When the remaining work is blocked on the user — commit
+or stash in-flight work, land a branch, adjudicate a ⚖ decision, fix a flagged
+bug — say it first and plainly ("Commit or stash your branch work, then
+`/srk:shave 5`"). Never bury the action in a menu or a condition the user has to
+resolve: "row 5 becomes executable after…" leaves them guessing. Phrase a future
+step as an explicit condition → action ("When your branch lands, run
+`/srk:audit`"), never a vague noun ("the natural next sweep"). If the ball is in
+the user's court and no `/srk:` command is the move, say exactly that ("Nothing
+to shave until your branch lands — go finish it, then `/srk:audit`") instead of
+offering a command to fill the slot. Then at most 1–2 real alternatives.
+Default shape:
 
 ```
 <result line — the fact, e.g. "Map built: 17,682 symbols across 6 languages.">
 <the script's quip verbatim, if humor is on>
 
 Next:
-• /srk:gate "<task>"  — before writing code
-• /srk:audit          — find safe cleanup opportunities
-• /srk:trend          — track weight over time
+• <the one concrete action, imperative — e.g. "Commit your WIP, then /srk:shave 5">
+• <at most one or two real alternatives — /srk:audit, /srk:trend, …>
 ```
 
-Pick the Next options that actually fit the situation (see each command's
-"Next" list). Explain more only when the user asks why, or when a safety
-decision (a T2 escalation, a red gate) genuinely needs it. One light joke
-max, information first; `humor: false` → play it straight.
+Pick actions that actually fit the situation (see each command's "Next" list) —
+and when the honest next move is a human step, say it, don't pad the slot with a
+`/srk:` command. Explain more only when the user asks why, or when a safety
+decision (a T2 escalation, a red gate) genuinely needs it. One light joke max,
+information first; `humor: false` → play it straight.
 
 ## Output discipline (anti context-rot)
 

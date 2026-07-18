@@ -49,10 +49,12 @@ shaving remains — it doesn't; the leftovers are blocked on a person, not a run
 </success_criteria>
 
 <next>
-Next (pick by mode — don't dump all four):
-• single item done → /srk:shave <next #> (the item just named)
-• --auto halted at a T2 → /srk:shave <n> to confirm it, or /srk:shave --full-send
-• --full-send done → /srk:score <base>..HEAD  and  /srk:trend; then commit or
-  stash your in-flight work and /srk:audit to unblock dirty-target items.
-  Do NOT suggest re-shaving items full-send already handed back to you.
+Lead with the ONE concrete action for the mode; if it's a human step, say it
+plainly — don't just list a command:
+• single item done → next up: /srk:shave <next #> (name the item)
+• halted with items blocked on YOU → lead with the human action: "Commit or
+  stash your in-flight work, then /srk:shave <n>", or "Land your branch, then
+  /srk:audit" — never a bare command or a buried "becomes executable after…".
+  Do NOT re-suggest items full-send already handed back.
+• clean finish, backlog drained → /srk:score <base>..HEAD, then /srk:trend
 </next>

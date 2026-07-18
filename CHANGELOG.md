@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.26.3
+Response-style fix: every command ends with a clear directive, not a command menu
+you have to decode.
+
+- **The Next block leads with the one concrete action, plainly.** Commands were
+  ending on a list of `/srk:` options with the real next step buried in a
+  condition ("row 5 becomes executable after…", "the natural next sweep"),
+  leaving the user to work out what to actually do. SKILL.md's response-style
+  convention, both the audit and shave workflows, and the shave/audit/trend
+  `<next>` blocks now require leading with the single clearest action as a plain
+  imperative — including a non-`srk` step (commit or stash in-flight work, land
+  the branch, adjudicate a ⚖ decision, fix a flagged bug) when that's the real
+  move — and phrasing any future step as an explicit condition → action ("When
+  your branch lands, run `/srk:audit`"). When the ball is in the user's court and
+  no command is the move, the tool now says so outright instead of padding the
+  slot. Doc-only.
+
 ## 0.26.2
 Fix `dirty_apply.py unpark` false-refusing genuinely disjoint hunks — caught
 empirically before the first production park/unpark on the edge-trades WIP.

@@ -32,5 +32,7 @@ instead. (`diffstat.py --total` prints just the lifetime block.)
 <next>
 Next:
 • /srk:score <base>..HEAD  — score a specific committed range
-• /srk:audit               — find the next reductions to extend the streak
+• written new code since the last audit? → /srk:audit for the next reductions.
+  If nothing has changed, an audit just reproduces the last plan — don't re-run
+  it on repeat; the next sweep pays off only after the code has actually moved.
 </next>

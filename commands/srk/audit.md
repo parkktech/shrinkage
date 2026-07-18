@@ -27,7 +27,9 @@ brief in `$SKILL/agents/shrink-auditor.md`. Required reading:
 </success_criteria>
 
 <next>
-Next:
-• /srk:shave 1 — execute the plan's #1 item safely
-• /srk:trend          — track the ratchet over time
+Lead with the concrete action:
+• top items clean → /srk:shave 1 (execute the plan's #1 safely)
+• top items blocked on your dirty tree → say it plainly: "Commit or stash your
+  in-flight work, then /srk:shave 1" — don't just list the command
+• /srk:trend — track the ratchet over time
 </next>
