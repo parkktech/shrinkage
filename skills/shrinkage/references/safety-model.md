@@ -132,7 +132,14 @@ evidence can't be written down in four lines isn't ready.
 - **Characterization first**: if the code being consolidated has no meaningful
   coverage, write golden-master tests for CURRENT behavior before changing it
   — including current quirks. You're preserving behavior, not fixing it; fixes
-  are a separate, labeled commit.
+  are a separate, labeled commit. **For a CLI/command target the cheapest
+  characterization is an output diff**: capture the command's read-only /
+  `--dry-run` output before and after and require it byte-identical. This catches
+  runtime method-resolution breaks — a missing trait `use`, a renamed call — that
+  syntax checks and linters pass straight over (a paper-command dedup nearly
+  shipped a `BadMethodCallException` that only an ad-hoc dry-run diff caught).
+  When the target's `$signature`/arg parser advertises a dry-run mode, prescribe
+  this gate automatically; framework rules carry the exact invocation.
 - **Green-after, per transform**: run the gate after each atomic transform
   (§6), not once at the end of a batch. A batch with one failure and six
   entangled changes cannot be bisected cheaply.

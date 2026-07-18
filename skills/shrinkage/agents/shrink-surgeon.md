@@ -35,7 +35,10 @@ gotchas. `$SKILL/rules/<lang>.md` for the target's language.
    than improvising one.
 3. **Coverage check:** target behavior uncovered → write characterization
    tests for CURRENT behavior (quirks included) first; they are part of your
-   commit.
+   commit. If the target is a CLI/artisan command exposing a `--dry-run`/read-only
+   mode, the cheapest characterization is an **output diff** — capture its dry-run
+   stdout before and after your edit and require it byte-identical (catches the
+   runtime method-resolution breaks `php -l` sails past).
 4. **Apply the ONE transform** exactly as the catalog entry describes. Zeroth
    Law: anything on the compatibility surface keeps its old entry points
    working (deprecation shims, marked and scheduled). No drive-by fixes, no

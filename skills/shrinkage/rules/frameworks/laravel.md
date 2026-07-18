@@ -82,6 +82,18 @@ compile-level check suffices. Field-proven recipes:
 - **Config / `.env` key changes:** `php artisan config:cache` then
   `config:clear` surfaces a malformed config array; grep `config('<key>')` and
   `env('<KEY>')` string reads first (dynamic-reference checklist).
+- **Artisan commands with a read-only / `--dry-run` mode** (`$signature` holds
+  `--dry-run`, `--pretend`, `--check`, or similar): the strongest cheap gate is a
+  **characterization output diff** — run `php artisan <command> --dry-run`
+  BEFORE the transform, capture stdout, run it again AFTER, and byte-diff the two;
+  identical output = behavior preserved. This catches what `php -l` and syntax
+  checks cannot — a runtime method-resolution break (a missing trait `use`, a
+  renamed helper) that only fires when the path executes, exactly the
+  `BadMethodCallException` a paper-command dedup nearly shipped. Prefer a
+  `--dry-run` that exercises the changed path; if the command has no read-only
+  mode, add a thin characterization test that calls the affected method with
+  canned input. Detect it automatically: if the target's `$signature` string
+  contains `--dry-run`, prescribe this gate.
 
 Surgeon/verifier: pick the gate from this table for each file type in scope
 rather than improvising one. When a repo teaches a cheaper sufficient gate, add
