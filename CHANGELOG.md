@@ -30,6 +30,14 @@ Continuing the field-report hardening (P1.4–P2.12).
   observing suite → the row stays T2. The audit workflow declares the standing
   condition once in the plan header (not per-row noise) and records each row's
   `gate: <suite>` in the coverage column. Doc-only.
+- **P2.8 — Framework gate recipes (Laravel).** `rules/frameworks/laravel.md`
+  gains a "gate recipes" section mapping each file type to the cheapest
+  sufficient gate, field-proven: Blade → `view:cache` + `view:clear`, routes →
+  `route:list`, heavy views → a `view()->addLocation` fixture harness (not the
+  controller/HTTP path, which times out), plus detecting the repo's real test
+  runner (Pest vs raw phpunit) and a `config:cache`/`clear` check for config
+  edits. The surgeon brief now picks gates from the rules file per file type
+  instead of improvising. Doc-only.
 
 ## 0.25.0
 Field-report-driven hardening from a production Laravel deployment (~2,900 files

@@ -54,6 +54,39 @@ rather than "new class". Verify: no Illuminate duplicate got written (sweep
 the diff's new symbols against `vendor` search), seams used over layers, and
 queued/route/config string references still resolve after any change.
 
+## Gate recipes (file-type → cheapest sufficient gate)
+
+A gate exists to *observe* the change cheaply, not to exercise the whole app.
+For each file type in scope, pick the cheapest gate that would actually fail if
+the transform broke something — don't improvise a heavy end-to-end run when a
+compile-level check suffices. Field-proven recipes:
+
+- **Blade templates** (`*.blade.php`): `php artisan view:cache` compiles every
+  template in one pass (catches syntax errors, undefined components/directives,
+  bad `@include`/`@extends` targets), then `php artisan view:clear` so a stale
+  compiled cache doesn't leak into later runs. Far cheaper than rendering pages.
+- **Routes** (`routes/*.php`): `php artisan route:list > /dev/null` resolves the
+  whole route table, so a controller/action a route names by class-string fails
+  loudly if you removed or renamed it — exactly the reference the static map
+  can't see (see the dynamic-reference checklist above).
+- **Rendering a specific view for behavior:** do NOT gate through the
+  controller/HTTP path when the page is heavy — a report page that recomputes
+  minutes of data will time the gate out. Use a fixture render harness:
+  `view()->addLocation(<fixture dir>)` and render the region view(s) directly
+  with canned data, asserting on the output. Milliseconds instead of minutes,
+  and it isolates the template from unrelated slow upstream work.
+- **The test runner is not always `phpunit`:** many repos alias
+  `vendor/bin/phpunit` to Pest or run only via `php artisan test`. Detect it —
+  check `composer.json` scripts and whether `tests/Pest.php` exists — and invoke
+  the suite the repo actually uses instead of assuming a raw phpunit binary.
+- **Config / `.env` key changes:** `php artisan config:cache` then
+  `config:clear` surfaces a malformed config array; grep `config('<key>')` and
+  `env('<KEY>')` string reads first (dynamic-reference checklist).
+
+Surgeon/verifier: pick the gate from this table for each file type in scope
+rather than improvising one. When a repo teaches a cheaper sufficient gate, add
+it here — this list is the framework's institutional memory, not session memory.
+
 ## Templates (Blade)
 
 - .blade.php files are indexed (they're PHP to the map): component/method

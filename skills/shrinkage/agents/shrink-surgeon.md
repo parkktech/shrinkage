@@ -27,7 +27,12 @@ gotchas. `$SKILL/rules/<lang>.md` for the target's language.
    `aborted: evidence failed re-verification` with details. Do not improvise
    a different candidate.
 2. **Baseline:** run the gate; must be green. Red → STOP, return
-   `aborted: red baseline`.
+   `aborted: red baseline`. If no gate command was handed to you, or the change
+   touches a framework file type (Blade, routes, config), take the cheapest
+   sufficient gate from that framework's **gate recipes** in
+   `rules/frameworks/<fw>.md` (e.g. `view:cache` + `view:clear` for Blade,
+   `route:list` for routes, the repo's real runner — Pest vs phpunit) rather
+   than improvising one.
 3. **Coverage check:** target behavior uncovered → write characterization
    tests for CURRENT behavior (quirks included) first; they are part of your
    commit.
