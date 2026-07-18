@@ -117,3 +117,21 @@ def test_refuses_typechange_symlink_to_regular_file(repo):
     code, out = run("safe_commit.py", "--allow-typechange", "-m",
                     "fix: restore symlink arrangement", "--", "CLAUDE.md", cwd=repo)
     assert code == 0, out
+
+
+def test_stale_shave_marker_self_cleans(repo):
+    # #7: a crashed shave leaves the marker; after the 2h TTL the hook must not
+    # only stop guarding — it deletes the stale marker so it can't linger/re-arm.
+    (repo / ".claude").mkdir(exist_ok=True)
+    marker = repo / ".claude" / "srk-shave-active"
+    marker.write_text("session=crashed armed=long-ago\n")
+    old = 3 * 3600
+    os.utime(marker, (os.path.getmtime(marker) - old, os.path.getmtime(marker) - old))
+    payload = {"tool_name": "Bash", "tool_input": {"command": "git add -A"}}
+    code, out = run_hook(payload, cwd=repo, extra_env={"CLAUDE_PROJECT_DIR": str(repo)})
+    assert code == 0, out                       # stale → not guarding
+    assert not marker.exists(), "stale marker must be self-deleted"
+    # fresh marker still guards
+    marker.write_text("session=live\n")
+    code, out = run_hook(payload, cwd=repo, extra_env={"CLAUDE_PROJECT_DIR": str(repo)})
+    assert code == 2 and "Blocked" in out, out

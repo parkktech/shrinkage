@@ -220,7 +220,10 @@ Deleting is part of the feature; this workflow is how deletion earns trust.
    green individually can error when run together). Red baseline → stop and
    report; you cannot detect breakage against a red baseline. A NEWLY
    discovered red suite gets a ledger `## red-baselines` entry so the next
-   session doesn't re-spend the discovery.
+   session doesn't re-spend the discovery. For a KNOWN permanently-red corner,
+   use identical-failure-set mode (safety-model §4): `plan.py failset record --
+   <suite cmd>` before, `failset compare` after — the exact same failing set or
+   you broke something; never shave the failing tests' own subject.
 
 3. **Hunt, using signals in this order (cheap → expensive):**
    - `codemap.py refresh` then scan the target's symbols for `x0` refs (C6
@@ -259,7 +262,10 @@ Deleting is part of the feature; this workflow is how deletion earns trust.
    verified before any copy is deleted. Every mutation is atomic with a
    balance/re-parse sanity check; a failed check writes nothing. First
    **activate the staging guard** for the run:
-   `mkdir -p .claude && touch .claude/srk-shave-active` — a PreToolUse hook then
+   `mkdir -p .claude && echo "session=${CLAUDE_SESSION_ID:-unknown} armed=$(date -u +%FT%TZ)" > .claude/srk-shave-active`
+   (the content is forensics — which session armed it, when; the guard runs on
+   mtime with a 2h TTL and SELF-DELETES stale markers from crashed runs, so a
+   crash never leaves normal work blocked) — a PreToolUse hook then
    rejects broad `git add -A` / `git commit -a` until you clear it. Then per
    candidate: apply one catalog entry → gates green → **commit through the
    staging guard**: `python3 $SKILL/scripts/safe_commit.py -m "<evidence msg>"

@@ -26,8 +26,15 @@ def shave_active():
     for rel in MARKERS:
         p = os.path.join(root, rel)
         try:
-            if os.path.exists(p) and (time.time() - os.path.getmtime(p)) < _MAX_AGE:
-                return True
+            if os.path.exists(p):
+                if (time.time() - os.path.getmtime(p)) < _MAX_AGE:
+                    return True
+                # Stale marker = a crashed shave. Self-clean so it can't linger
+                # as cruft (or re-arm if anything ever touches its mtime).
+                try:
+                    os.remove(p)
+                except OSError:
+                    pass
         except OSError:
             pass
     return bool(os.environ.get("SRK_SHAVE_ACTIVE"))
