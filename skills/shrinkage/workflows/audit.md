@@ -8,6 +8,36 @@ phases) consuming the plan.
 </objective>
 
 <process>
+0. **Freshness gate — when a plan already exists.** Before any sweep, compare
+   SHRINK-PLAN.md's `map-fp` stamp and date against the current map fingerprint
+   (`codemap.py refresh` prints it) and `git log` since the plan was written.
+
+   - **Nothing changed** (same fingerprint, zero code commits — doc-only
+     renames don't count): do NOT silently re-sweep, and do NOT silently
+     re-stamp either. ASK the user — one question, three options:
+
+     ```
+     The plan is already current — the full six-sweep audit ran <when>, and
+     nothing has changed since (map-fp <fp>, 0 code commits).
+
+       1. Work the plan — clear its TODO list, then /srk:shave 1
+       2. Re-verify only — re-check open rows' evidence + gates, no new sweeps
+       3. Force a full re-sweep — /srk:audit --force
+     ```
+
+     Unattended (no one to ask): pick 2 (re-verify), state the choice at the
+     top of the report, and proceed.
+   - **Code moved** (fingerprint differs / code commits landed): run the full
+     audit, carrying the prior plan's open rows into the sweeps as re-verify
+     items (step 2).
+   - **`--force`**: skip this gate entirely — full six sweeps, no question.
+
+   WHICHEVER path runs — full, re-verify-only, or work-the-plan — the run ENDS
+   with the same two-section close (step 8: `Results:` / `TODO before
+   advancing:`). A re-audit that skipped its sweeps still owes the user the
+   same "here's where you stand, here's the next action" report — "plan
+   re-stamped" alone is not a close.
+
 1. **Fresh map, full scope.** `codemap.py build` (or `scope <dir>`); note
    files collapsed by budget — for an audit, prefer raising the budget or
    auditing per-subtree so nothing hides in a collapsed file.

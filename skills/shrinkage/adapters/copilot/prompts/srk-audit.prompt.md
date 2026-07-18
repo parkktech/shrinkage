@@ -6,8 +6,10 @@ agent: agent
 ---
 
 Follow `.claude/skills/shrinkage/workflows/audit.md` for ${input} (default: whole
-repo): fresh map, all six sweeps (dead-symbol, duplication via dupes+clones,
-structure, flags, platform, noise). Read the ledger first
+repo). FRESHNESS GATE FIRST: if a current plan exists and nothing changed, ask
+(work the plan / re-verify only / force full re-sweep) — never silently re-sweep;
+`--force` always sweeps. Then: fresh map, all six sweeps (dead-symbol,
+duplication via dupes+clones, structure, flags, platform, noise). Read the ledger first
 (`.shrinkage/ledger.md`): never flag `## keeps`, never propose `## frozen`
 paths; carry a prior plan's open rows in as explicit re-verify items (`plan.py
 open`, `plan.py carry`). Verify every candidate in source, run `git status

@@ -1,7 +1,7 @@
 ---
 name: srk:audit
 description: "Repo-wide shrink audit: six evidence sweeps, tiered candidates, ranked SHRINK-PLAN.md backlog"
-argument-hint: "[dir]"
+argument-hint: "[dir] [--force]"
 allowed-tools: [Bash, Read, Grep, Write, Agent]
 ---
 
@@ -13,7 +13,11 @@ does not cut.
 
 <execution_context>
 Locate the shrinkage skill dir ($SKILL: `${CLAUDE_PLUGIN_ROOT}/skills/shrinkage` when installed as a plugin, else `.claude/skills/shrinkage` or `~/.claude/skills/shrinkage`), then follow
-`$SKILL/workflows/audit.md` exactly. Subagents for the parallel sweeps use the
+`$SKILL/workflows/audit.md` exactly — starting with its step-0 freshness gate:
+when a current plan already exists and nothing changed, ASK (work the plan /
+re-verify only / force a full re-sweep) instead of silently re-sweeping or
+silently re-stamping; `--force` in $ARGUMENTS always runs the full six sweeps.
+Every path ends with the step-8 two-section close (Results / TODO). Subagents for the parallel sweeps use the
 brief in `$SKILL/agents/shrink-auditor.md`. Required reading:
 `$SKILL/references/safety-model.md` §§0–3 and
 `$SKILL/references/consolidation-catalog.md`.
