@@ -32,8 +32,12 @@ def section(root, name):
         return []
     out, cur = [], None
     try:
-        text = p.read_text(encoding="utf-8")
-    except OSError:
+        # Lenient read: the ledger is hand-authored and optional, so a file saved
+        # as cp1252/latin-1 (e.g. an em-dash in a reason line) or any read hiccup
+        # must degrade to "no entries" — never crash the map/audit/commit that
+        # reads it with a UnicodeDecodeError (which is a ValueError, not OSError).
+        text = p.read_text(encoding="utf-8", errors="replace")
+    except (OSError, ValueError):
         return []
     for line in text.splitlines():
         if line.lstrip().startswith("#"):

@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.26.1
+Hotfix for the ledger reader (reported from the edge-trades deployment).
+
+- **Ledger read is now lenient.** `ledger.py` read `.shrinkage/ledger.md` as
+  strict UTF-8 and caught only `OSError`, so a hand-authored ledger saved as
+  Windows-1252 / Latin-1 (e.g. an em-dash in a reason line) raised an uncaught
+  `UnicodeDecodeError` — a `ValueError`, not an `OSError` — and crashed every
+  `codemap` build and audit that reads it. It now reads with `errors="replace"`
+  and treats any read/decode error as "no entries", so a mis-encoded or CRLF
+  ledger degrades gracefully instead of taking the map down; the first path/glob
+  token per row is still recovered exactly. +2 tests.
+
 ## 0.26.0
 Second wave of the production field-report hardening (items P1.4–P2.12; P0.1–P1.3
 shipped in 0.25.0). Institutional memory the tool owns rather than the session —
