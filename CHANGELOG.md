@@ -9,6 +9,12 @@ Continuing the field-report hardening (P1.4–P2.12).
   auditors to scale C1/C9 estimates by the observed factor — byte-identical
   output constraints make dedupe merges realize well under the naive line count
   (the deployment saw ~40% twice). +2 tests.
+- **P1.5 — `plan.py` CLI.** `scripts/plan.py open|done|restamp|carry` edits
+  SHRINK-PLAN.md reliably instead of by sed: `open` lists open rows, `done <id>
+  <sha> [actual]` strikes + annotates the row and feeds the P1.4 calibration
+  loop, `restamp` refreshes map-fp + recomputes est-savings from the open rows,
+  `carry <old-plan>` emits a new plan skeleton of the still-open rows. The
+  markdown stays the source of truth. Audit + shave workflows call it. +3 tests.
 
 ## 0.25.0
 Field-report-driven hardening from a production Laravel deployment (~2,900 files

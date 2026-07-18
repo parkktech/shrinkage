@@ -67,6 +67,11 @@ phases) consuming the plan.
    <!-- est-savings: <sum of the est. net LOC column, e.g. -1240> -->
    ```
 
+   Stamp both reliably with `python3 $SKILL/scripts/plan.py restamp` (it reads
+   the map fingerprint and sums the est. net LOC of the open rows) rather than
+   hand-summing or sed. On a re-audit, `plan.py carry <old-plan>` emits a fresh
+   skeleton of the still-open rows to build on.
+
    The `est-savings` total lets the session-start line show the headline
    ("~1240 LOC to reclaim") without re-reading the whole plan. Keep the tier
    letter (T0–T3) visible in each row so the startup line can summarize the
