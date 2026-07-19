@@ -34,6 +34,10 @@ agent one of those devs.
   and speculative structure; a shave removes it — one atomic, revertible commit
   per change, with an evidence chain and a green-test gate, so **backwards
   compatibility is never broken**.
+- **Proves it before deleting it.** Every "nothing references this" claim can
+  be cross-examined by a real language server (the LSP oracle), and public
+  surface that static analysis can never clear gets a one-line runtime probe —
+  production traffic itself closes the case. Grep suggests; evidence decides.
 - **Keeps score.** After every change it reports net lines (app vs test,
   separately), new/removed symbols, and a trend over time. Negative is the high
   score.
@@ -82,6 +86,45 @@ commit; the pre-flight disjointness check because a merge discovered a conflict
 only after committing; the symlink guard because an edit-through-a-link
 silently decoupled a tracked config; the TODO gate so nothing shaves past an
 unfixed bug. One incident each, then never again.
+
+---
+
+## The evidence engine (v0.39) — cheaper audits, stronger proof
+
+The two costs that dominated the field runs both had the same root: the map's
+zero-reference flag is *lexical*, and lexical evidence is weak. v0.39 attacks
+both ends of that funnel.
+
+**The oracle kills false candidates at the top.** On one field repo, ~100 of
+154 zero-ref flags were framework-convention false positives — symbols
+reached through routes, DI wiring, or template strings that an identifier
+count can't see — and every one cost an auditor a full checklist walk to
+hand-clear. That hand-clearing was the single biggest line item in the
+"million-plus tokens" first audit. Now `lsp_refs.py check` puts each x0
+candidate to a real language server (`textDocument/references` — pylsp,
+tsserver, intelephense, gopls, rust-analyzer, whichever is installed): if the
+oracle finds references, the candidate dies in seconds instead of consuming
+an hour of agent time — and a wrong deletion that the checklist might have
+missed never gets proposed at all. The asymmetry is deliberate: **oracle-found
+refs kill instantly; oracle-found zero upgrades the evidence but still walks
+the dynamic-reference checklist**, because LSP resolves imports and calls,
+not DI containers, config strings, or reflection. The tool gets faster
+without getting more credulous. No server installed → it says so and the
+audit runs exactly as before.
+
+**The probe converts "unprovable" into "measured" at the bottom.** T2 rows —
+public surface, possible unknown external callers — used to die in the
+Deferred section as permanent "needs human judgment" entries, because static
+analysis *cannot* close those chains. `probe.py add` arms a one-line entry
+counter (PHP `error_log` / Python `logging`, placed by the surgery engines so
+it can't corrupt the file), a committed registry tracks the observation
+window, and the next audit harvests the verdict automatically: **CLOSED-ZERO**
+(a real window of production traffic, zero hits) is stronger evidence than
+any static argument and licenses the removal; **ALIVE** means you just found
+a real production caller for the price of one log line — *before* deleting
+something that would have broken it; **BLIND** (the log globs matched no
+files) refuses to count a dead telemetry channel as proof. The deferred
+backlog stops being a graveyard and becomes a queue with a clock on it.
 
 ---
 
@@ -366,24 +409,14 @@ what makes deletion safe in that ecosystem.
 
 ## Roadmap — the ceiling is higher than LOC golf
 
-Straight from the field verdicts, ranked by what would change outcomes:
+Straight from the field verdicts, ranked by what would change outcomes. (The
+two former headliners — LSP reference resolution and runtime deprecation
+telemetry — shipped in v0.39; see "The evidence engine" above.)
 
-- **LSP-grade reference resolution — SHIPPED (v0.39).** The map stays the
-  token-lean *hint*; `lsp_refs.py check` asks a real language server
-  (pylsp/pyright, tsserver, intelephense, gopls, rust-analyzer — whatever is
-  installed) `textDocument/references` for every map-`x0` candidate. Oracle
-  finds refs → false positive killed in seconds (~100 of 154 zero-ref flags
-  on one field repo were exactly this class); oracle finds zero →
-  "oracle-confirmed x0", and the dynamic-reference checklist still runs —
-  LSP can't see DI containers, config strings, or reflection.
-- **Production evidence, not just static evidence — SHIPPED v1 (v0.39).**
-  `probe.py` mechanizes the deprecation cycle (safety-model §5): `add`
-  inserts a one-line telemetry counter at the symbol's entry (PHP + Python;
-  exact placement via the surgery engines), tracks it in a committed
-  registry + DEPRECATIONS.md; `status` scans your logs and closes the chain
-  empirically — ALIVE keeps the symbol, CLOSED-ZERO licenses the removal,
-  BLIND refuses to call a dead telemetry channel "proof". Still roadmap: the
-  removal PR-ing itself at window close.
+- **Self-driving deprecation.** The probe cycle's missing last mile: at
+  CLOSED-ZERO the removal drafts its own PR — evidence chain, probe citation,
+  and revert instructions included — instead of waiting for the next audit.
+  More probe languages (Go/Rust/JS structured logging) ride along.
 - **Continuous instead of big-bang.** The seven sweeps scoped to each merged
   PR's diff in CI, plus the unjustified-new-symbol check the gatelog already
   does — dead code caught the week it's born, at diff-sized cost.

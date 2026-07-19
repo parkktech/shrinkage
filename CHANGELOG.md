@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.39.1
+README: the evidence engine gets its own section. v0.39's two capabilities
+were only visible as flipped Roadmap entries — the wrong shelf for shipped
+features. Now: a "What it does" bullet (proves it before deleting it), a
+dedicated "The evidence engine" section stating the actual advantages in
+field terms (the oracle removes the biggest first-audit cost line — ~100 of
+154 x0s hand-cleared — and can't make the tool more credulous, only faster;
+the probe turns the deferred-T2 graveyard into a queue with a clock on it),
+and a Roadmap trimmed to what's genuinely still future (self-driving
+deprecation PRs, more probe languages).
+
 ## 0.39.0
 The two revolutionary-ceiling stones, design-first: the map gets an oracle,
 and the deprecation cycle gets a heartbeat.
