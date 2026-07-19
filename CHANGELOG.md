@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.40.3
+Onboard must ASK about a missing oracle and RUN it on yes — never end by just
+printing a command. A field re-onboard on 0.40.2 did exactly the forbidden
+thing: it showed "the one-line install if you want it: …" and moved on,
+without ever asking. The instruction was there; it wasn't emphatic enough to
+survive a "nothing drifted" re-run.
+
+- **Onboard step 6 rewritten as an action with one forbidden outcome.** Default
+  stays ask-first (`oracle_autoinstall` false): for each worth-it missing
+  oracle, ask a single yes/no and — on yes — run the install itself; with the
+  flag true, just run it. The one thing it may never do in an interactive
+  session is end having only *shown* a copy-paste command. Runs on every
+  onboard, including re-runs, so a missing oracle is a live decision, not a
+  status line. (`oracle_autoinstall` default unchanged: false.)
+
 ## 0.40.2
 The install flow now fails gracefully and specifically: try → if it can't,
 tell you exactly what to hand your server admin → move to the next language.

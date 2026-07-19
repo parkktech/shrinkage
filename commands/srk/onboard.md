@@ -66,38 +66,39 @@ as conscious choices, user ready to work.
    `codemap.py refresh` so map location/gitignore reflect the choices.
 5. GSD project detected → point out the auto-integration (map + api-map.json
    in `.planning/intel/`, SHRINK-PLAN.md target, SUMMARY.md scoreboard lines).
-6. **Reference oracle — check, then DRIVE THE INSTALL (don't hand over a
-   command).** Run `python3 $SKILL/scripts/lsp_refs.py servers`. Decide which
-   missing oracles are worth installing by the map's own file counts: a
-   language is "in this repo" for oracle purposes only if it has a real
-   presence — **skip anything with just 1–2 files** (a stray build script
-   isn't worth a global install). So a 415-PHP / 151-JS / 1-Python repo →
-   PHP + JS are candidates, Python is not.
+6. **Reference oracle — ASK, then INSTALL. Never just print a command.** This
+   is an ACTION step and it runs on EVERY onboard, including a re-run: a missing
+   oracle for a language the repo actually uses is a decision to put to the
+   user NOW, not a status line. Run `python3 $SKILL/scripts/lsp_refs.py
+   servers`. Decide which missing oracles are worth it by the map's file counts
+   — a language counts only with a real presence, so **skip anything with just
+   1–2 files** (a stray script isn't worth a global install). A
+   415-PHP / 151-JS / 1-Python repo → PHP + JS are candidates, Python is not.
 
-   Then, in order of preference:
-   - **`oracle_autoinstall: true` in settings → just install, no question.**
-     Run `lsp_refs.py install <lang>` for each worth-it missing oracle and
-     report what happened. This is the hands-off switch; honor it.
-   - **Otherwise, interactive → ONE decisive question, then YOU run it.** Not a
-     per-language quiz, not a pasted command. Say it in plain language and name
-     what you're skipping and why, e.g.: *"Your backend PHP oracle is already
-     live. Your frontend has 151 JS files with no oracle — want me to install
-     it so the frontend gets the same semantic dead-code checking? (I'd run the
-     TypeScript language server install — one-time, no license. I'm skipping
-     Python: only 1 file.) Also: set `oracle_autoinstall: true` and I'll just
-     handle this automatically next time."* On **yes**, run `lsp_refs.py
-     install <lang>` yourself and show the result — it picks the right package
-     manager, then re-checks the binary is actually on PATH (off-PATH lands as
-     a warning with the dir to add, never a false success). Do NOT make the
-     user copy a command; the whole point is that you do it. Pass ALL the
-     worth-it languages in one `install a b c` call — it processes each
-     independently, so if one hits a **permission wall** (only `npm i -g` on a
-     locked-down box can) it prints the no-admin fix + the exact command to
-     forward to a server admin and CONTINUES to the next language. Relay that
-     admin command verbatim; don't retry the blocked one in a loop.
-   - **Unattended → never auto-install** even with the flag set (a background
-     `npm i -g` can hang on sudo/network). Print the exact `lsp_refs.py install
-     <lang>` line and note it in the close.
+   For the worth-it missing oracles:
+   - **Default (`oracle_autoinstall` false) → ASK ONE yes/no, then RUN it on
+     yes.** Plain language, e.g.: *"Your frontend has 151 JS files with no
+     reference oracle — want me to install it (one-time, no license) so the
+     frontend gets the same semantic dead-code checking PHP already has?"* On
+     **yes**, run `lsp_refs.py install <lang1> <lang2>` yourself (all worth-it
+     langs in one call) and report the result. On **no**, move on. Name any
+     language you skipped and why ("skipped Python: 1 file").
+   - **`oracle_autoinstall` true → skip the question, just run the install** and
+     report.
+   - **Unattended (any flag) → don't install** (a background `npm i -g` can hang
+     on sudo/network): print the `lsp_refs.py install <lang>` line and note it.
+
+   **THE ONE FORBIDDEN OUTCOME:** ending onboard having only *shown* an install
+   command for the user to copy. In an interactive session you must either ask
+   and (on yes) run it, or — with the flag — just run it. "Here's the one-liner
+   if you want it" is exactly the failure this step exists to prevent; a pasted
+   command is never the deliverable, the installed oracle (or a clean no) is.
+
+   `install` processes languages independently: if one hits a **permission
+   wall** (only `npm i -g` on a locked-down box can — pip --user/pipx/go/rustup
+   are user-level) it prints the no-admin fix + the exact command to forward to
+   a server admin and CONTINUES to the next language. Relay that admin command
+   verbatim; don't retry the blocked one in a loop.
    Declining is always fine — audits work without the oracle, they just lean
    fully on the dynamic-reference checklist. `install` stays opt-in by design:
    passive detection (`servers`/`check`, the audit) NEVER installs.
@@ -110,10 +111,10 @@ as conscious choices, user ready to work.
 - [ ] Map built and location policy applied
 - [ ] All five settings written as explicit choices
 - [ ] Status line offered (and installed on yes) — it never appears otherwise
-- [ ] Oracle checked; for the repo's MAIN languages the install was driven by
-      Claude (auto if `oracle_autoinstall`, else one decisive question then RUN
-      on yes) — 1–2-file languages named as skipped, never a pasted command,
-      never a background install unattended
+- [ ] Oracle: for each worth-it missing language, ASKED a yes/no and RAN the
+      install on yes (or just ran it if `oracle_autoinstall` true) — 1–2-file
+      languages named as skipped; NEVER ended by only printing a command for the
+      user to copy; never a background install unattended
 - [ ] Quickstart delivered; GSD integration noted when applicable
 </success_criteria>
 

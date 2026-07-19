@@ -19,9 +19,10 @@ DEFAULTS = {
     "auto_context_stop": 75, # fallback only: --auto offloads each item to a subagent so the
                              # main context stays flat; this % is the safety net if it doesn't.
     "allow_dangerous": True, # team kill-switch: False refuses `/srk:shave --auto --dangerous`.
-    "oracle_autoinstall": False,  # True: onboard installs missing LSP oracles for the repo's
-                                  # main languages WITHOUT asking (still only in interactive
-                                  # sessions — never a background npm i -g on a scheduled run).
+    "oracle_autoinstall": False,  # False (default): onboard ASKS a yes/no before installing a
+                                  # missing LSP oracle, then runs it on yes. True: onboard just
+                                  # installs the repo's main-language oracles, no prompt. Either
+                                  # way interactive-only — never a background npm i -g on a run.
 }
 
 QUIPS = {
