@@ -119,6 +119,93 @@ def test_servers_reports_both_states(repo, monkeypatch):
     assert "not installed" in out and "intelephense" in out
 
 
+def _fake_npm(path, target_bin, mode="ok", prefix="/nonexistent"):
+    """A stand-in npm: `install` drops a fake `intelephense` into target_bin
+    (unless mode='fail'); `prefix -g` reports prefix (for the off-PATH probe)."""
+    path.write_text(
+        f"#!{sys.executable}\n"
+        "import sys\nfrom pathlib import Path\n"
+        "a = sys.argv[1:]\n"
+        f"if a[:2] == ['prefix', '-g']:\n    print({str(prefix)!r})\n"
+        "    raise SystemExit(0)\n"
+        "if a and a[0] == 'install':\n"
+        f"    if {mode!r} == 'fail':\n"
+        "        sys.stderr.write('npm ERR! simulated\\n'); raise SystemExit(1)\n"
+        f"    b = Path({str(target_bin)!r}); b.mkdir(parents=True, exist_ok=True)\n"
+        "    e = b / 'intelephense'; e.write_text('#!/bin/sh\\necho i\\n')\n"
+        "    e.chmod(0o755)\n"
+        "raise SystemExit(0)\n")
+    path.chmod(0o755)
+
+
+def test_install_dry_run_shows_command_never_runs(repo, monkeypatch):
+    empty = repo / "bin"
+    empty.mkdir()
+    monkeypatch.setenv("PATH", str(empty))          # no npm anywhere
+    monkeypatch.delenv("SRK_LSP_CMD_PHP", raising=False)
+    code, out = run("lsp_refs.py", "install", "php", "--dry-run", cwd=repo)
+    assert code == 0
+    assert "would run" in out and "npm install -g intelephense" in out
+    assert "not on PATH" in out                     # honest about the gap
+    assert not (empty / "intelephense").exists()    # nothing was installed
+
+
+def test_install_already_present_skips(repo, monkeypatch):
+    monkeypatch.setenv("SRK_LSP_CMD_PHP", "echo stub")
+    code, out = run("lsp_refs.py", "install", "php", cwd=repo)
+    assert code == 0 and "already installed" in out
+
+
+def test_install_no_prereq_is_honest(repo, monkeypatch):
+    empty = repo / "bin"
+    empty.mkdir()
+    monkeypatch.setenv("PATH", str(empty))
+    monkeypatch.delenv("SRK_LSP_CMD_PHP", raising=False)
+    code, out = run("lsp_refs.py", "install", "php", cwd=repo)
+    assert code == 1
+    assert "can't auto-install" in out and "npm" in out
+
+
+def test_install_runs_then_verifies_on_path(repo, monkeypatch):
+    """End-to-end: prereq present → run it → server now on PATH → ✓."""
+    binpath = repo / "bin"
+    binpath.mkdir()
+    _fake_npm(binpath / "npm", target_bin=binpath)   # installs onto PATH
+    monkeypatch.setenv("PATH", str(binpath))
+    monkeypatch.delenv("SRK_LSP_CMD_PHP", raising=False)
+    code, out = run("lsp_refs.py", "install", "php", cwd=repo)
+    assert code == 0
+    assert "installed" in out and "intelephense" in out
+    assert (binpath / "intelephense").exists()
+
+
+def test_install_off_path_is_flagged_not_claimed(repo, monkeypatch):
+    """Installed but landed off-PATH → ⚠, counted as a failure, never ✓."""
+    binpath = repo / "bin"
+    binpath.mkdir()
+    prefix = repo / "npmprefix"                       # NOT on PATH
+    _fake_npm(binpath / "npm", target_bin=prefix / "bin", prefix=str(prefix))
+    monkeypatch.setenv("PATH", str(binpath))
+    monkeypatch.delenv("SRK_LSP_CMD_PHP", raising=False)
+    code, out = run("lsp_refs.py", "install", "php", cwd=repo)
+    assert code == 1
+    assert "NOT on your PATH" in out
+    assert (prefix / "bin" / "intelephense").exists()  # it did install…
+    # …but the oracle invokes by name, so this is a warning, not success
+
+
+def test_install_failure_surfaces_error(repo, monkeypatch):
+    binpath = repo / "bin"
+    binpath.mkdir()
+    _fake_npm(binpath / "npm", target_bin=binpath, mode="fail")
+    monkeypatch.setenv("PATH", str(binpath))
+    monkeypatch.delenv("SRK_LSP_CMD_PHP", raising=False)
+    code, out = run("lsp_refs.py", "install", "php", cwd=repo)
+    assert code == 1
+    assert "still isn't found" in out
+    assert not (binpath / "intelephense").exists()
+
+
 @pytest.mark.skipif(shutil.which("pylsp") is None,
                     reason="pylsp not installed — live-oracle test")
 def test_live_pylsp_round_trip(repo, monkeypatch):

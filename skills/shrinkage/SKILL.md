@@ -170,7 +170,9 @@ Extra signals for shave/audit: `codemap.py dupes` (same-name symbols),
 `coverage_check.py <files>` (coverage-aware tier escalation),
 `lsp_refs.py check` (the reference oracle — a real language server verifies
 every map-x0; refs found kills the candidate, zero found still walks the
-checklist), and `probe.py` (runtime deprecation telemetry, PHP+Python — arms
+checklist; `lsp_refs.py servers` lists oracles, `install [lang]` installs a
+missing one via its package manager — opt-in, onboarding asks first, passive
+detection never installs), and `probe.py` (runtime deprecation telemetry, PHP+Python — arms
 the §5 counter, tracks the window, closes the chain empirically or proves
 the symbol alive). Bookkeeping:
 `gatelog.py` (persistent gate ledger — diffstat flags new symbols with no

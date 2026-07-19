@@ -66,12 +66,25 @@ as conscious choices, user ready to work.
    `codemap.py refresh` so map location/gitignore reflect the choices.
 5. GSD project detected → point out the auto-integration (map + api-map.json
    in `.planning/intel/`, SHRINK-PLAN.md target, SUMMARY.md scoreboard lines).
-6. **Reference oracle check** — run `python3 $SKILL/scripts/lsp_refs.py
-   servers` and show the output. Any ✗ for a language this repo uses → offer
-   the one-line install (e.g. `npm i -g intelephense` for a PHP repo): an
-   installed oracle lets every audit semantically verify map-x0 candidates
-   instead of hand-clearing false positives. Decline is fine — audits work
-   without it, they just lean fully on the checklist.
+6. **Reference oracle — check, then OFFER TO INSTALL.** Run `python3
+   $SKILL/scripts/lsp_refs.py servers` and show the output. Cross-reference the
+   ✗ rows against the languages THIS repo actually uses (from the map you just
+   built — don't offer a Rust oracle to a PHP-only repo). For each missing
+   oracle whose language is present:
+   - **Interactive session → ask before installing.** One question per language
+     (or a single grouped one): "Install the PHP oracle? It's `intelephense`
+     via npm — a global package-manager install on this machine, one-time,
+     no license needed. It upgrades every audit's dead-code check from lexical
+     to semantic." On **yes**, run `python3 $SKILL/scripts/lsp_refs.py install
+     <lang>` and show the result — it runs the right package manager, then
+     re-checks the binary is actually on PATH (a package that lands off-PATH is
+     reported as a warning, never a false success). On **no**, move on.
+   - **Unattended session → never auto-install** (a background `npm i -g` could
+     hang on sudo/network). Just print the exact `lsp_refs.py install <lang>`
+     line for the user to run when they're back, and note it in the close.
+   Either way, declining is fine — audits work without the oracle, they just
+   lean fully on the dynamic-reference checklist. `install` is opt-in by
+   design: passive detection (`servers`/`check`, the audit) NEVER installs.
 7. Print the quickstart: `/srk:gate "<task>"` before coding, `/srk:score`
    after, `/srk:audit` when they want the backlog, `/srk:trend` to watch the
    ratchet move.
@@ -81,8 +94,9 @@ as conscious choices, user ready to work.
 - [ ] Map built and location policy applied
 - [ ] All five settings written as explicit choices
 - [ ] Status line offered (and installed on yes) — it never appears otherwise
-- [ ] Oracle availability shown (`lsp_refs.py servers`); install offered for
-      missing languages the repo uses
+- [ ] Oracle availability shown (`lsp_refs.py servers`); install OFFERED and
+      (on yes, interactive) RUN for missing languages the repo uses — never
+      auto-installed unattended
 - [ ] Quickstart delivered; GSD integration noted when applicable
 </success_criteria>
 

@@ -4,6 +4,16 @@ exact question: "is this x0 actually unreferenced?" via textDocument/references.
 
   check <file> <symbol> [<file> <symbol> ...]   verify map-x0 candidates
   servers                                       which oracles are installed
+  install [lang ...] [--dry-run]                install missing oracle(s) via
+                                                the ecosystem's package manager
+
+`install` is EXPLICIT — it runs a package manager, so it never fires from
+passive detection (`servers`/`check`); the agent or onboarding invokes it
+directly, and onboarding asks first. Bare `install` does every missing
+language; `install php python` scopes it. Each language tries its real
+package manager (npm/pipx/pip/go/rustup), gated on that tool existing, then
+re-checks that the server actually landed on PATH — a package that installed
+off-PATH is reported as such, never as a false success.
 
 Verdict semantics (asymmetric on purpose):
 - oracle finds references  -> the x0 was a false positive. Candidate KILLED
@@ -44,6 +54,20 @@ SERVERS = {
     "php": [(["intelephense", "--stdio"], "npm i -g intelephense")],
     "go": [(["gopls"], "go install golang.org/x/tools/gopls@latest")],
     "rust": [(["rust-analyzer"], "rustup component add rust-analyzer")],
+}
+
+# language -> ordered install candidates: (prereq tool, argv). First candidate
+# whose prereq tool exists wins. HARDCODED — install never runs a user string.
+INSTALL = {
+    "php": [("npm", ["npm", "install", "-g", "intelephense"])],
+    "javascript": [("npm", ["npm", "install", "-g", "typescript",
+                            "typescript-language-server"])],
+    "python": [("pipx", ["pipx", "install", "python-lsp-server"]),
+               ("pip3", ["pip3", "install", "--user", "python-lsp-server"]),
+               ("pip", ["pip", "install", "--user", "python-lsp-server"])],
+    "go": [("go", ["go", "install",
+                  "golang.org/x/tools/gopls@latest"])],
+    "rust": [("rustup", ["rustup", "component", "add", "rust-analyzer"])],
 }
 
 LANG_IDS = {".py": "python", ".js": "javascript", ".jsx": "javascriptreact",
@@ -246,8 +270,13 @@ def cmd_servers():
             print(f"  ✓ {lang:<11} {' '.join(argv)}")
         else:
             print(f"  ✗ {lang:<11} not installed — {hint}")
+    missing = [l for l in SERVERS if server_cmd(l)[0] is None]
     print("\nAny ✓ language upgrades x0 verification from lexical (the map) "
           "to semantic (the oracle).")
+    if missing:
+        print(f"Install a missing one: lsp_refs.py install "
+              f"[{' | '.join(missing)}]  (runs the package manager; "
+              "onboarding asks first).")
 
 
 def cmd_check(pairs):
@@ -318,12 +347,131 @@ def cmd_check(pairs):
     sys.exit(1 if killed else (0 if confirmed or not skipped else 2))
 
 
+def _server_exe(lang):
+    return SERVERS[lang][0][0][0]        # first candidate's binary name
+
+
+def _extra_bindirs(lang):
+    """Where a fresh install lands when it's not yet on PATH — asked of the
+    ecosystem's own tool, best-effort. rust returns the binary path directly."""
+    out = []
+    try:
+        if lang in ("php", "javascript") and shutil.which("npm"):
+            p = subprocess.run(["npm", "prefix", "-g"], capture_output=True,
+                               text=True, timeout=30)
+            if p.returncode == 0 and p.stdout.strip():
+                out.append(Path(p.stdout.strip()) / "bin")
+        elif lang == "python":
+            p = subprocess.run([sys.executable, "-m", "site", "--user-base"],
+                               capture_output=True, text=True, timeout=30)
+            if p.returncode == 0 and p.stdout.strip():
+                out.append(Path(p.stdout.strip()) / "bin")
+            out.append(Path.home() / ".local" / "bin")
+        elif lang == "go" and shutil.which("go"):
+            for var in ("GOBIN", "GOPATH"):
+                p = subprocess.run(["go", "env", var], capture_output=True,
+                                   text=True, timeout=30)
+                d = p.stdout.strip()
+                if p.returncode == 0 and d:
+                    out.append(Path(d) / "bin" if var == "GOPATH" else Path(d))
+        elif lang == "rust" and shutil.which("rustup"):
+            p = subprocess.run(["rustup", "which", "rust-analyzer"],
+                               capture_output=True, text=True, timeout=30)
+            if p.returncode == 0 and p.stdout.strip():
+                out.append(Path(p.stdout.strip()))   # direct binary path
+    except Exception:
+        pass
+    return out
+
+
+def _locate(lang):
+    """(path, on_path) for a language's server, or (None, False)."""
+    exe = _server_exe(lang)
+    hit = shutil.which(exe)
+    if hit:
+        return hit, True
+    for d in _extra_bindirs(lang):
+        cand = d if d.name == exe else d / exe
+        if cand.exists():
+            return str(cand), False
+    return None, False
+
+
+def cmd_install(langs, dry_run):
+    if not langs:
+        langs = [l for l in INSTALL if server_cmd(l)[0] is None]
+        if not langs:
+            print("all registered oracles are already installed — nothing "
+                  "to do.")
+            return
+    unknown = [l for l in langs if l not in INSTALL]
+    if unknown:
+        die(2, f"no install recipe for: {', '.join(unknown)} "
+               f"(known: {', '.join(INSTALL)})")
+
+    failures = 0
+    for lang in langs:
+        if server_cmd(lang)[0] is not None:
+            print(f"✓ {lang}: already installed — skipping.")
+            continue
+        candidate = next((c for c in INSTALL[lang] if shutil.which(c[0])), None)
+        if dry_run:
+            argv = candidate[1] if candidate else INSTALL[lang][0][1]
+            flag = "" if candidate else (
+                f"  (⚠ {INSTALL[lang][0][0]} not on PATH — install it first)")
+            print(f"• {lang}: would run  {' '.join(argv)}{flag}")
+            continue
+        if candidate is None:
+            need = " / ".join(c[0] for c in INSTALL[lang])
+            print(f"✗ {lang}: can't auto-install — need one of [{need}] on "
+                  f"PATH first. Manual: {server_cmd(lang)[1]}")
+            failures += 1
+            continue
+        _, argv = candidate
+        print(f"→ {lang}: {' '.join(argv)}")
+        try:
+            r = subprocess.run(argv, capture_output=True, text=True,
+                               timeout=900)
+        except subprocess.TimeoutExpired:
+            print(f"✗ {lang}: install timed out (900s). Run it by hand: "
+                  f"{' '.join(argv)}")
+            failures += 1
+            continue
+        path, on_path = _locate(lang)
+        if path and on_path:
+            print(f"✓ {lang}: installed — {path}")
+        elif path:
+            print(f"⚠ {lang}: installed at {path}, but NOT on your PATH — the "
+                  f"oracle invokes `{_server_exe(lang)}` by name, so add that "
+                  "directory to PATH (or symlink it) for it to work.")
+            failures += 1
+        else:
+            tail = "\n    ".join(
+                (r.stderr or r.stdout or "").strip().splitlines()[-12:])
+            note = ("\n  (PEP 668 externally-managed? try `pipx install "
+                    "python-lsp-server`)" if lang == "python" else "")
+            print(f"✗ {lang}: install ran (exit {r.returncode}) but "
+                  f"`{_server_exe(lang)}` still isn't found.{note}"
+                  + (f"\n    {tail}" if tail else ""))
+            failures += 1
+
+    if not dry_run:
+        print(f"\n{len(langs) - failures}/{len(langs)} oracle(s) ready."
+              + (" Re-run `lsp_refs.py servers` to confirm." if failures
+                 else ""))
+    sys.exit(1 if failures else 0)
+
+
 def main():
     args = sys.argv[1:]
     if not args or args[0] in ("-h", "--help"):
         die(0, __doc__)
     if args[0] == "servers":
         cmd_servers()
+        return
+    if args[0] == "install":
+        rest = [a for a in args[1:] if a != "--dry-run"]
+        cmd_install([l.lower() for l in rest], "--dry-run" in args)
         return
     if args[0] == "check":
         rest = args[1:]
