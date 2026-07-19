@@ -38,6 +38,13 @@ phases) consuming the plan.
    same "here's where you stand, here's the next action" report — "plan
    re-stamped" alone is not a close.
 
+   **Probe harvest (any path, costs one command):** if `.shrinkage/probes.json`
+   exists, run `python3 $SKILL/scripts/probe.py status`. CLOSED-ZERO → that
+   deferred row's chain is closed empirically: promote it to executable, cite
+   the probe id in its evidence. ALIVE → the symbol has a production caller:
+   flip the row to a ledger keep and remove the probe. BLIND → surface it in
+   the TODO list (telemetry is off — the window isn't really counting).
+
 1. **Fresh map, full scope.** `codemap.py build` (or `scope <dir>`); note
    files collapsed by budget — for an audit, prefer raising the budget or
    auditing per-subtree so nothing hides in a collapsed file.
@@ -113,6 +120,20 @@ phases) consuming the plan.
    calls it, nothing tests it), while 0 refs but well-covered says the refs
    are hiding somewhere (fixtures, dynamic dispatch) — walk the checklist
    harder before believing it's dead.
+   **Ask the oracle before believing any x0.** `lsp_refs.py servers` — if a
+   language server is installed for the candidate's language, every map-x0
+   candidate gets `python3 $SKILL/scripts/lsp_refs.py check <file> <symbol>
+   [<file> <symbol> …]` (batch them — one server session per language). The
+   map's x0 is *lexical*; the oracle's answer is *semantic*, and the two
+   verdicts are asymmetric: **oracle finds references → the candidate is
+   KILLED instantly** (that's a false x0 caught in seconds instead of an
+   hour of checklist — in one field run over half the map's x0s were false);
+   **oracle finds zero → mark the row's evidence `oracle-confirmed x0` and
+   STILL walk the dynamic-reference checklist** — LSP resolves imports and
+   calls, not DI containers, config strings, reflection, routes, templates,
+   or queued-job class names. No oracle installed → note it once in the plan
+   header (with the one-line install hint `lsp_refs.py servers` prints) and
+   carry on checklist-only; never block the audit on a missing server.
    **No coverage report at all → suite-gated mode** (safety-model §4): don't
    cap the whole plan at T2. Declare the standing condition **once** in the plan
    header (see step 6) and then, per row, name the specific suite that would
@@ -193,7 +214,11 @@ phases) consuming the plan.
    followed by a `## Hidden dependencies discovered` section that future
    audits and shaves append to (reverted attempts land here), and a
    `## Deferred (T2)` section where each entry carries its deprecation-cycle
-   proposal. This file is the audit's product and the shave's input.
+   proposal — for PHP/Python rows that's concrete: arm the counter with
+   `probe.py add <file> <symbol> --window N` and stamp the row
+   `probe: <id> since <date>`; the NEXT audit runs `probe.py status` during
+   step 0 and flips CLOSED-ZERO rows to executable (ALIVE rows to keeps).
+   This file is the audit's product and the shave's input.
 
    Close the plan with a **`## TODO before shaving`** checklist — the
    operator's gate for the whole shave cycle. Source items from: every entry in

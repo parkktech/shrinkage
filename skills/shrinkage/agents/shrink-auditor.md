@@ -52,10 +52,19 @@ entry, NEVER propose a `## frozen` path.
    may no longer apply. Emit each as a candidate block with a `status:` line
    (`still-open` / `now-executable` / `gone` / `changed: <what>`) so carry-over
    is a systematic re-check, not a hand-written list.
-4. Walk the dynamic-reference checklist for the candidate's language. Items
+4. **x0 candidates: ask the oracle first.** If `scripts/lsp_refs.py servers`
+   shows an installed server for the candidate's language, run
+   `scripts/lsp_refs.py check <file> <symbol>` (batch your sweep's candidates
+   into one call — one server session). Oracle finds references → the
+   candidate is DEAD ON ARRIVAL: drop it, report it as a killed false-x0
+   (one line, no candidate block). Oracle finds zero → note
+   `oracle-confirmed x0` in the evidence line and continue to the checklist.
+5. Walk the dynamic-reference checklist for the candidate's language. Items
    you cannot verify → say so explicitly; unverifiable checklist items cap
-   the candidate at T2.
-5. Assign: catalog entry, tier, estimated net LOC, effort (S/M/L), confidence
+   the candidate at T2. **A T2 that stalls on "unknown external callers" is a
+   probe candidate**: recommend `probe.py add` in the gotchas line so the
+   plan row carries the §5 telemetry route instead of dying as "unprovable".
+6. Assign: catalog entry, tier, estimated net LOC, effort (S/M/L), confidence
    (high = full chain; medium = chain minus history; low = signals only —
    low-confidence candidates are allowed but must be labeled).
 </process>

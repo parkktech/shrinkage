@@ -66,7 +66,13 @@ as conscious choices, user ready to work.
    `codemap.py refresh` so map location/gitignore reflect the choices.
 5. GSD project detected → point out the auto-integration (map + api-map.json
    in `.planning/intel/`, SHRINK-PLAN.md target, SUMMARY.md scoreboard lines).
-6. Print the quickstart: `/srk:gate "<task>"` before coding, `/srk:score`
+6. **Reference oracle check** — run `python3 $SKILL/scripts/lsp_refs.py
+   servers` and show the output. Any ✗ for a language this repo uses → offer
+   the one-line install (e.g. `npm i -g intelephense` for a PHP repo): an
+   installed oracle lets every audit semantically verify map-x0 candidates
+   instead of hand-clearing false positives. Decline is fine — audits work
+   without it, they just lean fully on the checklist.
+7. Print the quickstart: `/srk:gate "<task>"` before coding, `/srk:score`
    after, `/srk:audit` when they want the backlog, `/srk:trend` to watch the
    ratchet move.
 </process>
@@ -75,6 +81,8 @@ as conscious choices, user ready to work.
 - [ ] Map built and location policy applied
 - [ ] All five settings written as explicit choices
 - [ ] Status line offered (and installed on yes) — it never appears otherwise
+- [ ] Oracle availability shown (`lsp_refs.py servers`); install offered for
+      missing languages the repo uses
 - [ ] Quickstart delivered; GSD integration noted when applicable
 </success_criteria>
 
