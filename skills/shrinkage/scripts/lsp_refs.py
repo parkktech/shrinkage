@@ -13,7 +13,11 @@ directly, and onboarding asks first. Bare `install` does every missing
 language; `install php python` scopes it. Each language tries its real
 package manager (npm/pipx/pip/go/rustup), gated on that tool existing, then
 re-checks that the server actually landed on PATH — a package that installed
-off-PATH is reported as such, never as a false success.
+off-PATH is reported as such, never as a false success. Languages are
+independent: one failing never stops the rest. A permission wall (the only
+privileged case — `npm i -g` against a system prefix; pip --user, pipx, go,
+rustup are all user-level) is caught and reported as "no-admin fix, or send
+this exact command to your server admin", then the loop moves on.
 
 Verdict semantics (asymmetric on purpose):
 - oracle finds references  -> the x0 was a false positive. Candidate KILLED
@@ -347,6 +351,18 @@ def cmd_check(pairs):
     sys.exit(1 if killed else (0 if confirmed or not skipped else 2))
 
 
+_PERM_SIGNS = ("eacces", "eperm", "permission denied", "operation not permitted",
+               "access is denied", "must be run as root", "need to be root",
+               "requires superuser", "as administrator", "are you root")
+
+
+def _perm_error(text):
+    """Did the package manager fail for lack of privilege (vs. any other
+    reason)? Distinguishes 'ask your admin' from 'the install is just broken'."""
+    low = (text or "").lower()
+    return any(s in low for s in _PERM_SIGNS)
+
+
 def _server_exe(lang):
     return SERVERS[lang][0][0][0]        # first candidate's binary name
 
@@ -409,7 +425,7 @@ def cmd_install(langs, dry_run):
         die(2, f"no install recipe for: {', '.join(unknown)} "
                f"(known: {', '.join(INSTALL)})")
 
-    failures = 0
+    failures, admin = 0, []
     for lang in langs:
         if server_cmd(lang)[0] is not None:
             print(f"✓ {lang}: already installed — skipping.")
@@ -445,6 +461,19 @@ def cmd_install(langs, dry_run):
                   f"oracle invokes `{_server_exe(lang)}` by name, so add that "
                   "directory to PATH (or symlink it) for it to work.")
             failures += 1
+        elif _perm_error((r.stderr or "") + "\n" + (r.stdout or "")):
+            admin.append(lang)
+            failures += 1
+            print(f"✗ {lang}: the package manager hit a PERMISSION error — "
+                  "this account can't install it here.")
+            if candidate[0] == "npm":
+                print("  → No admin needed — give npm a user-level prefix, "
+                      "then retry (nothing here touches system dirs):")
+                print("      npm config set prefix ~/.npm-global && "
+                      'export PATH="$HOME/.npm-global/bin:$PATH"')
+                print(f"      lsp_refs.py install {lang}")
+            print("  → Or contact your server admin and ask them to install "
+                  f"this:\n      {' '.join(argv)}")
         else:
             tail = "\n    ".join(
                 (r.stderr or r.stdout or "").strip().splitlines()[-12:])
@@ -459,6 +488,9 @@ def cmd_install(langs, dry_run):
         print(f"\n{len(langs) - failures}/{len(langs)} oracle(s) ready."
               + (" Re-run `lsp_refs.py servers` to confirm." if failures
                  else ""))
+        if admin:
+            print(f"Needs elevated install (send your admin the command above, "
+                  f"or use the no-admin fix): {', '.join(admin)}.")
     sys.exit(1 if failures else 0)
 
 

@@ -89,7 +89,12 @@ as conscious choices, user ready to work.
      install <lang>` yourself and show the result — it picks the right package
      manager, then re-checks the binary is actually on PATH (off-PATH lands as
      a warning with the dir to add, never a false success). Do NOT make the
-     user copy a command; the whole point is that you do it.
+     user copy a command; the whole point is that you do it. Pass ALL the
+     worth-it languages in one `install a b c` call — it processes each
+     independently, so if one hits a **permission wall** (only `npm i -g` on a
+     locked-down box can) it prints the no-admin fix + the exact command to
+     forward to a server admin and CONTINUES to the next language. Relay that
+     admin command verbatim; don't retry the blocked one in a loop.
    - **Unattended → never auto-install** even with the flag set (a background
      `npm i -g` can hang on sudo/network). Print the exact `lsp_refs.py install
      <lang>` line and note it in the close.

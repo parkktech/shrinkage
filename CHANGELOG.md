@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.40.2
+The install flow now fails gracefully and specifically: try → if it can't,
+tell you exactly what to hand your server admin → move to the next language.
+
+- **Permission walls are caught, not dumped.** When a package manager fails
+  for lack of privilege (only `npm i -g` against a system prefix can — pip
+  `--user`, pipx, go, rustup are all user-level), `lsp_refs.py install` now
+  says so plainly and prints two escape hatches: the **no-admin fix** (point
+  npm at a user prefix, retry) and the **exact command to forward to a server
+  admin**. Non-permission failures still surface the real error tail. A
+  permission classifier (EACCES/EPERM/"permission denied"/root) distinguishes
+  "ask your admin" from "the install is just broken".
+- **Languages are independent.** One language failing never aborts the rest —
+  the loop reports each outcome and moves on, so `install php javascript go`
+  handles all three even if the first hits a wall. +2 tests (permission→admin
+  message, continue-after-failure); the fake-package-manager harness gained an
+  EACCES mode.
+
 ## 0.40.1
 Onboard now DRIVES the oracle install instead of handing you a command. From
 a field re-onboard: it detected PHP ✓ / JS ✗ (151 files) but buried the offer

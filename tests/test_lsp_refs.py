@@ -129,6 +129,10 @@ def _fake_npm(path, target_bin, mode="ok", prefix="/nonexistent"):
         f"if a[:2] == ['prefix', '-g']:\n    print({str(prefix)!r})\n"
         "    raise SystemExit(0)\n"
         "if a and a[0] == 'install':\n"
+        f"    if {mode!r} == 'eacces':\n"
+        "        sys.stderr.write('npm ERR! code EACCES\\n"
+        "npm ERR! Error: EACCES: permission denied, mkdir "
+        "/usr/lib/node_modules\\n'); raise SystemExit(1)\n"
         f"    if {mode!r} == 'fail':\n"
         "        sys.stderr.write('npm ERR! simulated\\n'); raise SystemExit(1)\n"
         f"    b = Path({str(target_bin)!r}); b.mkdir(parents=True, exist_ok=True)\n"
@@ -192,6 +196,36 @@ def test_install_off_path_is_flagged_not_claimed(repo, monkeypatch):
     assert "NOT on your PATH" in out
     assert (prefix / "bin" / "intelephense").exists()  # it did install…
     # …but the oracle invokes by name, so this is a warning, not success
+
+
+def test_install_permission_wall_points_to_admin(repo, monkeypatch):
+    """EACCES → 'no-admin fix, or send this to your admin' — not a raw trace."""
+    binpath = repo / "bin"
+    binpath.mkdir()
+    _fake_npm(binpath / "npm", target_bin=binpath, mode="eacces")
+    monkeypatch.setenv("PATH", str(binpath))
+    monkeypatch.delenv("SRK_LSP_CMD_PHP", raising=False)
+    code, out = run("lsp_refs.py", "install", "php", cwd=repo)
+    assert code == 1
+    assert "PERMISSION" in out
+    assert "server admin" in out
+    assert "npm install -g intelephense" in out        # the exact command to forward
+    assert "npm config set prefix" in out              # the no-admin escape hatch
+
+
+def test_install_continues_to_next_language_after_failure(repo, monkeypatch):
+    """One language failing must not abort the others — the loop moves on."""
+    binpath = repo / "bin"
+    binpath.mkdir()
+    _fake_npm(binpath / "npm", target_bin=binpath, mode="eacces")  # php via npm fails
+    monkeypatch.setenv("PATH", str(binpath))                       # go: no `go` on PATH
+    for v in ("SRK_LSP_CMD_PHP", "SRK_LSP_CMD_GO"):
+        monkeypatch.delenv(v, raising=False)
+    code, out = run("lsp_refs.py", "install", "php", "go", cwd=repo)
+    assert code == 1
+    assert "php" in out and "PERMISSION" in out          # php: admin-wall reported
+    assert "go" in out and "can't auto-install" in out   # go: reached and handled
+    assert out.index("php") < out.index("go")            # processed in order, both
 
 
 def test_install_failure_surfaces_error(repo, monkeypatch):
