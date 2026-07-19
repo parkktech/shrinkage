@@ -28,8 +28,12 @@ important ones and the comedy one.
    - `auto_context_stop` — `--auto` stops when the context window passes this
      percent (default 75), so long runs stay resumable.
    - `quiet_startup` — `true`: suppress the session-start [shrinkage] line.
+   - `oracle_autoinstall` — `false` (default): `/srk:onboard` asks one
+     question before installing a missing LSP reference oracle. `true`: onboard
+     just installs the oracle for the repo's main languages, no prompt (still
+     interactive-only — never a background install on a scheduled run).
 2. With `key value`: validate (gate ∈ soft|hard; commit_map, pr_scoreboard,
-   humor/quiet_startup ∈ true|false; budget/auto_max_items/auto_context_stop = positive int), update the file, confirm the
+   humor/quiet_startup/oracle_autoinstall ∈ true|false; budget/auto_max_items/auto_context_stop = positive int), update the file, confirm the
    change in one line.
 3. Side effects: `commit_map` → true: remove the map path from `.gitignore`;
    → false: re-run `/srk:map` so the ignore entry is restored. `humor` →

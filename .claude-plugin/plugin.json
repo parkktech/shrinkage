@@ -1,6 +1,6 @@
 {
   "name": "shrinkage",
-  "version": "0.40.0",
+  "version": "0.40.1",
   "description": "Shrinkage \u2014 write less, better code: token-lean codemaps, a reuse-first extension ladder, and provably-safe code reduction with backwards compatibility as the Zeroth Law. An LSP reference oracle and runtime deprecation probes turn \u201clooks unused\u201d into proof before anything is deleted. Commands: /srk:onboard, /srk:map, /srk:query, /srk:gate, /srk:audit, /srk:shave, /srk:score, /srk:trend, /srk:coverage, /srk:config, /srk:update, /srk:help.",
   "author": {
     "name": "Jason Ratzlaff"

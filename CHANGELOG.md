@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.40.1
+Onboard now DRIVES the oracle install instead of handing you a command. From
+a field re-onboard: it detected PHP ✓ / JS ✗ (151 files) but buried the offer
+under the status report, showed a raw `lsp_refs.py install` incantation, and
+silently skipped Python without saying why — so it read as homework, not help.
+
+- **Onboard drives, doesn't delegate.** The oracle step now: (1) decides which
+  missing oracles are worth it by the map's file counts — skips 1–2-file
+  languages and NAMES the skip so you're not left wondering about the other ✗;
+  (2) asks ONE decisive question in plain language, not a per-language quiz and
+  not a pasted command; (3) runs `lsp_refs.py install` *itself* on yes. The
+  user never copies a command — the whole point is that Claude does it.
+- **`oracle_autoinstall` setting (default false).** Set it `true` and onboard
+  installs the oracle for your repo's main languages with no prompt at all —
+  the hands-off switch. Still interactive-only: a background `npm i -g` never
+  fires on a scheduled/unattended run, flag or no flag. +3 settings tests.
+
 ## 0.40.0
 The oracle installs itself now — onboarding asks first, and nothing installs
 behind your back.

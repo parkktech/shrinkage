@@ -66,25 +66,36 @@ as conscious choices, user ready to work.
    `codemap.py refresh` so map location/gitignore reflect the choices.
 5. GSD project detected → point out the auto-integration (map + api-map.json
    in `.planning/intel/`, SHRINK-PLAN.md target, SUMMARY.md scoreboard lines).
-6. **Reference oracle — check, then OFFER TO INSTALL.** Run `python3
-   $SKILL/scripts/lsp_refs.py servers` and show the output. Cross-reference the
-   ✗ rows against the languages THIS repo actually uses (from the map you just
-   built — don't offer a Rust oracle to a PHP-only repo). For each missing
-   oracle whose language is present:
-   - **Interactive session → ask before installing.** One question per language
-     (or a single grouped one): "Install the PHP oracle? It's `intelephense`
-     via npm — a global package-manager install on this machine, one-time,
-     no license needed. It upgrades every audit's dead-code check from lexical
-     to semantic." On **yes**, run `python3 $SKILL/scripts/lsp_refs.py install
-     <lang>` and show the result — it runs the right package manager, then
-     re-checks the binary is actually on PATH (a package that lands off-PATH is
-     reported as a warning, never a false success). On **no**, move on.
-   - **Unattended session → never auto-install** (a background `npm i -g` could
-     hang on sudo/network). Just print the exact `lsp_refs.py install <lang>`
-     line for the user to run when they're back, and note it in the close.
-   Either way, declining is fine — audits work without the oracle, they just
-   lean fully on the dynamic-reference checklist. `install` is opt-in by
-   design: passive detection (`servers`/`check`, the audit) NEVER installs.
+6. **Reference oracle — check, then DRIVE THE INSTALL (don't hand over a
+   command).** Run `python3 $SKILL/scripts/lsp_refs.py servers`. Decide which
+   missing oracles are worth installing by the map's own file counts: a
+   language is "in this repo" for oracle purposes only if it has a real
+   presence — **skip anything with just 1–2 files** (a stray build script
+   isn't worth a global install). So a 415-PHP / 151-JS / 1-Python repo →
+   PHP + JS are candidates, Python is not.
+
+   Then, in order of preference:
+   - **`oracle_autoinstall: true` in settings → just install, no question.**
+     Run `lsp_refs.py install <lang>` for each worth-it missing oracle and
+     report what happened. This is the hands-off switch; honor it.
+   - **Otherwise, interactive → ONE decisive question, then YOU run it.** Not a
+     per-language quiz, not a pasted command. Say it in plain language and name
+     what you're skipping and why, e.g.: *"Your backend PHP oracle is already
+     live. Your frontend has 151 JS files with no oracle — want me to install
+     it so the frontend gets the same semantic dead-code checking? (I'd run the
+     TypeScript language server install — one-time, no license. I'm skipping
+     Python: only 1 file.) Also: set `oracle_autoinstall: true` and I'll just
+     handle this automatically next time."* On **yes**, run `lsp_refs.py
+     install <lang>` yourself and show the result — it picks the right package
+     manager, then re-checks the binary is actually on PATH (off-PATH lands as
+     a warning with the dir to add, never a false success). Do NOT make the
+     user copy a command; the whole point is that you do it.
+   - **Unattended → never auto-install** even with the flag set (a background
+     `npm i -g` can hang on sudo/network). Print the exact `lsp_refs.py install
+     <lang>` line and note it in the close.
+   Declining is always fine — audits work without the oracle, they just lean
+   fully on the dynamic-reference checklist. `install` stays opt-in by design:
+   passive detection (`servers`/`check`, the audit) NEVER installs.
 7. Print the quickstart: `/srk:gate "<task>"` before coding, `/srk:score`
    after, `/srk:audit` when they want the backlog, `/srk:trend` to watch the
    ratchet move.
@@ -94,9 +105,10 @@ as conscious choices, user ready to work.
 - [ ] Map built and location policy applied
 - [ ] All five settings written as explicit choices
 - [ ] Status line offered (and installed on yes) — it never appears otherwise
-- [ ] Oracle availability shown (`lsp_refs.py servers`); install OFFERED and
-      (on yes, interactive) RUN for missing languages the repo uses — never
-      auto-installed unattended
+- [ ] Oracle checked; for the repo's MAIN languages the install was driven by
+      Claude (auto if `oracle_autoinstall`, else one decisive question then RUN
+      on yes) — 1–2-file languages named as skipped, never a pasted command,
+      never a background install unattended
 - [ ] Quickstart delivered; GSD integration noted when applicable
 </success_criteria>
 
