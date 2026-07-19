@@ -126,6 +126,12 @@ Deleting is part of the feature; this workflow is how deletion earns trust.
        ...
    To continue:
      • /srk:shave <k>            — confirm this one (deprecation cycle for T2)
+     • arm a probe on #k         — PHP/Python T2s: `probe.py add <file> <symbol>
+                                   --window 30` starts the §5 telemetry clock
+                                   NOW; the row waits on production evidence
+                                   instead of on a human guess (mark the row
+                                   `probe: <id> since <date>`; next audit's
+                                   `probe.py status` reads the verdict)
      • /srk:shave --auto --dangerous  — execute ALL remaining autonomously
                                         (removes public surface directly; each
                                         commit still tested + revertible)

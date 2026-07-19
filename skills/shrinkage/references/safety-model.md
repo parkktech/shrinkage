@@ -172,6 +172,25 @@ surface, unknown external callers — don't delete. Instrument:
 This converts "unprovable" into "measured" — the only honest path to shrinking
 a public surface.
 
+**Mechanized (PHP + Python):** `scripts/probe.py` runs this cycle end-to-end.
+`probe.py add <file> <symbol> [--window N] [--logs GLOB …]` inserts the
+counter at the body entry via the surgery engines (balance/parse-checked;
+abstract bodies, one-liners, and code-on-the-brace-line are refused with the
+fix), registers it in `.shrinkage/probes.json` (committed — the registry IS
+the institutional memory), and adds the DEPRECATIONS.md row. The plan row
+carries `probe: <id> since <date>`. **The counter only fires in RUNNING
+code** — the probe commit must DEPLOY, and the window starts at arming, not
+at deploy; if deploy lagged, extend the window mentally. `probe.py status`
+reads the verdict per probe and refuses to flatter: **ALIVE** (marker found
+in the logs → a real caller exists → keep the symbol, remove the probe),
+**window open** (keep waiting), **BLIND** (zero log files matched the globs
+→ telemetry is off, the zero means nothing — fix the globs or the deploy
+before trusting anything), **CLOSED-ZERO** (window elapsed, real logs
+watched, zero hits → the chain is closed empirically; remove the symbol
+citing the probe id, then `probe.py remove <id>`). Other languages: refuse
+to fake it — verify with the LSP oracle (`lsp_refs.py check`) plus the
+checklist instead.
+
 Every shim and deprecation created under this cycle is recorded in
 **DEPRECATIONS.md** (repo root) as `- [ ] <old> -> <new> (remove <when>)`, and
 the trend report counts unchecked entries — a shim without a scheduled,
