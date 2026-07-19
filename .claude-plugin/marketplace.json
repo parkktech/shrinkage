@@ -9,7 +9,7 @@
     {
       "name": "shrinkage",
       "source": "./",
-      "description": "Shrinkage — write less, better code: token-lean codemaps, reuse-first extension ladder, provably-safe reduction. /srk:map, /srk:gate, /srk:score, /srk:shave, /srk:audit.",
+      "description": "Shrinkage — write less, better code: token-lean codemaps, reuse-first extension ladder, provably-safe reduction. An LSP reference oracle and runtime deprecation probes turn 'looks unused' into proof before deletion. /srk:map, /srk:gate, /srk:audit, /srk:shave, /srk:coverage.",
       "category": "development",
       "tags": ["code-quality", "refactoring", "dead-code", "gsd"]
     }

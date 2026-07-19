@@ -160,6 +160,11 @@ Nothing to configure, nothing to run per-repo.
   plus an `⬆ /srk:update` nudge when a release ships): `/srk:onboard` offers it
   first thing — and if another tool already owns your status line (GSD, a
   custom bar), Shrinkage **chains onto it** instead of replacing it.
+- The reference oracle (semantic x0 verification): `/srk:onboard` detects
+  which language servers your repo needs, and — with your yes — installs the
+  missing one for you (`lsp_refs.py install <lang>` runs the right package
+  manager and confirms it landed on PATH). It's opt-in: the audit never
+  installs anything on its own.
 - Exact parsing (regex fallback already works):
   `pip install tree-sitter tree-sitter-javascript tree-sitter-typescript tree-sitter-php`
 - GitHub Copilot instead of Claude Code: see [Other runtimes](#other-runtimes).

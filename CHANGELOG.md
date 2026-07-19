@@ -1,5 +1,28 @@
 # Changelog
 
+## 0.40.0
+The oracle installs itself now — onboarding asks first, and nothing installs
+behind your back.
+
+- **`lsp_refs.py install [lang ...] [--dry-run]`.** For each missing oracle it
+  picks the language's real package manager (npm for intelephense/tsserver,
+  pipx→pip for pylsp, go, rustup), **gated on that tool actually existing**,
+  runs it, then **re-checks the binary is on PATH** — a package that installs
+  off-PATH is reported as a warning with the directory to add, never as a
+  false ✓. Bare `install` does every missing language; `install php` scopes
+  it. HARDCODED command table — it never runs a user-supplied string. +6 tests
+  incl. a fake package manager exercising the run→verify→PATH-check loop, the
+  off-PATH warning, honest failure surfacing, and prereq-missing.
+- **Onboarding offers to install.** `/srk:onboard` now cross-references the
+  ✗ oracles against the languages the repo actually uses and, in an
+  interactive session, **asks per language and runs the install on yes**
+  (unattended sessions print the line instead — a background `npm i -g` must
+  never hang a scheduled run on a sudo prompt). Passive detection —
+  `servers`, `check`, the audit itself — still never installs anything.
+- **Storefront description refreshed.** plugin.json + marketplace.json blurbs
+  were a release or two stale (no `/srk:coverage`, no mention of the oracle or
+  probes) — the plugin was failing its own doc-truth rule. Now current.
+
 ## 0.39.1
 README: the evidence engine gets its own section. v0.39's two capabilities
 were only visible as flipped Roadmap entries — the wrong shelf for shipped
