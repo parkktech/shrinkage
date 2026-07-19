@@ -368,16 +368,22 @@ what makes deletion safe in that ecosystem.
 
 Straight from the field verdicts, ranked by what would change outcomes:
 
-- **LSP-grade reference resolution.** Today's map is a token-lean *hint* and the
-  evidence chain does the proving — which is honest but expensive (~100 of 154
-  zero-ref flags on one repo were framework-convention false positives the
-  auditors had to hand-clear). Wiring the map to PHPStan/intelephense/tsserver
-  indexes kills the false-`x0` class and cuts audit cost several-fold.
-- **Production evidence, not just static evidence.** The deprecation cycle
-  (safety-model §5) is manual today. The end-state: flag a T2 candidate →
-  auto-instrument a one-line telemetry counter → an observation window of zero
-  hits closes the chain empirically → the removal PRs itself. The only honest
-  way to shrink public surface, end-to-end.
+- **LSP-grade reference resolution — SHIPPED (v0.39).** The map stays the
+  token-lean *hint*; `lsp_refs.py check` asks a real language server
+  (pylsp/pyright, tsserver, intelephense, gopls, rust-analyzer — whatever is
+  installed) `textDocument/references` for every map-`x0` candidate. Oracle
+  finds refs → false positive killed in seconds (~100 of 154 zero-ref flags
+  on one field repo were exactly this class); oracle finds zero →
+  "oracle-confirmed x0", and the dynamic-reference checklist still runs —
+  LSP can't see DI containers, config strings, or reflection.
+- **Production evidence, not just static evidence — SHIPPED v1 (v0.39).**
+  `probe.py` mechanizes the deprecation cycle (safety-model §5): `add`
+  inserts a one-line telemetry counter at the symbol's entry (PHP + Python;
+  exact placement via the surgery engines), tracks it in a committed
+  registry + DEPRECATIONS.md; `status` scans your logs and closes the chain
+  empirically — ALIVE keeps the symbol, CLOSED-ZERO licenses the removal,
+  BLIND refuses to call a dead telemetry channel "proof". Still roadmap: the
+  removal PR-ing itself at window close.
 - **Continuous instead of big-bang.** The seven sweeps scoped to each merged
   PR's diff in CI, plus the unjustified-new-symbol check the gatelog already
   does — dead code caught the week it's born, at diff-sized cost.

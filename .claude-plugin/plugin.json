@@ -1,12 +1,20 @@
 {
   "name": "shrinkage",
-  "version": "0.38.0",
-  "description": "Shrinkage — write less, better code: token-lean codemaps, a reuse-first extension ladder, and provably-safe code reduction with backwards compatibility as the Zeroth Law. Commands: /srk:onboard, /srk:map, /srk:query, /srk:gate, /srk:score, /srk:shave, /srk:audit, /srk:trend, /srk:config, /srk:update, /srk:help.",
+  "version": "0.39.0",
+  "description": "Shrinkage \u2014 write less, better code: token-lean codemaps, a reuse-first extension ladder, and provably-safe code reduction with backwards compatibility as the Zeroth Law. Commands: /srk:onboard, /srk:map, /srk:query, /srk:gate, /srk:score, /srk:shave, /srk:audit, /srk:trend, /srk:config, /srk:update, /srk:help.",
   "author": {
     "name": "Jason Ratzlaff"
   },
   "repository": "https://github.com/parkktech/shrinkage",
   "license": "MIT",
   "commands": "./commands/srk/",
-  "keywords": ["code-minimalism", "refactoring", "dead-code", "codemap", "gsd", "code-quality", "shrinkage"]
+  "keywords": [
+    "code-minimalism",
+    "refactoring",
+    "dead-code",
+    "codemap",
+    "gsd",
+    "code-quality",
+    "shrinkage"
+  ]
 }

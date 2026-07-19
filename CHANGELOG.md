@@ -1,5 +1,42 @@
 # Changelog
 
+## 0.39.0
+The two revolutionary-ceiling stones, design-first: the map gets an oracle,
+and the deprecation cycle gets a heartbeat.
+
+- **LSP-grade reference resolution — `lsp_refs.py`.** A minimal, dependency-free
+  LSP client (Content-Length framed JSON-RPC over stdio) that asks a real
+  language server the audit's exact question: `check <file> <symbol> …` runs
+  `textDocument/references` on every map-x0 candidate. Server registry by
+  language — pylsp/pyright, typescript-language-server, intelephense, gopls,
+  rust-analyzer — one server session reused across the batch, rootUri at the
+  git toplevel, interleaved server noise (notifications, server→client
+  requests) handled without stalling. The verdict is deliberately asymmetric:
+  **refs found → the false x0 is KILLED in seconds** (the class that cost a
+  field run ~100 hand-cleared candidates out of 154); **zero found →
+  `oracle-confirmed x0`, and the dynamic-reference checklist still runs** (LSP
+  can't see DI containers, config strings, reflection, routes). No oracle →
+  loud install hint, never a silent skip. `servers` shows what's installed.
+  Wired into: audit step 3 (mandatory for x0s when an oracle exists), the
+  auditor brief (killed false-x0s reported, not shipped), onboard (oracle
+  check + install offer). +6 tests incl. a fake framed-protocol server and a
+  live pylsp round trip.
+- **Runtime deprecation telemetry — `probe.py`.** Safety-model §5, mechanized
+  end-to-end minus the auto-PR: `add <file> <symbol> [--window N] [--logs G]`
+  inserts a one-line entry counter (PHP `error_log`, Python `logging`) at the
+  exact body entry via the surgery engines — after the docstring, balance/
+  parse-checked, abstract/one-liner/K&R-brace bodies refused with the fix —
+  registers it in committed `.shrinkage/probes.json`, and adds the
+  DEPRECATIONS.md row. `status` scans the log globs and refuses to flatter:
+  ALIVE (production caller found → keep the symbol), window open, **BLIND
+  (zero log files matched → the zero means nothing — fix telemetry first)**,
+  CLOSED-ZERO (window elapsed over real logs → chain closed empirically;
+  remove the symbol citing the probe id). `remove <id>` restores the file
+  byte-exact and ticks the row. Wired into: audit step 0 probe harvest
+  (CLOSED-ZERO promotes the row, ALIVE flips it to a keep), the deferred-T2
+  section, the shave halt menu, the auditor brief. Non-PHP/Python languages
+  refuse toward the oracle + checklist. +7 tests.
+
 ## 0.38.0
 The queue, drained — plus the ecosystem stone. Five capabilities from the
 standing backlog, each field-motivated.

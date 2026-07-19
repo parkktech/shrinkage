@@ -166,11 +166,17 @@ instead copy the `commands/srk/` folder into `.claude/commands/`:
 | `/srk:help [command]` | usage guide, in workflow order | — |
 
 Extra signals for shave/audit: `codemap.py dupes` (same-name symbols),
-`codemap.py clones` (renamed copy-paste via normalized shingles), and
-`coverage_check.py <files>` (coverage-aware tier escalation). Bookkeeping:
+`codemap.py clones` (renamed copy-paste via normalized shingles),
+`coverage_check.py <files>` (coverage-aware tier escalation),
+`lsp_refs.py check` (the reference oracle — a real language server verifies
+every map-x0; refs found kills the candidate, zero found still walks the
+checklist), and `probe.py` (runtime deprecation telemetry, PHP+Python — arms
+the §5 counter, tracks the window, closes the chain empirically or proves
+the symbol alive). Bookkeeping:
 `gatelog.py` (persistent gate ledger — diffstat flags new symbols with no
 record), `badge.py` (shrink badge SVG from the trend log), DEPRECATIONS.md
-(shim removal schedule — trend nags on unchecked entries). `/srk:shave`
+(shim removal schedule — trend nags on unchecked entries; probe rows close
+there too). `/srk:shave`
 accepts `--dry-run`: full plan with evidence, zero edits.
 
 Context economy: load `rules/<lang>.md` once per session; the gate never loads
