@@ -1,6 +1,15 @@
 # Changelog
 
-## 0.42.1
+## 0.42.2
+- **README: a real install-troubleshooting note for
+  `Plugin "shrinkage" not found in marketplace "parkktech"`.** Root cause seen
+  in the field: `/plugin marketplace add` reuses a cached clone instead of
+  re-fetching, and a clone cached before v0.19.0 (the `srk` → `shrinkage`
+  plugin rename) only knows the plugin by its old name `srk` — so the current
+  `shrinkage@parkktech` can't resolve until the clone is refreshed. The note
+  gives the fix (Update marketplace → uninstall stale `srk` → install; or
+  remove + re-add) and points at Enable auto-update as the permanent close.
+  Docs-only; no code change.
 Two small hardening fixes to the watchdog, from review.
 
 - **`add_hooks` no longer rewrites `~/.claude/settings.json` on every boot.**

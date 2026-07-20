@@ -137,6 +137,29 @@ In Claude Code:
 /plugin install shrinkage@parkktech
 ```
 
+**If install says `Plugin "shrinkage" not found in marketplace "parkktech"`:**
+your marketplace was added earlier and `/plugin marketplace add` **reuses the
+cached clone instead of re-fetching it** (open `/plugin` → **Marketplaces** →
+`parkktech` and check its *last updated* date). The catch: this plugin was
+renamed **`srk` → `shrinkage`** in v0.19.0, so a clone cached before that shows
+the plugin as **`srk`** and `shrinkage@parkktech` simply doesn't exist in it
+yet. Refresh the clone and the current name resolves:
+
+1. `/plugin` → **Marketplaces** → `parkktech` → **Update marketplace**
+2. if an old **`srk`** is still installed: `/plugin uninstall srk@parkktech`
+3. `/plugin install shrinkage@parkktech`
+
+If it still won't install, remove and re-add for a guaranteed-fresh clone:
+
+```
+/plugin marketplace remove parkktech
+/plugin marketplace add parkktech/shrinkage
+/plugin install shrinkage@parkktech
+```
+
+Then turn on **Enable auto-update** (same Marketplaces screen) so the clone
+never goes stale again — that closes this whole class of problem.
+
 **If `/srk` shows no commands after installing:** the plugin is on disk but the
 running session hasn't registered it. Run `/reload-plugins` — that fixes it
 without losing your session. If commands are still missing, quit and relaunch
