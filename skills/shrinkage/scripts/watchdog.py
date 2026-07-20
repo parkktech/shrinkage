@@ -82,3 +82,93 @@ def take_heartbeat(session_id):
         return True
     except OSError:
         return False
+
+
+MARKER = "shrinkage/watchdog.py"
+EVENTS = ("SessionStart", "UserPromptSubmit")
+
+
+def looks_malformed(path):
+    """True when the file exists with content but does not parse — never
+    overwrite a file we failed to understand."""
+    p = Path(path)
+    if not p.exists():
+        return False
+    try:
+        text = p.read_text(encoding="utf-8")
+    except OSError:
+        return True
+    return bool(text.strip()) and read_json(p) == {} and text.strip() not in ("{}", "null")
+
+
+def write_settings(path, data):
+    """Atomic temp+replace. False on any failure; the original stays intact."""
+    p = Path(path)
+    tmp = p.with_suffix(".json.srk-tmp")
+    try:
+        p.parent.mkdir(parents=True, exist_ok=True)
+        tmp.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+        os.replace(str(tmp), str(p))
+        return True
+    except OSError:
+        try:
+            tmp.unlink()
+        except OSError:
+            pass
+        return False
+
+
+def backup_once(path):
+    """Keep one pristine copy of the settings as we first found them.
+
+    Written only if absent, so a later run can never overwrite the pristine
+    copy with an already-modified one."""
+    p = Path(path)
+    bak = p.with_suffix(".json.srk-bak")
+    if bak.exists() or not p.exists():
+        return
+    try:
+        bak.write_text(p.read_text(encoding="utf-8"), encoding="utf-8")
+    except OSError:
+        pass
+
+
+def _ours(entry):
+    return any(MARKER in (h.get("command") or "") for h in (entry.get("hooks") or []))
+
+
+def add_hooks(path, python, script):
+    """Register both watchdog hooks. Idempotent; preserves everything else."""
+    if looks_malformed(path):
+        return False
+    backup_once(path)
+    data = read_json(path) if Path(path).exists() else {}
+    hooks = data.setdefault("hooks", {})
+    for event in EVENTS:
+        arg = "boot" if event == "SessionStart" else "check"
+        entries = [e for e in hooks.get(event, []) if not _ours(e)]
+        entries.append({"hooks": [{
+            "type": "command",
+            "command": '"{}" "{}" {}'.format(python, script, arg),
+        }]})
+        hooks[event] = entries
+    return write_settings(path, data)
+
+
+def remove_hooks(path):
+    """Drop only our entries — another tool's hooks on the same event stay."""
+    if looks_malformed(path):
+        return False
+    data = read_json(path)
+    hooks = data.get("hooks") or {}
+    changed = False
+    for event in EVENTS:
+        if event not in hooks:
+            continue
+        kept = [e for e in hooks[event] if not _ours(e)]
+        if len(kept) != len(hooks[event]):
+            changed = True
+        hooks[event] = kept
+    if not changed:
+        return True
+    return write_settings(path, data)

@@ -58,3 +58,84 @@ def test_take_heartbeat_consumes_on_read(tmp_path, monkeypatch):
 def test_take_heartbeat_false_when_absent(tmp_path, monkeypatch):
     monkeypatch.setattr(watchdog, "STATE", tmp_path / "state")
     assert watchdog.take_heartbeat("sess-1") is False
+
+
+def test_write_settings_preserves_foreign_keys(tmp_path):
+    s = tmp_path / "settings.json"
+    s.write_text(json.dumps({
+        "statusLine": {"type": "command", "command": "gsd-statusline.js"},
+        "enabledPlugins": {"shrinkage@parkktech": True},
+    }), encoding="utf-8")
+
+    watchdog.add_hooks(s, "/usr/bin/python3", "/home/u/.claude/shrinkage/watchdog.py")
+
+    out = json.loads(s.read_text(encoding="utf-8"))
+    assert out["statusLine"] == {"type": "command", "command": "gsd-statusline.js"}
+    assert out["enabledPlugins"] == {"shrinkage@parkktech": True}
+    assert "SessionStart" in out["hooks"]
+    assert "UserPromptSubmit" in out["hooks"]
+
+
+def test_add_hooks_is_idempotent(tmp_path):
+    s = tmp_path / "settings.json"
+    s.write_text("{}", encoding="utf-8")
+
+    watchdog.add_hooks(s, "/usr/bin/python3", "/home/u/.claude/shrinkage/watchdog.py")
+    watchdog.add_hooks(s, "/usr/bin/python3", "/home/u/.claude/shrinkage/watchdog.py")
+
+    out = json.loads(s.read_text(encoding="utf-8"))
+    assert len(out["hooks"]["SessionStart"]) == 1
+    assert len(out["hooks"]["UserPromptSubmit"]) == 1
+
+
+def test_add_hooks_keeps_other_tools_hooks(tmp_path):
+    s = tmp_path / "settings.json"
+    s.write_text(json.dumps({
+        "hooks": {"SessionStart": [{"hooks": [{"type": "command", "command": "other-tool.sh"}]}]}
+    }), encoding="utf-8")
+
+    watchdog.add_hooks(s, "/usr/bin/python3", "/home/u/.claude/shrinkage/watchdog.py")
+
+    entries = json.loads(s.read_text(encoding="utf-8"))["hooks"]["SessionStart"]
+    assert len(entries) == 2
+    assert any("other-tool.sh" in e["hooks"][0]["command"] for e in entries)
+
+
+def test_remove_hooks_removes_only_ours(tmp_path):
+    s = tmp_path / "settings.json"
+    s.write_text(json.dumps({
+        "hooks": {"SessionStart": [{"hooks": [{"type": "command", "command": "other-tool.sh"}]}]}
+    }), encoding="utf-8")
+    watchdog.add_hooks(s, "/usr/bin/python3", "/home/u/.claude/shrinkage/watchdog.py")
+
+    watchdog.remove_hooks(s)
+
+    out = json.loads(s.read_text(encoding="utf-8"))
+    entries = out["hooks"]["SessionStart"]
+    assert len(entries) == 1
+    assert "other-tool.sh" in entries[0]["hooks"][0]["command"]
+    assert not out["hooks"].get("UserPromptSubmit")
+
+
+def test_add_hooks_refuses_malformed_settings(tmp_path):
+    s = tmp_path / "settings.json"
+    s.write_text("{ this is not json", encoding="utf-8")
+
+    assert watchdog.add_hooks(s, "/usr/bin/python3", "/x/watchdog.py") is False
+    assert s.read_text(encoding="utf-8") == "{ this is not json"  # untouched
+
+
+def test_add_hooks_backs_up_original_once(tmp_path):
+    """Atomic replace protects against a torn write, not against writing
+    valid-but-wrong JSON. Keep one pristine copy of what we found."""
+    s = tmp_path / "settings.json"
+    original = json.dumps({"statusLine": {"command": "mine.js"}})
+    s.write_text(original, encoding="utf-8")
+
+    watchdog.add_hooks(s, "/usr/bin/python3", "/x/shrinkage/watchdog.py")
+    backup = tmp_path / "settings.json.srk-bak"
+    assert json.loads(backup.read_text(encoding="utf-8")) == json.loads(original)
+
+    # A later write must not clobber the pristine copy with an already-modified one.
+    watchdog.add_hooks(s, "/usr/bin/python3", "/x/shrinkage/watchdog.py")
+    assert json.loads(backup.read_text(encoding="utf-8")) == json.loads(original)
