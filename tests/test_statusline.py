@@ -115,3 +115,47 @@ def test_check_update_reads_tags_from_remote(repo, monkeypatch, tmp_path):
     data = json.loads(cache.read_text())
     assert data["latest"] == "0.30.0", data
     assert data["checked_at"] > 0
+
+
+# --- split cache TTL (spec: 2026-07-20-drift-in-conversation) ---------------
+
+
+def test_successful_check_fresh_within_full_ttl():
+    now = 1_000_000
+    data = {"checked_at": now - 5 * 3600, "latest": "0.41.0"}
+    assert statusline.cache_stale(data, now=now) is False
+
+
+def test_successful_check_stale_past_full_ttl():
+    now = 1_000_000
+    data = {"checked_at": now - 7 * 3600, "latest": "0.41.0"}
+    assert statusline.cache_stale(data, now=now) is True
+
+
+def test_failed_check_stale_well_before_full_ttl():
+    """Regression for the measured case: a null cached at 1.2h suppressed the
+    hint for 6h because a failure aged at the success TTL."""
+    now = 1_000_000
+    data = {"checked_at": now - int(1.2 * 3600), "latest": None}
+    assert statusline.cache_stale(data, now=now) is True
+
+
+def test_failed_check_fresh_inside_retry_window():
+    """Still backs off — a broken remote must not cause a respawn storm."""
+    now = 1_000_000
+    data = {"checked_at": now - 5 * 60, "latest": None}
+    assert statusline.cache_stale(data, now=now) is False
+
+
+def test_missing_cache_is_stale():
+    assert statusline.cache_stale({}, now=1_000_000) is True
+
+
+def test_future_checked_at_is_not_stale():
+    """Clock skew must never trigger a refresh storm."""
+    now = 1_000_000
+    assert statusline.cache_stale({"checked_at": now + 9999, "latest": None}, now=now) is False
+
+
+def test_failed_ttl_is_shorter_than_success_ttl():
+    assert statusline.TTL_FAILED < statusline.TTL

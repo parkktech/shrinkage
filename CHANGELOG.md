@@ -1,5 +1,23 @@
 # Changelog
 
+## Unreleased
+- **Version drift is now reported in the conversation, not just the status
+  line.** Detection already existed in `statusline.py`; the defect was
+  delivery. The hint rendered only in the srk status line segment, so anyone
+  whose bar belongs to another tool (GSD, etc.) was outside update
+  notification entirely. The watchdog — which already speaks on
+  `UserPromptSubmit` — now reads the same update cache and reports
+  `running vX · vY released` from an otherwise-healthy state. Cache-read only:
+  no new version logic, no second network call.
+- **A failed update check no longer suppresses the hint for six hours.**
+  `check_update()` cached a failure under the same 6h TTL as a success, so one
+  transient outage — unconfigured auth, offline laptop, network blip — froze a
+  `null` long after the cause passed. Failures now retry at 15 minutes
+  (`TTL_FAILED`) while keeping the anti-respawn-storm backoff.
+- The plugin's SessionStart hook calls `statusline.py --refresh-if-stale`, so
+  the update cache stays warm even when the status line never renders.
+- `installed-but-not-loaded` outranks drift: never both in one prompt.
+
 ## 0.41.0
 - **Installed-but-not-loaded now announces itself.** A correct install could
   still leave `/srk` empty when the running session hadn't registered the

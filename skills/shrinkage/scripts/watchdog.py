@@ -10,6 +10,7 @@ Every entry point fails open: a diagnostic must never block a prompt.
 
 import json
 import os
+import re
 import shutil
 import sys
 import time
@@ -20,6 +21,8 @@ WARNING = (
     "Try /reload-plugins first. If commands are still missing, quit and\n"
     "relaunch claude — without --continue or --resume."
 )
+
+DRIFT = "[shrinkage] running v{installed} · v{latest} released. /srk:update for the steps."
 
 HOME = Path.home()
 ROOT = HOME / ".claude" / "shrinkage"
@@ -34,6 +37,57 @@ def decide(enabled, installed, heartbeat):
     if not enabled or not installed:
         return "uninstall"
     return "healthy" if heartbeat else "warn"
+
+
+def semver(s):
+    """(major, minor, patch) or None. Re-derived rather than imported from
+    statusline.py for the same reason as NOT_LOADED_FLAG: the two files ship
+    and update independently, so an import would couple them."""
+    m = re.match(r"v?(\d+)\.(\d+)\.(\d+)$", (s or "").strip())
+    return tuple(int(g) for g in m.groups()) if m else None
+
+
+def decide_drift(installed, latest):
+    """drift | healthy — pure function of two version strings.
+
+    Silent under every uncertainty: an unknown version on either side, an
+    unparseable one, or a local build ahead of the newest tag. Only a
+    confidently-behind install is worth interrupting a prompt for."""
+    inst, new = semver(installed), semver(latest)
+    if not inst or not new:
+        return "healthy"
+    return "drift" if new > inst else "healthy"
+
+
+def update_cache_path():
+    p = os.environ.get("SRK_UPDATE_CACHE")
+    return Path(p) if p else HOME / ".claude" / "shrinkage-update.json"
+
+
+def cached_latest():
+    """The newest released version as last resolved by statusline.py's worker,
+    or None. Read-only: the watchdog never calls the network and never writes
+    this cache — exactly one component owns the remote call."""
+    return read_json(update_cache_path()).get("latest") or None
+
+
+def installed_version():
+    """Version of the installed copy, from the plugin registry. The watchdog
+    lives outside the plugin cache, so it cannot derive this from its own path
+    the way statusline.py does; it reads the same installPath is_installed()
+    validates. Prefers plugin.json (the source of truth per RELEASING.md) and
+    falls back to the version the registry recorded at install."""
+    data = read_json(HOME / ".claude" / "plugins" / "installed_plugins.json")
+    for key, entries in (data.get("plugins") or {}).items():
+        if not key.startswith(PLUGIN_KEY_PREFIX):
+            continue
+        for entry in entries or []:
+            path = entry.get("installPath")
+            if not path or not Path(path).is_dir():
+                continue
+            version = read_json(Path(path) / ".claude-plugin" / "plugin.json").get("version")
+            return version or entry.get("version") or None
+    return None
 
 
 def read_json(path):
@@ -237,6 +291,15 @@ def cmd_check(sid):
             flag.unlink()
     except OSError:
         pass
+    if verdict == "warn":
+        # A plugin that did not load outranks a plugin that is merely behind:
+        # reporting both in one prompt is noise, and /reload-plugins comes
+        # first anyway. Drift is reported only from an otherwise-healthy state.
+        return 0
+    installed = installed_version()
+    latest = cached_latest()
+    if decide_drift(installed, latest) == "drift":
+        print(DRIFT.format(installed=installed, latest=latest))
     return 0
 
 

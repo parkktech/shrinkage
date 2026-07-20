@@ -18,8 +18,13 @@ command so stdin reaches both and srk renders on its own line beneath
 
 The update hint (`⬆ /srk:update to vX.Y.Z`) NEVER blocks a render: displays
 read a small cache (~/.claude/shrinkage-update.json, $SRK_UPDATE_CACHE
-override); when stale (>6h) a detached `--check-update` worker refreshes it
-with `git ls-remote --tags` against the marketplace's origin.
+override); when stale a detached `--check-update` worker refreshes it with
+`git ls-remote --tags` against the marketplace's origin. Stale means >6h for a
+resolved answer but only >15m for a failed check, so a transient outage cannot
+suppress the hint for a full TTL. The plugin's SessionStart hook calls
+`--refresh-if-stale` so the cache stays warm even when another tool owns the
+status line and this script never renders; watchdog.py reads that cache to
+report drift in-conversation.
 Mock test:  echo '{"model":{"display_name":"Opus"},"context_window":{"used_percentage":25}}' | python3 statusline.py
 """
 import json
@@ -36,7 +41,8 @@ from pathlib import Path
 # couple two files that ship and update separately.
 NOT_LOADED_FLAG = Path.home() / ".claude" / "shrinkage" / "state" / "not-loaded"
 
-TTL = 6 * 3600  # re-check the remote at most every 6 hours
+TTL = 6 * 3600  # a resolved answer stays fresh for 6 hours
+TTL_FAILED = 15 * 60  # a failed check retries in 15 minutes, not 6 hours
 
 
 def cache_path():
@@ -120,6 +126,60 @@ def check_update():
         pass
 
 
+def cache_stale(data, now=None):
+    """Should the remote be re-checked? Pure function of the cache contents.
+
+    A check that failed to resolve a version (`latest` null) is retried far
+    sooner than one that succeeded: the null is an error, not an answer, and
+    caching it for the full TTL suppresses the update hint long after the
+    transient cause — unconfigured auth, offline laptop, network blip — has
+    passed. Backoff is preserved, just at TTL_FAILED.
+
+    A future `checked_at` (clock skew) counts as fresh: never refresh on
+    nonsense."""
+    now = time.time() if now is None else now
+    age = now - int(data.get("checked_at", 0))
+    if age < 0:
+        return False
+    return age > (TTL if data.get("latest") else TTL_FAILED)
+
+
+def spawn_refresh(data):
+    """Detached background re-check. Rewrites checked_at first so concurrent
+    callers don't all spawn a worker; never blocks, never raises."""
+    cp = cache_path()
+    try:
+        cp.parent.mkdir(parents=True, exist_ok=True)
+        cp.write_text(json.dumps({"checked_at": int(time.time()),
+                                  "latest": data.get("latest")}), encoding="utf-8")
+        subprocess.Popen([sys.executable, __file__, "--check-update"],
+                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                         start_new_session=True)
+    except OSError:
+        pass
+
+
+def refresh_if_stale():
+    """Entry point for the plugin's SessionStart hook (`--refresh-if-stale`).
+
+    The status line was the only thing that ever spawned the worker, so a user
+    whose bar belongs to another tool never refreshed the cache at all — and
+    the watchdog, which only reads it, would stay silent forever. Runs off the
+    prompt path and prints nothing."""
+    data = read_cache()
+    if cache_stale(data):
+        spawn_refresh(data)
+    return 0
+
+
+def read_cache():
+    """Parsed update cache, or {} for missing/unreadable/malformed."""
+    try:
+        return json.loads(cache_path().read_text(encoding="utf-8")) or {}
+    except (OSError, ValueError):
+        return {}
+
+
 def update_hint():
     """The ` · ⬆ /srk:update to vX.Y.Z` segment, or ''. Cache-read only —
     a stale cache kicks off a DETACHED background refresh and returns the old
@@ -127,22 +187,9 @@ def update_hint():
     inst = semver(installed_version())
     if not inst:
         return ""
-    cp = cache_path()
-    data = {}
-    try:
-        data = json.loads(cp.read_text(encoding="utf-8"))
-    except (OSError, ValueError):
-        pass
-    if int(time.time()) - int(data.get("checked_at", 0)) > TTL:
-        try:
-            cp.parent.mkdir(parents=True, exist_ok=True)
-            cp.write_text(json.dumps({"checked_at": int(time.time()),
-                                      "latest": data.get("latest")}), encoding="utf-8")
-            subprocess.Popen([sys.executable, __file__, "--check-update"],
-                             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-                             start_new_session=True)
-        except OSError:
-            pass
+    data = read_cache()
+    if cache_stale(data):
+        spawn_refresh(data)
     latest = semver(data.get("latest"))
     if latest and latest > inst:
         return f" · ⬆ /srk:update to v{data['latest']}"
@@ -224,6 +271,9 @@ def srk_segment():
 def main():
     if "--check-update" in sys.argv:
         check_update()
+        return
+    if "--refresh-if-stale" in sys.argv:
+        refresh_if_stale()
         return
     if "--segment" in sys.argv:
         print(srk_segment())

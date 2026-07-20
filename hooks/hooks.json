@@ -9,7 +9,7 @@
           },
           {
             "type": "command",
-            "command": "PY=$(command -v python3 || command -v python); [ -n \"$PY\" ] && { \"$PY\" \"${CLAUDE_PLUGIN_ROOT}/skills/shrinkage/scripts/watchdog.py\" heartbeat; \"$PY\" \"${CLAUDE_PLUGIN_ROOT}/skills/shrinkage/scripts/watchdog.py\" plant; } 2>/dev/null; true"
+            "command": "PY=$(command -v python3 || command -v python); [ -n \"$PY\" ] && { \"$PY\" \"${CLAUDE_PLUGIN_ROOT}/skills/shrinkage/scripts/watchdog.py\" heartbeat; \"$PY\" \"${CLAUDE_PLUGIN_ROOT}/skills/shrinkage/scripts/watchdog.py\" plant; \"$PY\" \"${CLAUDE_PLUGIN_ROOT}/skills/shrinkage/scripts/statusline.py\" --refresh-if-stale; } 2>/dev/null; true"
           }
         ]
       }

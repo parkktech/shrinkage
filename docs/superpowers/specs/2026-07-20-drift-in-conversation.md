@@ -1,7 +1,7 @@
 # Version drift in-conversation — the update hint gets a voice
 
 **Date:** 2026-07-20
-**Status:** Proposed design, not yet implemented
+**Status:** Implemented (option 2); unreleased
 **Branch:** `feature/drift-in-conversation`
 **Follows:** `2026-07-20-install-watchdog-design.md` (v0.41.0)
 
@@ -155,9 +155,9 @@ on the same per-boot `checked` marker, so `--continue` re-arms it.
 
 ## Failure modes — all fail-open
 
-- **Cache absent** (never ran, or the user has no status line at all) → silent.
-  This is the honest gap: with no srk segment, nothing currently *spawns*
-  `check_update()`. See Open question.
+- **Cache absent** (first ever run, before the worker has finished) → silent.
+  The status-line-less case that would otherwise make this permanent is closed
+  by the SessionStart spawn below; the remaining window is one session at most.
 - **Cache malformed** → silent, no crash, no rewrite. A diagnostic must never
   corrupt state it does not own.
 - **Clock skew** making `checked_at` future-dated → treated as fresh, silent.
@@ -167,7 +167,39 @@ on the same per-boot `checked` marker, so `--continue` re-arms it.
 - The status line segment's behavior is **byte-identical** for existing users
   apart from failed checks refreshing sooner.
 
-## Open question — who spawns the worker when there is no status line
+## Resolved — who spawns the worker when there is no status line
+
+**Decision: option 2.** The plugin's SessionStart hook calls
+`statusline.py --refresh-if-stale`, which spawns the detached worker when the
+cache is stale and prints nothing. The watchdog stays a pure reader; the
+network call stays off `UserPromptSubmit`.
+
+Verified end-to-end against the exact failure this spec documents — a
+`{"latest": null}` cache aged 1.2h, the state measured on the release machine:
+
+```
+cache before: {"checked_at": …, "latest": null}
+--refresh-if-stale
+cache after:  {"checked_at": …, "latest": "0.41.0"}
+```
+
+and the watchdog then reporting it, ranking correctly, and consuming on read:
+
+```
+loaded, behind      → [shrinkage] running v0.40.3 · v0.41.0 released. …
+same session again  → (silent)
+not loaded, behind  → installed-but-not-loaded only; drift suppressed
+```
+
+### The two candidates as weighed
+
+1. **The watchdog spawns it** when the cache is missing or stale — detached,
+   fire-and-forget. Closes the gap completely; costs the watchdog its
+   cache-read-only purity and puts a network call behind a prompt hook.
+2. **The plugin's SessionStart hook spawns it** — already runs when the plugin
+   loads (it writes the heartbeat), already off the prompt path. Cheaper and
+   better placed, but does nothing for a not-loaded session — which is fine,
+   since `warn` outranks `drift` in that state anyway.
 
 The split TTL fixes *staleness*, but on a machine with no srk status line
 segment the worker may never run at all, leaving the cache permanently absent
@@ -182,9 +214,9 @@ and the watchdog permanently silent. Two candidates:
    better placed, but does nothing for a not-loaded session — which is fine,
    since `warn` outranks `drift` in that state anyway.
 
-**Recommendation: (2).** It keeps the network call off `UserPromptSubmit`,
-preserves the watchdog as a pure reader, and its blind spot is a state where
-drift would be suppressed regardless. This needs deciding before implementation.
+Option 2 keeps the network call off `UserPromptSubmit`, preserves the watchdog
+as a pure reader, and its blind spot is a state where drift would be suppressed
+regardless.
 
 ## Testing
 

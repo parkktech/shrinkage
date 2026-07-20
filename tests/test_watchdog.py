@@ -262,3 +262,164 @@ def test_segment_normal_when_no_flag(tmp_path, monkeypatch):
     monkeypatch.setattr(statusline, "NOT_LOADED_FLAG", tmp_path / "flag")
     monkeypatch.chdir(tmp_path)
     assert not statusline.srk_segment().startswith("⚠")
+
+
+# --- version drift (spec: 2026-07-20-drift-in-conversation) -----------------
+
+
+def test_drift_when_latest_exceeds_installed():
+    assert watchdog.decide_drift("0.40.3", "0.41.0") == "drift"
+
+
+def test_no_drift_when_equal():
+    assert watchdog.decide_drift("0.41.0", "0.41.0") == "healthy"
+
+
+def test_no_drift_when_local_build_ahead_of_tags():
+    assert watchdog.decide_drift("0.42.0", "0.41.0") == "healthy"
+
+
+def test_no_drift_when_latest_unknown():
+    assert watchdog.decide_drift("0.40.3", None) == "healthy"
+
+
+def test_no_drift_when_installed_unknown_vendored():
+    assert watchdog.decide_drift(None, "0.41.0") == "healthy"
+
+
+def test_no_drift_on_unparseable_semver():
+    assert watchdog.decide_drift("0.40.3", "not-a-version") == "healthy"
+    assert watchdog.decide_drift("main", "0.41.0") == "healthy"
+
+
+def test_drift_across_minor_and_major():
+    assert watchdog.decide_drift("0.9.0", "0.10.0") == "drift"
+    assert watchdog.decide_drift("0.41.0", "1.0.0") == "drift"
+
+
+def test_read_update_cache_missing_is_silent(tmp_path, monkeypatch):
+    monkeypatch.setenv("SRK_UPDATE_CACHE", str(tmp_path / "nope.json"))
+    assert watchdog.cached_latest() is None
+
+
+def test_read_update_cache_malformed_is_silent(tmp_path, monkeypatch):
+    p = tmp_path / "u.json"
+    p.write_text("{broken", encoding="utf-8")
+    monkeypatch.setenv("SRK_UPDATE_CACHE", str(p))
+    assert watchdog.cached_latest() is None
+
+
+def test_read_update_cache_null_latest_is_silent(tmp_path, monkeypatch):
+    p = tmp_path / "u.json"
+    p.write_text(json.dumps({"checked_at": 1, "latest": None}), encoding="utf-8")
+    monkeypatch.setenv("SRK_UPDATE_CACHE", str(p))
+    assert watchdog.cached_latest() is None
+
+
+def test_read_update_cache_returns_latest(tmp_path, monkeypatch):
+    p = tmp_path / "u.json"
+    p.write_text(json.dumps({"checked_at": 1, "latest": "0.41.0"}), encoding="utf-8")
+    monkeypatch.setenv("SRK_UPDATE_CACHE", str(p))
+    assert watchdog.cached_latest() == "0.41.0"
+
+
+def test_installed_version_from_install_path(tmp_path, monkeypatch):
+    plug = tmp_path / "cache" / "shrinkage" / "0.40.3"
+    (plug / ".claude-plugin").mkdir(parents=True)
+    (plug / ".claude-plugin" / "plugin.json").write_text(
+        json.dumps({"version": "0.40.3"}), encoding="utf-8")
+    home = tmp_path / "home"
+    (home / ".claude" / "plugins").mkdir(parents=True)
+    (home / ".claude" / "plugins" / "installed_plugins.json").write_text(
+        json.dumps({"plugins": {"shrinkage@parkktech": [
+            {"installPath": str(plug), "version": "ignored-if-plugin-json-wins"}]}}),
+        encoding="utf-8")
+    monkeypatch.setattr(watchdog, "HOME", home)
+    assert watchdog.installed_version() == "0.40.3"
+
+
+def test_installed_version_falls_back_to_registry_entry(tmp_path, monkeypatch):
+    plug = tmp_path / "plug"
+    plug.mkdir()  # real dir, but no .claude-plugin/plugin.json
+    home = tmp_path / "home"
+    (home / ".claude" / "plugins").mkdir(parents=True)
+    (home / ".claude" / "plugins" / "installed_plugins.json").write_text(
+        json.dumps({"plugins": {"shrinkage@parkktech": [
+            {"installPath": str(plug), "version": "0.40.3"}]}}), encoding="utf-8")
+    monkeypatch.setattr(watchdog, "HOME", home)
+    assert watchdog.installed_version() == "0.40.3"
+
+
+def test_installed_version_none_when_not_installed(tmp_path, monkeypatch):
+    home = tmp_path / "home"
+    (home / ".claude" / "plugins").mkdir(parents=True)
+    (home / ".claude" / "plugins" / "installed_plugins.json").write_text(
+        json.dumps({"plugins": {}}), encoding="utf-8")
+    monkeypatch.setattr(watchdog, "HOME", home)
+    assert watchdog.installed_version() is None
+
+
+def test_warn_outranks_drift(tmp_path, monkeypatch, capsys):
+    """A plugin that did not load is the more urgent problem; never report both."""
+    monkeypatch.setattr(watchdog, "STATE", tmp_path / "state")
+    monkeypatch.setattr(watchdog, "is_enabled", lambda *a: True)
+    monkeypatch.setattr(watchdog, "is_installed", lambda: True)
+    monkeypatch.setattr(watchdog, "take_heartbeat", lambda sid: False)  # not loaded
+    monkeypatch.setattr(watchdog, "installed_version", lambda: "0.40.3")
+    monkeypatch.setattr(watchdog, "cached_latest", lambda: "0.41.0")
+    watchdog.cmd_check("s1")
+    out = capsys.readouterr().out
+    assert "installed but not loaded" in out
+    assert "0.41.0" not in out
+
+
+def test_drift_reported_when_healthy(tmp_path, monkeypatch, capsys):
+    monkeypatch.setattr(watchdog, "STATE", tmp_path / "state")
+    monkeypatch.setattr(watchdog, "is_enabled", lambda *a: True)
+    monkeypatch.setattr(watchdog, "is_installed", lambda: True)
+    monkeypatch.setattr(watchdog, "take_heartbeat", lambda sid: True)  # loaded
+    monkeypatch.setattr(watchdog, "installed_version", lambda: "0.40.3")
+    monkeypatch.setattr(watchdog, "cached_latest", lambda: "0.41.0")
+    watchdog.cmd_check("s1")
+    out = capsys.readouterr().out
+    assert "0.40.3" in out and "0.41.0" in out
+    assert "installed but not loaded" not in out
+
+
+def test_drift_consumed_on_read(tmp_path, monkeypatch, capsys):
+    monkeypatch.setattr(watchdog, "STATE", tmp_path / "state")
+    monkeypatch.setattr(watchdog, "is_enabled", lambda *a: True)
+    monkeypatch.setattr(watchdog, "is_installed", lambda: True)
+    monkeypatch.setattr(watchdog, "take_heartbeat", lambda sid: True)
+    monkeypatch.setattr(watchdog, "installed_version", lambda: "0.40.3")
+    monkeypatch.setattr(watchdog, "cached_latest", lambda: "0.41.0")
+    watchdog.cmd_check("s1")
+    capsys.readouterr()
+    watchdog.cmd_check("s1")  # same session, second prompt
+    assert capsys.readouterr().out == ""
+
+
+def test_drift_rearms_after_boot(tmp_path, monkeypatch, capsys):
+    """--continue reuses session_id; boot clears the marker and re-arms drift."""
+    monkeypatch.setattr(watchdog, "STATE", tmp_path / "state")
+    monkeypatch.setattr(watchdog, "is_enabled", lambda *a: True)
+    monkeypatch.setattr(watchdog, "is_installed", lambda: True)
+    monkeypatch.setattr(watchdog, "take_heartbeat", lambda sid: True)
+    monkeypatch.setattr(watchdog, "installed_version", lambda: "0.40.3")
+    monkeypatch.setattr(watchdog, "cached_latest", lambda: "0.41.0")
+    watchdog.cmd_check("s1")
+    capsys.readouterr()
+    watchdog.cmd_boot("s1")
+    watchdog.cmd_check("s1")
+    assert "0.41.0" in capsys.readouterr().out
+
+
+def test_drift_silent_when_no_cache(tmp_path, monkeypatch, capsys):
+    monkeypatch.setattr(watchdog, "STATE", tmp_path / "state")
+    monkeypatch.setattr(watchdog, "is_enabled", lambda *a: True)
+    monkeypatch.setattr(watchdog, "is_installed", lambda: True)
+    monkeypatch.setattr(watchdog, "take_heartbeat", lambda sid: True)
+    monkeypatch.setattr(watchdog, "installed_version", lambda: "0.40.3")
+    monkeypatch.setattr(watchdog, "cached_latest", lambda: None)
+    watchdog.cmd_check("s1")
+    assert capsys.readouterr().out == ""
