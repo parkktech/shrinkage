@@ -235,3 +235,15 @@ def test_plant_copies_script_and_registers(monkeypatch, tmp_path):
     assert (root / "watchdog.py").exists()
     cmds = json.dumps(json.loads(settings.read_text(encoding="utf-8")))
     assert "watchdog.py" in cmds
+
+
+def test_hooks_json_writes_heartbeat_and_plants():
+    from pathlib import Path as _P
+    hooks = json.loads((_P(__file__).resolve().parent.parent / "hooks" / "hooks.json")
+                       .read_text(encoding="utf-8"))
+    commands = " ".join(h["command"]
+                        for block in hooks["hooks"]["SessionStart"]
+                        for h in block["hooks"])
+    assert "watchdog.py" in commands
+    assert "plant" in commands
+    assert "heartbeat" in commands
