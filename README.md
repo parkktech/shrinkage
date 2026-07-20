@@ -137,6 +137,14 @@ In Claude Code:
 /plugin install shrinkage@parkktech
 ```
 
+**If `/srk` shows no commands after installing:** the plugin is on disk but the
+running session hasn't registered it. Run `/reload-plugins` — that fixes it
+without losing your session. If commands are still missing, quit and relaunch
+`claude` **without** `--continue` or `--resume`.
+
+From your first loaded session onward Shrinkage detects this state on its own
+and tells you, so you shouldn't need this note twice.
+
 **That's the whole setup.** From your next session, Shrinkage runs itself in
 every repo:
 

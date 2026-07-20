@@ -1,5 +1,21 @@
 # Changelog
 
+## Unreleased
+- **Installed-but-not-loaded now announces itself.** A correct install could
+  still leave `/srk` empty when the running session hadn't registered the
+  plugin — and nothing said so, to the user or to Claude, who would report the
+  install as healthy. A watchdog at a stable path outside the plugin cache
+  (`~/.claude/shrinkage/watchdog.py`), registered on `SessionStart` and
+  `UserPromptSubmit`, now reports the state in-conversation and recommends
+  `/reload-plugins` before a relaunch. It self-uninstalls when Shrinkage is
+  removed. Hooks inside the plugin can't catch this — they don't run when the
+  plugin doesn't load.
+- Measured on Claude Code 2.1.215: `--continue` reuses `session_id` and
+  `SessionStart` still fires, which is why the watchdog re-arms per boot rather
+  than trusting a session-keyed marker.
+- The planter keeps a one-time `~/.claude/settings.json.srk-bak` before its
+  first write.
+
 ## 0.40.3
 Onboard must ASK about a missing oracle and RUN it on yes — never end by just
 printing a command. A field re-onboard on 0.40.2 did exactly the forbidden
