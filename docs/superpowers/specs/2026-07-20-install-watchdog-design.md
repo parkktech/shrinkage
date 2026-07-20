@@ -48,8 +48,15 @@ loaded this session. Prunes entries older than a day.
 
 ### 2. Watchdog — `~/.claude/shrinkage/watchdog.py`
 
-Registered as a `UserPromptSubmit` hook in `~/.claude/settings.json`, referenced
-by **stable absolute path**.
+Registered in `~/.claude/settings.json` by **stable absolute path**, on two
+events:
+
+- **`SessionStart`** — clears this session's `checked` marker, recording a new
+  boot. Required because `--continue` reuses `session_id` (see Resume
+  behavior); without it, a continued session would be silenced by the marker its
+  own earlier run wrote. Living in user settings means it fires even when the
+  plugin does not load.
+- **`UserPromptSubmit`** — performs the check.
 
 `UserPromptSubmit` rather than `SessionStart` is load-bearing: it fires strictly
 after all SessionStart hooks have completed, so "no heartbeat" unambiguously
@@ -108,13 +115,28 @@ Decision matrix:
 `enabled in settings` must be resolved across **all** scopes (user, project,
 `settings.local.json`), not just `~/.claude/settings.json`.
 
-### Known limitation
+### Resume behavior — measured, not assumed
 
-If `--resume` reuses the original `session_id`, the `checked` marker from the
-first run silences the watchdog on resume. This fails *silent* rather than
-false-positive, which is the safe direction, but resumed sessions are exactly how
-this bug reached the user. **Verify Claude Code's actual resume/session-id
-behavior during implementation** and revisit if ids are reused.
+Verified on Claude Code 2.1.215:
+
+| behavior | result |
+|---|---|
+| `--continue` reuses `session_id` | **yes** — identical id across runs |
+| `SessionStart` fires on `--continue` | **yes** — boot counter incremented |
+
+The first result would have broken a `session_id`-keyed `checked` marker: a
+continued session is silenced by the marker its own earlier run wrote. Since
+continued sessions are the likely path by which this bug reached the user, that
+is the primary case failing open, not an edge case.
+
+The second result supplies the fix. The watchdog registers its own
+`SessionStart` hook in user settings, which clears the `checked` marker on every
+boot. Both watchdog hooks sit outside plugin registration, so both fire whether
+or not the plugin loads.
+
+No ordering constraint between the two SessionStart hooks: the plugin's writes
+`hb/<session_id>`, the watchdog's clears `checked/<session_id>`. Different files,
+and `UserPromptSubmit` runs after both.
 
 ## Failure modes — all fail-open
 
@@ -137,7 +159,9 @@ existing suite:
 
 - one case per decision-matrix row, over fixture trees
 - consume-on-read: second invocation in the same session stays silent
-- planter idempotency: repeated runs produce one settings entry
+- boot clearing: a cleared `checked` marker re-arms the check for the same
+  `session_id`, covering the `--continue` case
+- planter idempotency: repeated runs produce one settings entry per event
 - planter preserves unrelated keys, including a foreign `statusLine`
 - malformed `settings.json`: no write, no crash
 - missing `python3`: hook no-ops
