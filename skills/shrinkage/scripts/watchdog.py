@@ -8,6 +8,7 @@ absence of that heartbeat at first prompt means the plugin did not load.
 Every entry point fails open: a diagnostic must never block a prompt.
 """
 
+import copy
 import json
 import os
 import re
@@ -195,11 +196,15 @@ def _ours(entry):
 
 
 def add_hooks(path, python, script):
-    """Register both watchdog hooks. Idempotent; preserves everything else."""
+    """Register both watchdog hooks, preserving everything else. Idempotent in
+    content AND I/O: plant runs every SessionStart, so writing unconditionally
+    would rewrite the user's global settings.json each boot — churning its
+    mtime and racing any other tool that writes it. Rebuild, and write only
+    when the result actually differs from what's on disk."""
     if looks_malformed(path):
         return False
-    backup_once(path)
-    data = read_json(path) if Path(path).exists() else {}
+    original = read_json(path) if Path(path).exists() else {}
+    data = copy.deepcopy(original)
     hooks = data.setdefault("hooks", {})
     for event in EVENTS:
         arg = "boot" if event == "SessionStart" else "check"
@@ -209,6 +214,9 @@ def add_hooks(path, python, script):
             "command": '"{}" "{}" {}'.format(python, script, arg),
         }]})
         hooks[event] = entries
+    if data == original:
+        return True                     # already registered — no write, no churn
+    backup_once(path)
     return write_settings(path, data)
 
 
@@ -275,6 +283,10 @@ def cmd_check(sid):
     verdict = decide(is_enabled(settings_scopes()), is_installed(), take_heartbeat(sid))
     if verdict == "uninstall":
         remove_hooks(USER_SETTINGS)
+        try:
+            (STATE / "not-loaded").unlink()   # leave no stale badge behind
+        except OSError:
+            pass
         return 0
     try:
         marker.parent.mkdir(parents=True, exist_ok=True)

@@ -141,6 +141,38 @@ def test_add_hooks_backs_up_original_once(tmp_path):
     assert json.loads(backup.read_text(encoding="utf-8")) == json.loads(original)
 
 
+def test_add_hooks_skips_write_when_already_registered(tmp_path, monkeypatch):
+    """plant fires every boot; a second identical add_hooks must NOT rewrite
+    the user's global settings (no mtime churn, no race with other writers)."""
+    s = tmp_path / "settings.json"
+    s.write_text("{}", encoding="utf-8")
+    writes = []
+    real = watchdog.write_settings
+    monkeypatch.setattr(watchdog, "write_settings",
+                        lambda p, d: (writes.append(1), real(p, d))[1])
+
+    assert watchdog.add_hooks(s, "/usr/bin/python3", "/x/shrinkage/watchdog.py") is True
+    assert len(writes) == 1                       # first call: registers, writes
+    assert watchdog.add_hooks(s, "/usr/bin/python3", "/x/shrinkage/watchdog.py") is True
+    assert len(writes) == 1                       # second call: no write at all
+
+
+def test_add_hooks_rewrites_when_command_changed(tmp_path, monkeypatch):
+    """A changed interpreter/script path IS a real change → it must write."""
+    s = tmp_path / "settings.json"
+    s.write_text("{}", encoding="utf-8")
+    watchdog.add_hooks(s, "/usr/bin/python3", "/x/shrinkage/watchdog.py")
+    writes = []
+    real = watchdog.write_settings
+    monkeypatch.setattr(watchdog, "write_settings",
+                        lambda p, d: (writes.append(1), real(p, d))[1])
+
+    assert watchdog.add_hooks(s, "/usr/bin/python3.12", "/x/shrinkage/watchdog.py") is True
+    assert len(writes) == 1                       # different python → rewrite
+    cmd = json.loads(s.read_text())["hooks"]["SessionStart"][0]["hooks"][0]["command"]
+    assert "python3.12" in cmd
+
+
 def _wire(monkeypatch, tmp_path):
     """Point every filesystem anchor at a sandbox."""
     root = tmp_path / "claude" / "shrinkage"
@@ -222,6 +254,21 @@ def test_check_survives_garbage_stdin(monkeypatch, tmp_path, capsys):
     _wire(monkeypatch, tmp_path)
     assert watchdog.main(["check"], "not json at all") == 0
     assert capsys.readouterr().out == ""
+
+
+def test_uninstall_clears_stale_not_loaded_flag(monkeypatch, tmp_path, capsys):
+    """A warn-state flag must not outlive the plugin: uninstall clears it so
+    the status line can't keep showing 'not loaded' after removal."""
+    root = _wire(monkeypatch, tmp_path)
+    flag = root / "state" / "not-loaded"
+    flag.parent.mkdir(parents=True)
+    flag.write_text("", encoding="utf-8")
+    monkeypatch.setattr(watchdog, "is_enabled", lambda scopes: False)
+    monkeypatch.setattr(watchdog, "is_installed", lambda: False)
+
+    watchdog.main(["check"], json.dumps({"session_id": "s1"}))
+
+    assert not flag.exists()
 
 
 def test_plant_copies_script_and_registers(monkeypatch, tmp_path):

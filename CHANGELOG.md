@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.42.1
+Two small hardening fixes to the watchdog, from review.
+
+- **`add_hooks` no longer rewrites `~/.claude/settings.json` on every boot.**
+  `plant` runs each SessionStart and `add_hooks` wrote unconditionally, so the
+  user's global settings were atomically replaced every session — churning its
+  mtime and opening a whole-file race with any other tool writing it at
+  startup. It now rebuilds the hook entries and writes ONLY when the result
+  differs from disk; an already-registered, unchanged settings file is left
+  untouched. +2 tests (skip-when-identical, rewrite-when-command-changed).
+- **Uninstall clears the `not-loaded` flag.** The `uninstall` verdict removed
+  the watchdog's hooks but left `state/not-loaded` behind, so a badge could
+  linger after removal. It's now cleared on uninstall. +1 test.
+
 ## 0.42.0
 - **Version drift is now reported in the conversation, not just the status
   line.** Detection already existed in `statusline.py`; the defect was
