@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.42.0
 - **Version drift is now reported in the conversation, not just the status
   line.** Detection already existed in `statusline.py`; the defect was
   delivery. The hint rendered only in the srk status line segment, so anyone
