@@ -1,12 +1,12 @@
 ---
-name: srk:coverage
+name: coverage
 description: "Upgrade tiering: generate the repo's first coverage artifact (suite-gated → coverage-aware)"
 argument-hint: "[--run]"
 allowed-tools: [Bash]
 ---
 
 <execution_context>
-$SKILL is resolved FRESH for THIS invocation — never reuse a path remembered from earlier in the session (a mid-session plugin update strands version-pinned cache paths). Churn-proof order: `${CLAUDE_PLUGIN_ROOT}/skills/shrinkage` if set; else the newest installed copy `$(ls -dv ~/.claude/plugins/cache/*/shrinkage/*/skills/shrinkage 2>/dev/null | tail -1)`; else the vendored locations.
+$SKILL is resolved FRESH for THIS invocation — never reuse a path remembered from earlier in the session (a mid-session plugin update strands version-pinned cache paths). Churn-proof order: `${CLAUDE_PLUGIN_ROOT}/skills/shrinkage` if set; else the newest installed copy `$(ls -dv ~/.claude/plugins/cache/*/*/*/skills/shrinkage 2>/dev/null | tail -1)`; else the vendored locations.
 
 Run `python3 $SKILL/scripts/coverage_check.py bootstrap` — it detects this
 repo's test ecosystem (pest/phpunit incl. the pcov/xdebug driver check, pytest,

@@ -60,12 +60,12 @@ version. The reliable reset (Linux client with shell) deletes the cache:
     rm -rf ~/.claude/plugins/marketplaces/parkktech ~/.claude/plugins/cache/parkktech
     # 2. Relaunch, then in Claude Code:
     #      /plugin marketplace add parkktech/shrinkage
-    #      /plugin install shrinkage@parkktech
+    #      /plugin install srk@parkktech
     # 3. Quit and relaunch once more, then /srk to confirm.
 
 For the `srk`→`shrinkage` rename, `marketplace.json` carries a top-level
 `renames` map so Claude Code v2.1.193+ auto-migrates a stale `srk@parkktech`
-enabled entry to `shrinkage@parkktech`. Older clients clear the dead entry via
+enabled entry to `srk@parkktech`. Older clients clear the dead entry via
 `/plugin` → Errors → Enter to resolve.
 
 ## Version history

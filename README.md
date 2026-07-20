@@ -134,27 +134,29 @@ In Claude Code:
 
 ```
 /plugin marketplace add parkktech/shrinkage
-/plugin install shrinkage@parkktech
+/plugin install srk@parkktech
 ```
 
-**If install says `Plugin "shrinkage" not found in marketplace "parkktech"`:**
-your marketplace was added earlier and `/plugin marketplace add` **reuses the
-cached clone instead of re-fetching it** (open `/plugin` → **Marketplaces** →
-`parkktech` and check its *last updated* date). The catch: this plugin was
-renamed **`srk` → `shrinkage`** in v0.19.0, so a clone cached before that shows
-the plugin as **`srk`** and `shrinkage@parkktech` simply doesn't exist in it
-yet. Refresh the clone and the current name resolves:
+**If install says `Plugin "srk" not found in marketplace "parkktech"`** (or the
+former name `shrinkage`): your marketplace was added earlier and
+`/plugin marketplace add` **reuses the cached clone instead of re-fetching it**
+(open `/plugin` → **Marketplaces** → `parkktech` and check its *last updated*
+date). A clone cached under an older release can list the plugin under a
+different name than the one you're installing — the install name has moved
+between `srk` and `shrinkage` across versions, and the current name is
+**`srk`**. Refresh the clone and it resolves:
 
 1. `/plugin` → **Marketplaces** → `parkktech` → **Update marketplace**
-2. if an old **`srk`** is still installed: `/plugin uninstall srk@parkktech`
-3. `/plugin install shrinkage@parkktech`
+2. uninstall any stale copy still listed: `/plugin uninstall shrinkage@parkktech`
+   (or `srk@parkktech`)
+3. `/plugin install srk@parkktech`
 
 If it still won't install, remove and re-add for a guaranteed-fresh clone:
 
 ```
 /plugin marketplace remove parkktech
 /plugin marketplace add parkktech/shrinkage
-/plugin install shrinkage@parkktech
+/plugin install srk@parkktech
 ```
 
 Then turn on **Enable auto-update** (same Marketplaces screen) so the clone
@@ -218,8 +220,8 @@ then updates the plugin in the background after startup and prompts
 To update by hand, the reliable path is **uninstall → install → relaunch**:
 
 ```
-/plugin uninstall shrinkage@parkktech
-/plugin install shrinkage@parkktech
+/plugin uninstall srk@parkktech
+/plugin install srk@parkktech
 ```
 
 …then quit and relaunch. The `uninstall` clears the pinned cache **and** the

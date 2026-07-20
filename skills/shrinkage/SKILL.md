@@ -148,7 +148,7 @@ planning. GSD's project-skills discovery loads `rules/*.md` automatically.
 ## Commands
 
 Installed automatically with the plugin (`/plugin marketplace add
-parkktech/shrinkage` → `/plugin install shrinkage@parkktech`); standalone users can
+parkktech/shrinkage` → `/plugin install srk@parkktech`); standalone users can
 instead copy the `commands/srk/` folder into `.claude/commands/`:
 
 | Command | Does | Workflow |

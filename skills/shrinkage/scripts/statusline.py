@@ -8,7 +8,7 @@ the session JSON Claude Code pipes on stdin and renders the basics an existing
 bar would have shown, plus the Shrinkage part:
   Opus │ public_html │ ctx ███░░░░░░░ 31% │ srk ▼-7,348 LOC · streak 4 · ⬆ /srk:update to v0.31.0
   "statusLine": {"type": "command", "command":
-    "python3 $(ls -dv ~/.claude/plugins/cache/parkktech/shrinkage/*/ | tail -1)skills/shrinkage/scripts/statusline.py"}
+    "python3 $(ls -dv ~/.claude/plugins/cache/*/*/*/skills/shrinkage/scripts/statusline.py 2>/dev/null | tail -1)"}
 
 CHAINED (`--segment`) — a status line ALREADY exists (GSD's, a custom one):
 never replace it. `--segment` prints just the srk part; wrap the existing

@@ -1,5 +1,5 @@
 ---
-name: srk:onboard
+name: onboard
 description: "▶ START HERE — one-shot setup: status line, codemap, every preference (gate, map policy, PR scoreboard, comedy), quickstart"
 argument-hint: ""
 allowed-tools: [Bash, Read, Write]
@@ -30,7 +30,7 @@ as conscious choices, user ready to work.
 
      ```json
      {"statusLine": {"type": "command", "command":
-       "python3 $(ls -dv ~/.claude/plugins/cache/parkktech/shrinkage/*/ | tail -1)skills/shrinkage/scripts/statusline.py"}}
+       "python3 $(ls -dv ~/.claude/plugins/cache/*/*/*/skills/shrinkage/scripts/statusline.py 2>/dev/null | tail -1)"}}
      ```
 
    - **A status line already exists (GSD's, a custom one) → NEVER replace it.**
@@ -40,7 +40,7 @@ as conscious choices, user ready to work.
 
      ```json
      {"statusLine": {"type": "command", "command":
-       "sh -c 'IN=$(cat); printf \"%s\" \"$IN\" | { <their existing command, verbatim>; }; printf \"%s\" \"$IN\" | python3 $(ls -dv ~/.claude/plugins/cache/parkktech/shrinkage/*/ | tail -1)skills/shrinkage/scripts/statusline.py --segment'"}}
+       "sh -c 'IN=$(cat); printf \"%s\" \"$IN\" | { <their existing command, verbatim>; }; printf \"%s\" \"$IN\" | python3 $(ls -dv ~/.claude/plugins/cache/*/*/*/skills/shrinkage/scripts/statusline.py 2>/dev/null | tail -1) --segment'"}}
      ```
 
      Show the user the before/after command and confirm before writing —

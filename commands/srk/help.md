@@ -1,5 +1,5 @@
 ---
-name: srk:help
+name: help
 description: "Show every Shrinkage command in the order you'd use them, with a one-line usage guide"
 argument-hint: "[command | --full]"
 allowed-tools: [Read]
@@ -12,7 +12,7 @@ maintain). Default view is terse; detail is opt-in.
 </objective>
 
 <execution_context>
-$SKILL is resolved FRESH for THIS invocation — never reuse a path remembered from earlier in the session (a mid-session plugin update strands version-pinned cache paths). Churn-proof order: `${CLAUDE_PLUGIN_ROOT}/skills/shrinkage` if set; else the newest installed copy `$(ls -dv ~/.claude/plugins/cache/*/shrinkage/*/skills/shrinkage 2>/dev/null | tail -1)`; else the vendored locations.
+$SKILL is resolved FRESH for THIS invocation — never reuse a path remembered from earlier in the session (a mid-session plugin update strands version-pinned cache paths). Churn-proof order: `${CLAUDE_PLUGIN_ROOT}/skills/shrinkage` if set; else the newest installed copy `$(ls -dv ~/.claude/plugins/cache/*/*/*/skills/shrinkage 2>/dev/null | tail -1)`; else the vendored locations.
 
 No heavy logic. Read the argument and respond:
 

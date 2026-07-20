@@ -23,8 +23,9 @@ import sys
 from pathlib import Path
 
 REPO = "https://github.com/parkktech/shrinkage.git"
+REPO_SLUG = "parkktech/shrinkage"   # owner/repo for `/plugin marketplace add` (NOT the install name)
 MARKETPLACE = "parkktech"
-PLUGIN = "shrinkage"
+PLUGIN = "srk"                       # install name: `/plugin install srk@parkktech`
 # Claude Code stores plugin caches under one of these roots depending on runtime.
 CACHE_ROOTS = [
     "~/.claude/plugins/cache", "~/.config/claude/plugins/cache",
@@ -105,7 +106,7 @@ def main():
     print("  (uninstall FIRST — a bare /plugin install no-ops on an already-registered plugin.)")
     print("\nonly if the marketplace clone is corrupted, with Claude Code CLOSED:")
     print(f"  rm -rf ~/.claude/plugins/marketplaces/{MARKETPLACE} ~/.claude/plugins/cache/{MARKETPLACE}")
-    print(f"  then reopen: /plugin marketplace add {MARKETPLACE}/{PLUGIN} ; /plugin install {PLUGIN}@{MARKETPLACE}")
+    print(f"  then reopen: /plugin marketplace add {REPO_SLUG} ; /plugin install {PLUGIN}@{MARKETPLACE}")
 
 
 if __name__ == "__main__":

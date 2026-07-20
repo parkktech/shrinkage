@@ -208,7 +208,7 @@ Pre-push hook (`.git/hooks/pre-push`, chmod +x):
 
 ```sh
 #!/bin/sh
-SKILL=$(ls -dv ~/.claude/plugins/cache/*/shrinkage/*/skills/shrinkage 2>/dev/null | tail -1)
+SKILL=$(ls -dv ~/.claude/plugins/cache/*/*/*/skills/shrinkage 2>/dev/null | tail -1)
 [ -n "$SKILL" ] || exit 0
 python3 "$SKILL/scripts/diffstat.py" "origin/$(git rev-parse --abbrev-ref HEAD)..HEAD" --ci-gate
 # add --strict to block the push on warnings

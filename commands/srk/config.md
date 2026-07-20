@@ -1,5 +1,5 @@
 ---
-name: srk:config
+name: config
 description: "View or change any Shrinkage setting: gate hardness, map commit policy, PR scoreboard, token budget, comedy"
 argument-hint: "[key value]"
 allowed-tools: [Bash, Read, Write]

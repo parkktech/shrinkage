@@ -1,5 +1,31 @@
 # Changelog
 
+## 0.43.0
+**Plugin renamed `shrinkage` → `srk` to restore clean `/srk:*` commands.**
+Claude Code (v2.1.143+) now forces every plugin command to render as
+`/<plugin-name>:<command>`, with no override. With the plugin named
+`shrinkage` and each command's frontmatter still carrying a `srk:` prefix, the
+picker showed the doubled `/shrinkage:srk:audit`. The prefix now HAS to equal
+the plugin name, so the plugin name is `srk` again and the `/srk:*` form is
+back. The product is still "Shrinkage"; only the install/command name is `srk`.
+
+- **`plugin.json` / `marketplace.json`: `name` → `srk`.** Install is now
+  `/plugin install srk@parkktech` (the marketplace-add path stays
+  `parkktech/shrinkage` — that's the repo). `renames` reversed to
+  `{"shrinkage": "srk"}` so anyone on the `shrinkage` name migrates to `srk`.
+- **All 12 command frontmatter names de-prefixed** (`name: srk:audit` →
+  `name: audit`); with plugin `srk` that yields `/srk:audit`, not
+  `/srk:srk:audit`.
+- **Cache-path globs made rename-proof.** Every `$SKILL`/status-line fallback
+  that hardcoded `cache/*/shrinkage/*` now globs `cache/*/*/*/skills/shrinkage`,
+  anchored on the stable skill dir — a future rename can't strand them.
+  `${CLAUDE_PLUGIN_ROOT}` stays the primary resolver.
+- **`watchdog.py` key + `selfupdate.py` install name** updated to `srk@`; the
+  self-update guidance and marketplace-add repo slug kept distinct.
+- **To pick it up:** update the marketplace, `/plugin uninstall
+  shrinkage@parkktech`, `/plugin install srk@parkktech`, relaunch. 191 tests
+  green.
+
 ## 0.42.2
 - **README: a real install-troubleshooting note for
   `Plugin "shrinkage" not found in marketplace "parkktech"`.** Root cause seen

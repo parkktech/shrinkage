@@ -30,9 +30,14 @@ Then verify: `git ls-remote --tags origin` shows the new tag and
 - `.claude-plugin/` — `plugin.json` (the plugin) + `marketplace.json` (the
   self-hosted marketplace; plugin source is `./`).
 - `commands/srk/*.md` — the `/srk:*` slash commands (thin; defer to workflows).
-  `plugin.json` sets `"commands": "./commands/srk/"` so the subdir name `srk`
-  (not the plugin name `shrinkage`) is the command prefix — this is the GSD
-  trick that renders `name: srk:shave` as `/srk:shave` in the IDE picker.
+  The prefix comes from the PLUGIN NAME: `plugin.json` has `"name": "srk"`, and
+  Claude Code (v2.1.143+) namespaces every plugin command as `/<plugin>:<cmd>`.
+  So command files use BARE names (`name: audit`, NOT `srk:audit`) — a `srk:` in
+  the name would double to `/srk:srk:audit`. The `commands/srk/` subdir is just
+  organization; it does not affect the slug. (History: the plugin was briefly
+  named `shrinkage`, which forced `/shrinkage:srk:*`; renamed back to `srk` in
+  v0.43.0 to restore the clean `/srk:*` form. The product is still "Shrinkage";
+  only the install/command name is `srk`.)
 - `skills/shrinkage/` — the skill: `SKILL.md`, `scripts/`, `rules/`,
   `references/`, `workflows/`, `agents/`, `adapters/`.
 - `agents/` (repo root) — the tiered Claude Code subagents (surgeon on Haiku).

@@ -1,5 +1,5 @@
 ---
-name: srk:update
+name: update
 description: "Check installed vs latest version and print the reliable update steps (uninstall → install → relaunch)"
 argument-hint: "[--check]"
 allowed-tools: [Bash]
@@ -12,7 +12,7 @@ broken "already installed / cache-miss" state.
 </objective>
 
 <execution_context>
-$SKILL is resolved FRESH for THIS invocation — never reuse a path remembered from earlier in the session (a mid-session plugin update strands version-pinned cache paths). Churn-proof order: `${CLAUDE_PLUGIN_ROOT}/skills/shrinkage` if set; else the newest installed copy `$(ls -dv ~/.claude/plugins/cache/*/shrinkage/*/skills/shrinkage 2>/dev/null | tail -1)`; else the vendored locations.
+$SKILL is resolved FRESH for THIS invocation — never reuse a path remembered from earlier in the session (a mid-session plugin update strands version-pinned cache paths). Churn-proof order: `${CLAUDE_PLUGIN_ROOT}/skills/shrinkage` if set; else the newest installed copy `$(ls -dv ~/.claude/plugins/cache/*/*/*/skills/shrinkage 2>/dev/null | tail -1)`; else the vendored locations.
 
 Run this inline — no subagent. Locate the shrinkage skill dir
 ($SKILL: `${CLAUDE_PLUGIN_ROOT}/skills/shrinkage` when installed as a plugin,
@@ -27,8 +27,8 @@ Claude Code updates the plugin in the background after startup and prompts
 
 To update by hand, the reliable path is **uninstall → install → relaunch**:
 
-  /plugin uninstall shrinkage@parkktech
-  /plugin install shrinkage@parkktech
+  /plugin uninstall srk@parkktech
+  /plugin install srk@parkktech
 
 `uninstall` clears the cached files AND the registration together, so the
 `install` genuinely re-fetches. Do NOT tell the user to just delete the plugin
@@ -42,6 +42,6 @@ If the script says "up to date", say so and stop — no reinstall needed.
 
 <next>
 Next:
-• /plugin uninstall shrinkage@parkktech   — then /plugin install, then relaunch
+• /plugin uninstall srk@parkktech   — then /plugin install, then relaunch
 • /srk:audit                              — once updated, put it to work
 </next>

@@ -30,7 +30,7 @@ ROOT = HOME / ".claude" / "shrinkage"
 STATE = ROOT / "state"
 STABLE = ROOT / "watchdog.py"
 USER_SETTINGS = HOME / ".claude" / "settings.json"
-PLUGIN_KEY_PREFIX = "shrinkage@"
+PLUGIN_KEY_PREFIX = "srk@"
 
 
 def decide(enabled, installed, heartbeat):
@@ -108,7 +108,7 @@ def settings_scopes(cwd=None):
 
 
 def is_enabled(scopes):
-    """True when any scope enables a shrinkage@<marketplace> plugin."""
+    """True when any scope enables a srk@<marketplace> plugin."""
     for path in scopes:
         for key, on in (read_json(path).get("enabledPlugins") or {}).items():
             if key.startswith(PLUGIN_KEY_PREFIX):
@@ -117,7 +117,7 @@ def is_enabled(scopes):
 
 
 def is_installed():
-    """True when a shrinkage entry in installed_plugins.json points at a real dir."""
+    """True when a srk entry in installed_plugins.json points at a real dir."""
     data = read_json(HOME / ".claude" / "plugins" / "installed_plugins.json")
     for key, entries in (data.get("plugins") or {}).items():
         if not key.startswith(PLUGIN_KEY_PREFIX):

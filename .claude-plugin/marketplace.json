@@ -7,14 +7,19 @@
   "description": "Parkk Tech plugins for Claude Code",
   "plugins": [
     {
-      "name": "shrinkage",
+      "name": "srk",
       "source": "./",
-      "description": "Shrinkage — write less, better code: token-lean codemaps, reuse-first extension ladder, provably-safe reduction. An LSP reference oracle and runtime deprecation probes turn 'looks unused' into proof before deletion. /srk:map, /srk:gate, /srk:audit, /srk:shave, /srk:coverage.",
+      "description": "Shrinkage \u2014 write less, better code: token-lean codemaps, reuse-first extension ladder, provably-safe reduction. An LSP reference oracle and runtime deprecation probes turn 'looks unused' into proof before deletion. /srk:map, /srk:gate, /srk:audit, /srk:shave, /srk:coverage.",
       "category": "development",
-      "tags": ["code-quality", "refactoring", "dead-code", "gsd"]
+      "tags": [
+        "code-quality",
+        "refactoring",
+        "dead-code",
+        "gsd"
+      ]
     }
   ],
   "renames": {
-    "srk": "shrinkage"
+    "shrinkage": "srk"
   }
 }

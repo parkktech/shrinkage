@@ -1,5 +1,5 @@
 ---
-name: srk:query
+name: query
 description: "Query the codemap for symbols matching a term instead of grepping the repo"
 argument-hint: "<term> [--deep]"
 allowed-tools: [Bash, Read]

@@ -34,14 +34,14 @@ def test_is_enabled_scans_all_scopes(tmp_path):
     a = tmp_path / "a.json"
     b = tmp_path / "b.json"
     a.write_text(json.dumps({"enabledPlugins": {"gsd@x": True}}), encoding="utf-8")
-    b.write_text(json.dumps({"enabledPlugins": {"shrinkage@parkktech": True}}), encoding="utf-8")
+    b.write_text(json.dumps({"enabledPlugins": {"srk@parkktech": True}}), encoding="utf-8")
     assert watchdog.is_enabled([a, b]) is True
     assert watchdog.is_enabled([a]) is False
 
 
 def test_is_enabled_false_when_explicitly_disabled(tmp_path):
     a = tmp_path / "a.json"
-    a.write_text(json.dumps({"enabledPlugins": {"shrinkage@parkktech": False}}), encoding="utf-8")
+    a.write_text(json.dumps({"enabledPlugins": {"srk@parkktech": False}}), encoding="utf-8")
     assert watchdog.is_enabled([a]) is False
 
 
@@ -64,14 +64,14 @@ def test_write_settings_preserves_foreign_keys(tmp_path):
     s = tmp_path / "settings.json"
     s.write_text(json.dumps({
         "statusLine": {"type": "command", "command": "gsd-statusline.js"},
-        "enabledPlugins": {"shrinkage@parkktech": True},
+        "enabledPlugins": {"srk@parkktech": True},
     }), encoding="utf-8")
 
     watchdog.add_hooks(s, "/usr/bin/python3", "/home/u/.claude/shrinkage/watchdog.py")
 
     out = json.loads(s.read_text(encoding="utf-8"))
     assert out["statusLine"] == {"type": "command", "command": "gsd-statusline.js"}
-    assert out["enabledPlugins"] == {"shrinkage@parkktech": True}
+    assert out["enabledPlugins"] == {"srk@parkktech": True}
     assert "SessionStart" in out["hooks"]
     assert "UserPromptSubmit" in out["hooks"]
 
@@ -378,7 +378,7 @@ def test_installed_version_from_install_path(tmp_path, monkeypatch):
     home = tmp_path / "home"
     (home / ".claude" / "plugins").mkdir(parents=True)
     (home / ".claude" / "plugins" / "installed_plugins.json").write_text(
-        json.dumps({"plugins": {"shrinkage@parkktech": [
+        json.dumps({"plugins": {"srk@parkktech": [
             {"installPath": str(plug), "version": "ignored-if-plugin-json-wins"}]}}),
         encoding="utf-8")
     monkeypatch.setattr(watchdog, "HOME", home)
@@ -391,7 +391,7 @@ def test_installed_version_falls_back_to_registry_entry(tmp_path, monkeypatch):
     home = tmp_path / "home"
     (home / ".claude" / "plugins").mkdir(parents=True)
     (home / ".claude" / "plugins" / "installed_plugins.json").write_text(
-        json.dumps({"plugins": {"shrinkage@parkktech": [
+        json.dumps({"plugins": {"srk@parkktech": [
             {"installPath": str(plug), "version": "0.40.3"}]}}), encoding="utf-8")
     monkeypatch.setattr(watchdog, "HOME", home)
     assert watchdog.installed_version() == "0.40.3"

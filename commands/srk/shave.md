@@ -1,5 +1,5 @@
 ---
-name: srk:shave
+name: shave
 description: "Safe subtraction pass: remove/consolidate code with evidence chains, atomic commits, and zero behavior change"
 argument-hint: "[plan item # | --auto [--dangerous] | dir | file] [--dry-run]"
 allowed-tools: [Bash, Read, Grep, Edit, Write, Agent]
@@ -12,7 +12,7 @@ follows the safety model to the letter.
 </objective>
 
 <execution_context>
-$SKILL is resolved FRESH for THIS invocation — never reuse a path remembered from earlier in the session (a mid-session plugin update strands version-pinned cache paths). Churn-proof order: `${CLAUDE_PLUGIN_ROOT}/skills/shrinkage` if set; else the newest installed copy `$(ls -dv ~/.claude/plugins/cache/*/shrinkage/*/skills/shrinkage 2>/dev/null | tail -1)`; else the vendored locations.
+$SKILL is resolved FRESH for THIS invocation — never reuse a path remembered from earlier in the session (a mid-session plugin update strands version-pinned cache paths). Churn-proof order: `${CLAUDE_PLUGIN_ROOT}/skills/shrinkage` if set; else the newest installed copy `$(ls -dv ~/.claude/plugins/cache/*/*/*/skills/shrinkage 2>/dev/null | tail -1)`; else the vendored locations.
 
 Locate the shrinkage skill dir ($SKILL: `${CLAUDE_PLUGIN_ROOT}/skills/shrinkage` when installed as a plugin, else `.claude/skills/shrinkage`,
 `~/.claude/skills/shrinkage`, or `.agents/skills/shrinkage`), then follow
