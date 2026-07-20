@@ -247,3 +247,18 @@ def test_hooks_json_writes_heartbeat_and_plants():
     assert "watchdog.py" in commands
     assert "plant" in commands
     assert "heartbeat" in commands
+
+
+def test_segment_flags_not_loaded(tmp_path, monkeypatch):
+    import statusline
+    monkeypatch.setattr(statusline, "NOT_LOADED_FLAG", tmp_path / "flag")
+    (tmp_path / "flag").write_text("", encoding="utf-8")
+    monkeypatch.chdir(tmp_path)
+    assert statusline.srk_segment().startswith("⚠ srk not loaded")
+
+
+def test_segment_normal_when_no_flag(tmp_path, monkeypatch):
+    import statusline
+    monkeypatch.setattr(statusline, "NOT_LOADED_FLAG", tmp_path / "flag")
+    monkeypatch.chdir(tmp_path)
+    assert not statusline.srk_segment().startswith("⚠")

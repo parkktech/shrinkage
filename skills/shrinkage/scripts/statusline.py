@@ -30,6 +30,12 @@ import sys
 import time
 from pathlib import Path
 
+# Set by watchdog.py when the plugin is installed but did not load this
+# session. Re-derived from the filesystem rather than imported: the watchdog
+# is copied to a stable path independently of this script, so an import would
+# couple two files that ship and update separately.
+NOT_LOADED_FLAG = Path.home() / ".claude" / "shrinkage" / "state" / "not-loaded"
+
 TTL = 6 * 3600  # re-check the remote at most every 6 hours
 
 
@@ -190,6 +196,11 @@ def srk_segment():
     """Just the Shrinkage part: trend/streak (or the setup nudge) + update hint.
     This is what `--segment` prints, for CHAINING onto an existing status line
     (e.g. GSD's) — never replace a bar the user already has."""
+    try:
+        if NOT_LOADED_FLAG.exists():
+            return "⚠ srk not loaded — /reload-plugins"
+    except OSError:
+        pass
     log = Path(".git/info/shrinkage-log.jsonl")
     if not log.exists():
         log = Path(".claude/shrinkage-log.jsonl")
