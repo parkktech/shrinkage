@@ -115,9 +115,36 @@ Decision matrix:
 `enabled in settings` must be resolved across **all** scopes (user, project,
 `settings.local.json`), not just `~/.claude/settings.json`.
 
-### Resume behavior — measured, not assumed
+### Harness behavior — measured, not assumed
 
-Verified on Claude Code 2.1.215:
+Every harness assumption this design rests on was verified by experiment on
+Claude Code 2.1.215, each with a control:
+
+| assumption | result | what it decided |
+|---|---|---|
+| `--continue` reuses `session_id` | **yes** — identical id across runs | forced the boot-clearing hook |
+| `SessionStart` fires on `--continue` | **yes** — boot counter incremented | made the fix possible |
+| user-scope `settings.local.json` loads hooks | **no** — control in `settings.json` fired, treatment did not | ruled out the gentler write target |
+| an installed-but-unregistered plugin's hooks fire | **no** — enabled 1×, not-enabled 0×, disabled 0× | validates the heartbeat mechanism |
+| `UserPromptSubmit` stdout reaches the model's context | **yes** — token reproduced verbatim | validates the warning channel |
+
+Two of these overturned a working assumption, which is why they are recorded
+here rather than left as inference:
+
+- The `session_id` result would have silenced the watchdog on continued
+  sessions — the likeliest path by which this bug reaches a user.
+- `~/.claude/settings.local.json` is *listed in the docs as a settings file*,
+  and would have been the less invasive target, but hooks do not load from it.
+  `~/.claude/settings.json` is the only user-wide registration point that
+  works. There is no hook auto-discovery directory.
+
+Note on method: the `UserPromptSubmit` test returned a false negative on its
+first run (stray stdin, and no independent record of whether the hook had
+executed). Adding a hook-side log to separate "did not fire" from "fired but
+undelivered" is what made the result trustworthy. Any future probe here should
+carry the same corroboration.
+
+Detail on the two resume findings:
 
 | behavior | result |
 |---|---|
@@ -173,3 +200,14 @@ The planter writing to `~/.claude/settings.json` is the one genuinely invasive
 act in this design. It is mitigated by atomic merge-preserving writes, a backup
 before first write, and self-uninstall on removal — but it is the piece to review
 hardest.
+
+It is also unavoidable, not merely convenient. The alternatives were considered
+and eliminated: hook auto-discovery does not exist; user-scope
+`settings.local.json` does not load hooks (measured); project-scope settings
+protect only the repo they sit in, leaving a fresh repo — the exact first-install
+case — uncovered; a separate watchdog plugin dies in the same stale registry;
+and `~/.claude/CLAUDE.md` is passive and taxes every session's context.
+
+Shrinkage already writes this file: `onboard.md` installs the `statusLine` key
+there. The watchdog adds a `hooks` key beside it, which is a difference of
+degree rather than kind.
