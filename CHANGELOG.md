@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.41.0
 - **Installed-but-not-loaded now announces itself.** A correct install could
   still leave `/srk` empty when the running session hadn't registered the
   plugin — and nothing said so, to the user or to Claude, who would report the
