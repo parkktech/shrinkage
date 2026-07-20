@@ -139,3 +139,99 @@ def test_add_hooks_backs_up_original_once(tmp_path):
     # A later write must not clobber the pristine copy with an already-modified one.
     watchdog.add_hooks(s, "/usr/bin/python3", "/x/shrinkage/watchdog.py")
     assert json.loads(backup.read_text(encoding="utf-8")) == json.loads(original)
+
+
+def _wire(monkeypatch, tmp_path):
+    """Point every filesystem anchor at a sandbox."""
+    root = tmp_path / "claude" / "shrinkage"
+    monkeypatch.setattr(watchdog, "ROOT", root)
+    monkeypatch.setattr(watchdog, "STATE", root / "state")
+    monkeypatch.setattr(watchdog, "STABLE", root / "watchdog.py")
+    monkeypatch.setattr(watchdog, "USER_SETTINGS", tmp_path / "claude" / "settings.json")
+    return root
+
+
+def test_check_warns_when_no_heartbeat(monkeypatch, tmp_path, capsys):
+    _wire(monkeypatch, tmp_path)
+    monkeypatch.setattr(watchdog, "is_enabled", lambda scopes: True)
+    monkeypatch.setattr(watchdog, "is_installed", lambda: True)
+
+    rc = watchdog.main(["check"], json.dumps({"session_id": "s1"}))
+
+    assert rc == 0
+    assert "installed but not loaded" in capsys.readouterr().out
+
+
+def test_check_silent_when_heartbeat_present(monkeypatch, tmp_path, capsys):
+    root = _wire(monkeypatch, tmp_path)
+    monkeypatch.setattr(watchdog, "is_enabled", lambda scopes: True)
+    monkeypatch.setattr(watchdog, "is_installed", lambda: True)
+    (root / "state" / "hb").mkdir(parents=True)
+    (root / "state" / "hb" / "s1").write_text("", encoding="utf-8")
+
+    watchdog.main(["check"], json.dumps({"session_id": "s1"}))
+
+    assert capsys.readouterr().out == ""
+
+
+def test_check_only_fires_once_per_session(monkeypatch, tmp_path, capsys):
+    _wire(monkeypatch, tmp_path)
+    monkeypatch.setattr(watchdog, "is_enabled", lambda scopes: True)
+    monkeypatch.setattr(watchdog, "is_installed", lambda: True)
+
+    watchdog.main(["check"], json.dumps({"session_id": "s1"}))
+    capsys.readouterr()
+    watchdog.main(["check"], json.dumps({"session_id": "s1"}))
+
+    assert capsys.readouterr().out == ""
+
+
+def test_boot_rearms_check_for_same_session(monkeypatch, tmp_path, capsys):
+    """--continue reuses session_id; boot must re-arm or the continued
+    session is silenced by the marker its own earlier run wrote."""
+    _wire(monkeypatch, tmp_path)
+    monkeypatch.setattr(watchdog, "is_enabled", lambda scopes: True)
+    monkeypatch.setattr(watchdog, "is_installed", lambda: True)
+
+    watchdog.main(["check"], json.dumps({"session_id": "s1"}))
+    capsys.readouterr()
+    watchdog.main(["boot"], json.dumps({"session_id": "s1"}))
+    watchdog.main(["check"], json.dumps({"session_id": "s1"}))
+
+    assert "installed but not loaded" in capsys.readouterr().out
+
+
+def test_check_self_uninstalls_when_disabled(monkeypatch, tmp_path, capsys):
+    _wire(monkeypatch, tmp_path)
+    settings = tmp_path / "claude" / "settings.json"
+    settings.parent.mkdir(parents=True)
+    settings.write_text("{}", encoding="utf-8")
+    watchdog.add_hooks(settings, "/usr/bin/python3", "/x/shrinkage/watchdog.py")
+    monkeypatch.setattr(watchdog, "is_enabled", lambda scopes: False)
+    monkeypatch.setattr(watchdog, "is_installed", lambda: True)
+
+    watchdog.main(["check"], json.dumps({"session_id": "s1"}))
+
+    out = json.loads(settings.read_text(encoding="utf-8"))
+    assert all(not any("watchdog.py" in h["command"] for h in e["hooks"])
+               for e in out["hooks"].get("SessionStart", []))
+    assert capsys.readouterr().out == ""
+
+
+def test_check_survives_garbage_stdin(monkeypatch, tmp_path, capsys):
+    _wire(monkeypatch, tmp_path)
+    assert watchdog.main(["check"], "not json at all") == 0
+    assert capsys.readouterr().out == ""
+
+
+def test_plant_copies_script_and_registers(monkeypatch, tmp_path):
+    root = _wire(monkeypatch, tmp_path)
+    settings = tmp_path / "claude" / "settings.json"
+    settings.parent.mkdir(parents=True)
+    settings.write_text("{}", encoding="utf-8")
+
+    watchdog.main(["plant"], "")
+
+    assert (root / "watchdog.py").exists()
+    cmds = json.dumps(json.loads(settings.read_text(encoding="utf-8")))
+    assert "watchdog.py" in cmds

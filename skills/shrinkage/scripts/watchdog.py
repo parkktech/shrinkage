@@ -10,6 +10,9 @@ Every entry point fails open: a diagnostic must never block a prompt.
 
 import json
 import os
+import shutil
+import sys
+import time
 from pathlib import Path
 
 WARNING = (
@@ -172,3 +175,104 @@ def remove_hooks(path):
     if not changed:
         return True
     return write_settings(path, data)
+
+
+def session_id(stdin_text):
+    """Claude Code pipes session JSON on stdin. '' when unreadable."""
+    try:
+        return (json.loads(stdin_text) or {}).get("session_id") or ""
+    except (TypeError, ValueError):
+        return ""
+
+
+def _checked(sid):
+    return STATE / "checked" / sid
+
+
+def cmd_boot(sid):
+    """Clear the once-per-session marker. Fires on every process start,
+    including --continue, which reuses session_id."""
+    try:
+        _checked(sid).unlink()
+    except OSError:
+        pass
+    return 0
+
+
+def cmd_heartbeat(sid):
+    """Proof-of-life that the plugin loaded this session."""
+    try:
+        hb = STATE / "hb"
+        hb.mkdir(parents=True, exist_ok=True)
+        (hb / sid).write_text("", encoding="utf-8")
+        cutoff = time.time() - 86400
+        for old in hb.iterdir():
+            if old.stat().st_mtime < cutoff:
+                old.unlink()
+    except OSError:
+        pass
+    return 0
+
+
+def cmd_check(sid):
+    marker = _checked(sid)
+    if marker.exists():
+        return 0
+    verdict = decide(is_enabled(settings_scopes()), is_installed(), take_heartbeat(sid))
+    if verdict == "uninstall":
+        remove_hooks(USER_SETTINGS)
+        return 0
+    try:
+        marker.parent.mkdir(parents=True, exist_ok=True)
+        marker.write_text("", encoding="utf-8")
+    except OSError:
+        pass
+    flag = STATE / "not-loaded"
+    try:
+        if verdict == "warn":
+            flag.parent.mkdir(parents=True, exist_ok=True)
+            flag.write_text("", encoding="utf-8")
+            print(WARNING)
+        else:
+            flag.unlink()
+    except OSError:
+        pass
+    return 0
+
+
+def cmd_plant():
+    """Copy this script to the stable path and register both hooks."""
+    try:
+        STABLE.parent.mkdir(parents=True, exist_ok=True)
+        source = Path(__file__).resolve()
+        if source != Path(os.path.abspath(str(STABLE))):
+            shutil.copyfile(str(source), str(STABLE))
+    except OSError:
+        return 0
+    add_hooks(USER_SETTINGS, sys.executable, str(STABLE))
+    return 0
+
+
+def main(argv, stdin_text):
+    cmd = argv[0] if argv else "check"
+    sid = session_id(stdin_text)
+    if cmd == "plant":
+        return cmd_plant()
+    if not sid:
+        return 0
+    if cmd == "boot":
+        return cmd_boot(sid)
+    if cmd == "heartbeat":
+        return cmd_heartbeat(sid)
+    return cmd_check(sid)
+
+
+if __name__ == "__main__":
+    try:
+        raw = "" if sys.stdin.isatty() else sys.stdin.read()
+    except OSError:
+        raw = ""
+    try:
+        sys.exit(main(sys.argv[1:], raw))
+    except Exception:
+        sys.exit(0)  # fail open: never block a prompt
