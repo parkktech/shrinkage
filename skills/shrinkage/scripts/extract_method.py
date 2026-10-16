@@ -336,8 +336,8 @@ def _js_lang(ext):
 
 
 def _js_tree(text, ext):
+    lang = _js_lang(ext)  # refuses with an install hint before tree_sitter is imported
     import tree_sitter
-    lang = _js_lang(ext)
     tree = tree_sitter.Parser(lang).parse(text.encode("utf-8"))
     return tree
 
