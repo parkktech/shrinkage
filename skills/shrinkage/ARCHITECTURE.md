@@ -122,8 +122,11 @@ phase, per milestone.
   (`entries: {Symbol: {file, kind, signature, line, refs, language}}`,
   `_meta.generator: "shrinkage/codemap.py"`) — GSD's documented loose schema,
   feeding `plan_review.source_grounding_authority: intel` and API-SURFACE.md.
-- Discovery: GSD agents load project skills' `SKILL.md` + `rules/*.md` on
-  their own (project-skills-discovery); SKILL.md stays lean for that reason.
+- Discovery: GSD's project-skills-discovery scans only the project's
+  `.claude/skills/`, never plugin skills, so `wire_gsd` injects
+  `global:srk:shrinkage` via `.planning/config.json` `agent_skills` (Claude
+  runtime: emitted as a Skill-tool directive). SKILL.md stays lean because
+  every wired GSD agent loads it.
 - Artifacts: audits write SHRINK-PLAN.md into `.planning/`; scoreboard lines
   go into plan SUMMARY.md; verify phases consume the rules' "When verifying"
   sections.

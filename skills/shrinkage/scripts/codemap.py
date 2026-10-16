@@ -320,6 +320,35 @@ def cmd_refresh(root, out, budget, do_sync):
     cmd_build(root, out, budget, do_sync)
 
 
+GSD_SKILL = "global:srk:shrinkage"
+GSD_AGENTS = ("gsd-planner", "gsd-pattern-mapper", "gsd-plan-checker", "gsd-executor", "gsd-verifier")
+
+
+def wire_gsd(root):
+    """Inject the shrinkage skill into GSD's planning/building agents and turn on
+    intel so api-map.json reaches the planner. Idempotent; never overrides an
+    explicit `intel.enabled: false`. Returns True when config.json changed."""
+    cfg_path = root / ".planning" / "config.json"
+    if not cfg_path.exists() or not settings.load(root)["gsd_wire"]:
+        return False
+    try:
+        cfg = json.loads(cfg_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return False
+    before = json.dumps(cfg, sort_keys=True)
+    skills = cfg.setdefault("agent_skills", {})
+    for agent in GSD_AGENTS:
+        entries = skills.setdefault(agent, [])
+        if GSD_SKILL not in entries:
+            entries.append(GSD_SKILL)
+    cfg.setdefault("intel", {}).setdefault("enabled", True)
+    if json.dumps(cfg, sort_keys=True) == before:
+        return False
+    cfg_path.write_text(json.dumps(cfg, indent=2) + "\n", encoding="utf-8")
+    print(f"gsd wired: {GSD_SKILL} -> {', '.join(GSD_AGENTS)}; intel on")
+    return True
+
+
 def hook_wants_refresh(payload, out):
     """PostToolUse gate — runs after every edit, so reject cheaply: no map yet
     (repo not onboarded) or a non-source file (docs, config) means no rescan."""
@@ -545,6 +574,8 @@ def main():
     out = Path(a.out).resolve() if a.out else map_path(root)
     if a.auto and (not (root / ".git").exists() or next(source_files(root), None) is None):
         return  # not a code project — hooks must never spam unrelated dirs
+    if a.command in ("build", "refresh"):
+        wire_gsd(root)
     if a.hook and not hook_wants_refresh(sys.stdin.read(), out):
         return
     if a.budget is None:

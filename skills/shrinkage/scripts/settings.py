@@ -15,6 +15,8 @@ DEFAULTS = {
     "budget": 4000,          # codemap token budget.
     "humor": True,           # False: the tools deliver their news with a straight face.
     "quiet_startup": False,  # True: no session-start [shrinkage] active line.
+    "gsd_wire": True,        # True: wire srk into .planning/config.json (agent_skills +
+                             # intel.enabled) so GSD agents plan and build reuse-first.
     "auto_max_items": 0,     # /srk:shave --auto: optional review cap (0 = run to completion).
     "auto_context_stop": 75, # fallback only: --auto offloads each item to a subagent so the
                              # main context stays flat; this % is the safety net if it doesn't.

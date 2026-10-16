@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.44.0
+**GSD agents now plan and build with the codemap; the map refreshes after every edit.**
+
+- **GSD wiring (`wire_gsd`).** Every `build`/`refresh` in a GSD project
+  appends `global:srk:shrinkage` to `.planning/config.json` `agent_skills`
+  for gsd-planner, gsd-pattern-mapper, gsd-plan-checker, gsd-executor and
+  gsd-verifier, and sets `intel.enabled: true` unless explicitly false, so
+  api-map.json reaches the planner as API-SURFACE.md. Previously no GSD agent
+  loaded the skill: GSD's project-skills discovery never scans plugin skills.
+  Idempotent; opt out with `"gsd_wire": false`.
+- **Role instructions in SKILL.md.** The pattern-mapper writes a
+  `## Reuse Gate` section into PATTERNS.md (extend-target or justification per
+  new file); the planner consumes it and SHRINK-PLAN.md; the plan-checker
+  flags plans that ignore it under Dimension 12.
+- **Post-edit refresh hook.** PostToolUse on Write/Edit/MultiEdit/NotebookEdit
+  runs `codemap.py refresh --hook --quiet`: skips un-onboarded repos and
+  non-source edits, prints nothing (zero context tokens).
+- **Parse cache.** `.claude/codemap.cache.json` (auto-gitignored) keyed by
+  size+mtime: rebuilds re-parse only changed files.
+
 ## 0.43.0
 **Plugin renamed `shrinkage` → `srk` to restore clean `/srk:*` commands.**
 Claude Code (v2.1.143+) now forces every plugin command to render as

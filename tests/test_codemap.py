@@ -117,3 +117,33 @@ def test_rebuild_reparses_only_changed_files(repo, monkeypatch):
     assert parsed == ["b.js"], "unchanged files must come from the parse cache"
     assert second["a.py"] == first["a.py"]
     assert any(s.name == "delta" for s in second["b.js"])
+
+
+def test_build_wires_gsd_agents_and_intel_idempotently(repo):
+    import json
+    seed(repo)
+    (repo / ".planning").mkdir()
+    cfg = repo / ".planning" / "config.json"
+    cfg.write_text(json.dumps({"agent_skills": {"gsd-planner": ["skills/mine"]}}))
+    code, out = run("codemap.py", "build", cwd=repo)
+    assert "gsd wired" in out
+    data = json.loads(cfg.read_text())
+    assert data["agent_skills"]["gsd-planner"] == ["skills/mine", "global:srk:shrinkage"]
+    assert "global:srk:shrinkage" in data["agent_skills"]["gsd-pattern-mapper"]
+    assert data["intel"]["enabled"] is True
+    code, out = run("codemap.py", "refresh", cwd=repo)
+    assert "gsd wired" not in out, "second run must be a no-op"
+
+
+def test_gsd_wire_respects_explicit_intel_off_and_opt_out(repo):
+    import json
+    seed(repo)
+    (repo / ".planning").mkdir()
+    cfg = repo / ".planning" / "config.json"
+    cfg.write_text(json.dumps({"intel": {"enabled": False}}))
+    run("codemap.py", "build", cwd=repo)
+    assert json.loads(cfg.read_text())["intel"]["enabled"] is False
+    (repo / ".claude" / "shrinkage.json").write_text(json.dumps({"gsd_wire": False}))
+    cfg.write_text("{}")
+    run("codemap.py", "build", cwd=repo)
+    assert json.loads(cfg.read_text()) == {}

@@ -136,14 +136,32 @@ code has moved past the last audit. Silence it with `"quiet_startup": true`.
 
 ## GSD integration
 
-In a GSD project (`.planning/` present) everything auto-connects: the map
-lives at `.planning/intel/codemap.txt` and syncs all parsed symbols into
-`.planning/intel/api-map.json` (upgrading GSD's intel grounding and
-API-SURFACE.md to every language here, not just JS); planners run the gate
-(rules files have "When planning" sections); executors follow the ladder and
-put the scoreboard line in SUMMARY.md; verifiers use the rules' "When
-verifying" sections; audits write SHRINK-PLAN.md into `.planning/` for phase
-planning. GSD's project-skills discovery loads `rules/*.md` automatically.
+In a GSD project (`.planning/` present) the map lives at
+`.planning/intel/codemap.txt` and every parsed symbol syncs into
+`.planning/intel/api-map.json`. Any build/refresh (session start, post-edit
+hook, `/srk:map`) also wires `.planning/config.json`: `global:srk:shrinkage`
+is appended to `agent_skills` for gsd-planner, gsd-pattern-mapper,
+gsd-plan-checker, gsd-executor and gsd-verifier, and `intel.enabled` is set
+true unless explicitly false (so API-SURFACE.md reaches the planner). Opt out
+with `"gsd_wire": false`. Loaded into a GSD agent, apply your role:
+
+- **gsd-pattern-mapper** — for each new/modified file, `codemap.py query
+  <term>` first (grep only for what the map lacks). Name map symbols as
+  analogs in `## File Classification`. Add `## Reuse Gate` to PATTERNS.md:
+  one row per proposed NEW file/class — the existing symbol to extend
+  (path:line) or the one-line justification why none fits. The plan-checker
+  enforces PATTERNS.md, so this is where reuse becomes binding.
+- **gsd-planner** — consume `## Reuse Gate`: plans extend the named symbol;
+  a new file appears only with its justification copied into the action.
+  Read `.planning/SHRINK-PLAN.md` if present — fold items touching the
+  phase's files into the plan.
+- **gsd-plan-checker** — under Dimension 12, flag (warning) any plan creating
+  a file/class that `## Reuse Gate` says to extend, or a new file with no
+  gate row.
+- **gsd-executor** — follow the extension ladder; before creating a file not
+  in the plan, run the gate. End SUMMARY.md with the `diffstat.py` line.
+- **gsd-verifier** — apply the rules' "When verifying" sections; report net
+  LOC from `diffstat.py`.
 
 ## Commands
 

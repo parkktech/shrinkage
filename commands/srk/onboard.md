@@ -65,7 +65,12 @@ as conscious choices, user ready to work.
 4. Write the answers to `.claude/shrinkage.json`; re-run
    `codemap.py refresh` so map location/gitignore reflect the choices.
 5. GSD project detected → point out the auto-integration (map + api-map.json
-   in `.planning/intel/`, SHRINK-PLAN.md target, SUMMARY.md scoreboard lines).
+   in `.planning/intel/`, SHRINK-PLAN.md target, SUMMARY.md scoreboard lines)
+   and the `.planning/config.json` wiring the build just applied: shrinkage
+   injected into GSD's planner/pattern-mapper/checker/executor/verifier via
+   `agent_skills`, `intel.enabled` on. Opt out: `"gsd_wire": false`. No
+   `.planning/` yet → it wires itself on the first refresh after
+   `/gsd:new-project`.
 6. **Reference oracle — ASK, then INSTALL. Never just print a command.** This
    is an ACTION step and it runs on EVERY onboard, including a re-run: a missing
    oracle for a language the repo actually uses is a decision to put to the
