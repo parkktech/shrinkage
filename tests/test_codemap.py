@@ -71,3 +71,49 @@ def test_scope_writes_to_intel_dir_not_the_scanned_tree(repo):
     assert "alpha" in scope_map.read_text()
     # and it's kept out of git so auditors never have to clean it up
     assert "codemap-scope-pkg.txt" in (repo / ".gitignore").read_text()
+
+
+def test_hook_refreshes_only_for_source_edits(repo):
+    import json
+    import subprocess
+    import sys
+    from conftest import SCRIPTS
+    seed(repo)
+
+    def hook(path):
+        payload = json.dumps({"tool_name": "Edit", "tool_input": {"file_path": str(repo / path)}})
+        r = subprocess.run([sys.executable, str(SCRIPTS / "codemap.py"), "refresh", "--hook"],
+                           input=payload, capture_output=True, text=True, cwd=repo)
+        return r.stdout + r.stderr
+
+    assert hook("a.py") == "", "no map yet: un-onboarded repos must stay untouched"
+    assert not (repo / ".claude" / "codemap.txt").exists()
+    run("codemap.py", "build", cwd=repo)
+    (repo / "c.py").write_text("def gamma():\n    return 3\n")
+    assert hook("README.md") == "", "non-source edits must not rescan"
+    assert "gamma" not in (repo / ".claude" / "codemap.txt").read_text()
+    assert "map written" in hook("c.py")
+    assert "gamma" in (repo / ".claude" / "codemap.txt").read_text()
+
+
+def test_hooks_json_refreshes_map_after_edits():
+    import json
+    from pathlib import Path
+    hooks = json.loads((Path(__file__).resolve().parent.parent / "hooks" / "hooks.json").read_text())
+    block = hooks["hooks"]["PostToolUse"][0]
+    assert "Edit" in block["matcher"] and "Write" in block["matcher"]
+    assert "refresh --hook" in block["hooks"][0]["command"]
+
+
+def test_rebuild_reparses_only_changed_files(repo, monkeypatch):
+    import codemap
+    seed(repo)
+    first = codemap.build_index(repo)
+    parsed = []
+    real = codemap.parse_file
+    monkeypatch.setattr(codemap, "parse_file", lambda p: parsed.append(p.name) or real(p))
+    (repo / "b.js").write_text("export function beta() {\n  return 2;\n}\nexport function delta() {\n  return 4;\n}\n")
+    second = codemap.build_index(repo)
+    assert parsed == ["b.js"], "unchanged files must come from the parse cache"
+    assert second["a.py"] == first["a.py"]
+    assert any(s.name == "delta" for s in second["b.js"])

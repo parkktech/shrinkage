@@ -105,17 +105,60 @@ def ref_only_files(root):
         yield p
 
 
+PARSE_CACHE = Path(".claude") / "codemap.cache.json"
+
+
+def parse_cache_version():
+    """Parser code or tree-sitter toggle changes invalidate every cached parse."""
+    parsers_dir = Path(__file__).resolve().parent / "parsers"
+    newest = max((p.stat().st_mtime_ns for p in parsers_dir.glob("*.py")), default=0)
+    return f"{newest}:{Path(__file__).stat().st_mtime_ns}:{os.environ.get('SHRINKAGE_NO_TREESITTER', '')}"
+
+
+def load_parse_cache(root):
+    """{relpath: {"t": size:mtime, "i": ident counts, "s": symbol rows}} — lets a
+    rebuild re-parse only the files that changed (the post-edit hook path)."""
+    try:
+        data = json.loads((root / PARSE_CACHE).read_text(encoding="utf-8"))
+        return data["files"] if data.get("v") == parse_cache_version() else {}
+    except (OSError, ValueError, KeyError):
+        return {}
+
+
+def save_parse_cache(root, files):
+    path = root / PARSE_CACHE
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps({"v": parse_cache_version(), "files": files},
+                                   separators=(",", ":")), encoding="utf-8")
+        ensure_ignored(root, path)
+    except OSError:
+        pass
+
+
 def build_index(root):
     """{relpath: [Symbol]} with reference counts filled in."""
     index, idents, defs = {}, Counter(), Counter()
+    cache, fresh = load_parse_cache(root), {}
     for path in source_files(root):
         rel = path.relative_to(root).as_posix()
-        index[rel] = parse_file(path)
-        try:
-            idents.update(IDENT.findall(strip_comments(
-                path.read_text(encoding="utf-8", errors="replace"))))
-        except OSError:
-            pass
+        st = path.stat()
+        stamp = f"{st.st_size}:{st.st_mtime_ns}"
+        hit = cache.get(rel)
+        if hit and hit["t"] == stamp:
+            index[rel] = [Symbol(*row) for row in hit["s"]]
+            file_idents = hit["i"]
+        else:
+            index[rel] = parse_file(path)
+            try:
+                file_idents = Counter(IDENT.findall(strip_comments(
+                    path.read_text(encoding="utf-8", errors="replace"))))
+            except OSError:
+                file_idents = {}
+        idents.update(file_idents)
+        fresh[rel] = {"t": stamp, "i": file_idents, "s": [
+            [s.kind, s.name, s.signature, s.line, s.parent, s.base] for s in index[rel]]}
+    save_parse_cache(root, fresh)
     for path in ref_only_files(root):  # refs only — no symbols, no comment strip
         try:
             idents.update(IDENT.findall(path.read_text(encoding="utf-8", errors="replace")))
@@ -275,6 +318,19 @@ def cmd_refresh(root, out, budget, do_sync):
                 print(q)
             return
     cmd_build(root, out, budget, do_sync)
+
+
+def hook_wants_refresh(payload, out):
+    """PostToolUse gate — runs after every edit, so reject cheaply: no map yet
+    (repo not onboarded) or a non-source file (docs, config) means no rescan."""
+    if not out.exists():
+        return False
+    try:
+        tool_input = json.loads(payload).get("tool_input") or {}
+        path = tool_input.get("file_path") or tool_input.get("notebook_path")
+    except (ValueError, AttributeError):
+        return False
+    return bool(path) and language_of(Path(path).name) is not None
 
 
 def cmd_auto(root, out, budget, do_sync):
@@ -478,6 +534,9 @@ def main():
     ap.add_argument("--auto", action="store_true",
                     help="hook mode: exit silently when this isn't a code project "
                          "(no supported source files or no .git)")
+    ap.add_argument("--hook", action="store_true",
+                    help="PostToolUse mode: read the hook payload on stdin; refresh only "
+                         "when the edited file is source code and the map already exists")
     a = ap.parse_args()
     if a.quiet:
         sys.stdout = open(os.devnull, "w", encoding="utf-8")
@@ -486,6 +545,8 @@ def main():
     out = Path(a.out).resolve() if a.out else map_path(root)
     if a.auto and (not (root / ".git").exists() or next(source_files(root), None) is None):
         return  # not a code project — hooks must never spam unrelated dirs
+    if a.hook and not hook_wants_refresh(sys.stdin.read(), out):
+        return
     if a.budget is None:
         a.budget = settings.load(root)["budget"]
 
