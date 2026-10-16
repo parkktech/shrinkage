@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.44.1
+- **`extract_method.py`: JS/TS surgery refuses cleanly without tree-sitter.**
+  `_js_tree` imported `tree_sitter` before the availability check, so a
+  missing package crashed with `ModuleNotFoundError` instead of exiting 2 with
+  the install hint. Fixes `test_boundaries_refuse_loudly`.
+
 ## 0.44.0
 **GSD agents now plan and build with the codemap; the map refreshes after every edit.**
 
