@@ -25,6 +25,19 @@ validation rule that already exists, `Http` client (not Guzzle-by-hand),
 - New service class (rung 6–7) only when a seam doesn't fit — and register it
   where the existing provider already lives, not a new provider per class.
 
+## Domain layout (organize.py enforces once `app/Domains` exists)
+
+- `app/Domains/<Area>/{Actions,Models,Enums,Events,Listeners,Jobs,Policies,Services,Data,Http/{Controllers,Requests,Resources},Console/Commands,Filament,Support}/`.
+  `app/Models`, `app/Services`, `app/Jobs`, `app/Http/Controllers` (except the base `Controller`)
+  and the other generator targets hold nothing custom. `make:*` then move + fix the namespace.
+- Mirror the area: `database/migrations/<Area>/` (register with
+  `loadMigrationsFrom(glob(database_path('migrations/*'), GLOB_ONLYDIR))` — Laravel does not scan
+  subdirectories), `database/factories/<Area>/` bound with `#[UseFactory(...)]` (factory discovery
+  ignores domain namespaces), `routes/{web,api}/<area>.php`, `resources/views/<area>/`,
+  `tests/{Feature,Unit}/<Area>/`.
+- Controllers, Filament resources, jobs, listeners and commands call an Action; they hold no
+  business logic. Cross-area: use the other area's Actions/Events, never write its tables.
+
 ## Anti-patterns to refuse
 
 - Repository-wrapping Eloquent where every method delegates (C2 at scale).

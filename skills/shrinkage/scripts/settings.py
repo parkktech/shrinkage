@@ -15,6 +15,16 @@ DEFAULTS = {
     "budget": 4000,          # codemap token budget.
     "humor": True,           # False: the tools deliver their news with a straight face.
     "quiet_startup": False,  # True: no session-start [shrinkage] active line.
+    "change_records": True,  # True: commits touching code must update CHANGELOG.md and the
+                             # feature ledger (or say [changelog: none]/[ledger: none]); fixes
+                             # add a regression row. Enforced once the repo has those files.
+    "records_code_paths": None,  # e.g. ["app/", "routes/"]: what counts as code (default: any
+                                 # source file outside tests/docs/vendor).
+    "organize": True,        # True: new files are checked for area-first placement and
+                             # catch-all names (*Manager, *Helper, *Util …).
+    "banned_names": [],      # extra catch-all suffixes to refuse.
+    "domain_root": None,     # e.g. "app/Domains" (default: auto-detected).
+    "require_header": None,  # e.g. "@copyright 2026 Acme Inc.": every new file must carry it.
     "gsd_wire": True,        # True: wire srk into .planning/config.json (agent_skills +
                              # intel.enabled) so GSD agents plan and build reuse-first.
     "auto_max_items": 0,     # /srk:shave --auto: optional review cap (0 = run to completion).

@@ -23,6 +23,15 @@
             "command": "PY=$(command -v python3 || command -v python); if [ -n \"$PY\" ]; then exec \"$PY\" \"${CLAUDE_PLUGIN_ROOT}/hooks/guard_staging.py\"; fi"
           }
         ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "PY=$(command -v python3 || command -v python); if [ -n \"$PY\" ]; then exec \"$PY\" \"${CLAUDE_PLUGIN_ROOT}/skills/shrinkage/scripts/records.py\" hook; fi"
+          }
+        ]
       }
     ],
     "PreCompact": [
@@ -42,6 +51,15 @@
           {
             "type": "command",
             "command": "PY=$(command -v python3 || command -v python); [ -n \"$PY\" ] && \"$PY\" \"${CLAUDE_PLUGIN_ROOT}/skills/shrinkage/scripts/codemap.py\" refresh --hook --quiet 2>/dev/null; true"
+          }
+        ]
+      },
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "PY=$(command -v python3 || command -v python); if [ -n \"$PY\" ]; then exec \"$PY\" \"${CLAUDE_PLUGIN_ROOT}/skills/shrinkage/scripts/organize.py\" hook; fi"
           }
         ]
       }

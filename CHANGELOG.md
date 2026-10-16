@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.45.0
+**Change records and code organization are built in, on by default.**
+
+- **Change records (`scripts/records.py`).** Feature ledger (`docs/FEATURE-LEDGER.md`: stable
+  IDs, code paths, guard tests, never-deleted rows), `CHANGELOG.md` and a regression log. A new
+  PreToolUse(Bash) hook blocks a `git commit` that touches source code without staging the ledger
+  and changelog (or `[ledger: none]` / `[changelog: none]`); a fix must add a regression row.
+  Enforced once the repo has the files — `/srk:onboard` runs `records.py init`. `records.py verify`
+  fails when a ledger path vanished; `records.py protected <path>` before any deletion. Audits
+  treat every ledger path as a keep (`ledger.keeps()`); the safety model's never-list forbids
+  touching a ledger feature without the owner's recorded OK. Opt out: `"change_records": false`.
+- **Organization and naming (`scripts/organize.py`).** A PostToolUse(Write) hook checks every
+  new file: area-first placement once a domain root exists (`app/Domains`, `src/Domain(s)`,
+  `app/Modules`, `modules`; Laravel base directories hold glue only) and no catch-all names
+  (`*Manager`, `*Helper`, `*Util`, `*Misc`, `*Common`). Optional `require_header` enforces a
+  company header line. Silent unless something is wrong. Opt out: `"organize": false`.
+- **Core loop gains a Record step;** GSD executor commits carry their records and the verifier
+  runs `records.py verify`. Laravel rules document the domain layout (migration subdirectory
+  loading, `#[UseFactory]`).
+
 ## 0.44.1
 - **`extract_method.py`: JS/TS surgery refuses cleanly without tree-sitter.**
   `_js_tree` imported `tree_sitter` before the availability check, so a

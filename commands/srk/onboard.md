@@ -62,8 +62,17 @@ as conscious choices, user ready to work.
      plan to use `scope` in monorepos.
    - **humor** — the comedy setting. Quips on (default) or straight-faced?
      Ask with a straight face.
+   - **require_header** — a line every new source file must carry (e.g. the
+     company copyright line)? Default none.
 4. Write the answers to `.claude/shrinkage.json`; re-run
    `codemap.py refresh` so map location/gitignore reflect the choices.
+   Then run `python3 $SKILL/scripts/records.py init` — it creates
+   `CHANGELOG.md` and `docs/FEATURE-LEDGER.md` if absent (never overwrites).
+   Say what it made: from now on commits touching code must update them (or
+   say `[changelog: none]` / `[ledger: none]`), fixes add a regression row, and
+   new files are checked for area-first placement and catch-all names
+   (`change_records` / `organize` turn either off). Offer to seed ledger rows
+   for the features that already exist.
 5. GSD project detected → point out the auto-integration (map + api-map.json
    in `.planning/intel/`, SHRINK-PLAN.md target, SUMMARY.md scoreboard lines)
    and the `.planning/config.json` wiring the build just applied: shrinkage

@@ -12,7 +12,9 @@ verifier agent briefs assume it.
 
 No matter how much is added or removed, **backwards compatibility outranks
 every reduction goal in this skill.** Shrinking is what we do; compatibility
-is what we are. Concretely:
+is what we are. The feature ledger, changelog and regression log
+(`scripts/records.py`) are its memory: what exists, what changed, what broke.
+Concretely:
 
 **The compatibility surface** — anything a consumer outside your control may
 depend on: exported/public functions and their signatures, API endpoints and
@@ -268,6 +270,9 @@ loosening of the defaults.
 
 ## 7. The never-list
 
+- Never delete, rename or change the behaviour of anything a live feature-ledger
+  row names (`records.py protected <path>`) without the owner's OK recorded in
+  that row. A ledger path is a feature, not a shrink candidate.
 - Never delete on map evidence alone (§1).
 - Never batch unrelated deletions into one commit (§6).
 - Never remove or weaken tests to improve the scoreboard — `diffstat.py`

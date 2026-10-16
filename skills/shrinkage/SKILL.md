@@ -48,14 +48,60 @@ betraying the other two:
    `gatelog.py add` — the scoreboard cross-checks it. → `workflows/gate.md`
 4. **Implement** — smallest diff, plus a subtraction pass in every touched
    file. Deletions follow the safety model — no exceptions for drive-bys.
-5. **Score** — `python3 <skill>/scripts/diffstat.py` and report its line (app
+5. **Record** — update the change records in the same commit
+   (`scripts/records.py`, on by default): feature-ledger rows for what you
+   added or changed (code paths + guard test in backticks), a `CHANGELOG.md`
+   line under `[Unreleased]`, and for a fix a regression row naming the guard
+   test. Pure refactor/tests/tooling says `[ledger: none]` / `[changelog: none]`
+   in the message. A hook blocks `git commit` without them once the repo has
+   the files; `/srk:onboard` creates them.
+6. **Score** — `python3 <skill>/scripts/diffstat.py` and report its line (app
    and test LOC counted separately). `--pr` for the PR block, `--log` for the
    trend log. → detail: `workflows/score.md`
-6. **Re-map** — run `codemap.py refresh` again after implementing: your new
+7. **Re-map** — run `codemap.py refresh` again after implementing: your new
    methods, classes, and parameters fold into the map (and GSD's
    api-map.json) immediately, so the next task — or the next fresh-context
    subagent — orients against reality, not a stale snapshot. Optional
    editor hook for continuous refresh: `references/ci-integration.md`.
+
+## Organization and naming (on by default)
+
+New code is placed and named so the next reader finds it by area:
+
+- **Area first.** Once the repo has a domain root (`app/Domains`,
+  `src/Domain(s)`, `app/Modules`, `modules`), code goes in
+  `<root>/<Area>/<Kind>/` (Actions, Models, Enums, Events, Jobs, Policies,
+  Services, Http/…), mirrored in migrations, factories, routes, views and
+  tests (`<dir>/<Area>/…`). Framework base directories hold glue only. No
+  domain root yet → follow the repo's existing layout; propose one in the gate
+  when a third unrelated area appears.
+- **Names say what it does.** Actions are verb-noun (`SendApprovedDraft`),
+  models are the concept (`ContactPoint`), never `*Manager`, `*Helper`,
+  `*Util`, `*Misc`, `*Common`. One class per file; file named after it.
+- **A new area is a new module** (ladder rung 8): justify it in the gate and
+  register it wherever the repo lists its areas.
+- **Header.** If `require_header` is set, every new file carries it.
+
+`scripts/organize.py` checks every new file (PostToolUse on Write) and tells
+you what to fix; `organize.py check <paths>` runs it by hand.
+
+## Change records — never two steps forward, one back
+
+Backwards compatibility needs memory. `scripts/records.py` keeps three records
+and gates commits on them (`"change_records": false` to opt out):
+
+- **Feature ledger** (`docs/FEATURE-LEDGER.md`): a row per user-visible
+  capability — stable ID, status, code paths, guard test. Rows are never
+  deleted; removal or behaviour change needs the owner's OK recorded in the
+  row. `records.py verify` fails when a listed path vanished;
+  `records.py protected <path>` before deleting or rewriting anything.
+- **Changelog** (`CHANGELOG.md`, Keep a Changelog): `[Unreleased]` line per
+  change.
+- **Regression log** (ledger §2): every fix names what broke and its guard.
+- **Contracts** (ledger §3): APIs, webhooks, sync mappings, export formats
+  change additively only.
+
+Audits treat every ledger path as a settled keep (`ledger.keeps()`).
 
 ## The Extension Ladder
 
@@ -158,10 +204,14 @@ with `"gsd_wire": false`. Loaded into a GSD agent, apply your role:
 - **gsd-plan-checker** — under Dimension 12, flag (warning) any plan creating
   a file/class that `## Reuse Gate` says to extend, or a new file with no
   gate row.
-- **gsd-executor** — follow the extension ladder; before creating a file not
-  in the plan, run the gate. End SUMMARY.md with the `diffstat.py` line.
-- **gsd-verifier** — apply the rules' "When verifying" sections; report net
-  LOC from `diffstat.py`.
+- **gsd-executor** — follow the extension ladder and the organization rules;
+  before creating a file not in the plan, run the gate. Every task commit
+  carries its change records (ledger row, changelog line, regression row for
+  fixes). End SUMMARY.md with the `diffstat.py` line.
+- **gsd-verifier** — apply the rules' "When verifying" sections; run
+  `records.py verify` (no ledger path vanished) and confirm the phase's
+  features have ledger rows with guard tests; report net LOC from
+  `diffstat.py`.
 
 ## Commands
 

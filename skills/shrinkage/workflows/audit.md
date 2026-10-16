@@ -91,7 +91,8 @@ phases) consuming the plan.
      flaky by weather, a secrets surface, and it slows every gate that names it.
    Subagents parallelize cleanly here: one sweep each, evidence-only briefs
    (see `agents/shrink-auditor.md`). **Inject the ledger** (`scripts/ledger.py`,
-   file `references/ledger.md`) into every brief: `## keeps` (do NOT re-flag;
+   file `references/ledger.md`) into every brief: `ledger.keeps()` — `## keeps`
+   plus every path the feature ledger names (do NOT re-flag;
    re-verify only if explicitly asked) and `## frozen` (never a candidate). The
    map already drops `## excluded` globs, so phantom files never reach a sweep.
    Append new keeps and hidden-dependency discoveries back to the ledger — it

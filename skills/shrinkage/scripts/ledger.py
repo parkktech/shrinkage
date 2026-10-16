@@ -53,6 +53,17 @@ def section(root, name):
     return out
 
 
+def keeps(root="."):
+    """`## keeps` plus every path a live feature-ledger row names: audits never re-flag a
+    feature's own code for removal (records.protected_paths)."""
+    try:
+        import records
+        ledger_keeps = records.protected_paths(root)
+    except Exception:
+        ledger_keeps = []
+    return section(root, "keeps") + ledger_keeps
+
+
 def excluded(root="."):
     return section(root, "excluded")
 
